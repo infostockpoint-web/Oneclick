@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Data Storage Converter — One Click</title><link rel="stylesheet" href="../assets/css/style.css"></head>
+<body>
+<div id="header-container"></div>
+<main class="tool-container">
+  <div class="tool-header"><h1>Data Storage Converter</h1><p>Convert between bytes, KB, MB, GB, TB (decimal and binary).</p></div>
+  <div class="tool-interface">
+    <div class="form-group"><label for="value">Value</label><input id="value" class="form-control" type="number" placeholder="Enter value" /></div>
+    <div class="form-group"><label for="from">From</label>
+      <select id="from" class="form-control">
+        <option value="B">Bytes (B)</option>
+        <option value="KB">Kilobytes (KB)</option>
+        <option value="MB">Megabytes (MB)</option>
+        <option value="GB">Gigabytes (GB)</option>
+        <option value="TB">Terabytes (TB)</option>
+        <option value="KiB">Kibibytes (KiB)</option>
+        <option value="MiB">Mebibytes (MiB)</option>
+        <option value="GiB">Gibibytes (GiB)</option>
+        <option value="TiB">Tebibytes (TiB)</option>
+      </select></div>
+    <div class="form-group"><label for="to">To</label>
+      <select id="to" class="form-control">
+        <option value="B">Bytes (B)</option>
+        <option value="KB">Kilobytes (KB)</option>
+        <option value="MB">Megabytes (MB)</option>
+        <option value="GB">Gigabytes (GB)</option>
+        <option value="TB">Terabytes (TB)</option>
+        <option value="KiB">Kibibytes (KiB)</option>
+        <option value="MiB">Mebibytes (MiB)</option>
+        <option value="GiB">Gibibytes (GiB)</option>
+        <option value="TiB">Tebibytes (TiB)</option>
+      </select></div>
+    <button id="convert" class="btn btn-primary">Convert</button>
+    <div id="result" class="result-area mt-2">Result: —</div>
+  </div>
+  <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+</main>
+<div id="footer-container"></div>
+<script src="../assets/js/common.js"></script>
+<script>
+  const dec = { B:1, KB:1000, MB:1e6, GB:1e9, TB:1e12 };
+  const bin = { B:1, KiB:1024, MiB:Math.pow(1024,2), GiB:Math.pow(1024,3), TiB:Math.pow(1024,4) };
+  function unitToBytes(val, unit){ return dec[unit]? val*dec[unit] : bin[unit]? val*bin[unit] : NaN; }
+  function bytesToUnit(bytes, unit){ return dec[unit]? bytes/dec[unit] : bin[unit]? bytes/bin[unit] : NaN; }
+  document.getElementById('convert').addEventListener('click', ()=>{
+    const v=parseFloat(document.getElementById('value').value); if(isNaN(v)) return showNotification('Enter a number','error');
+    const from=document.getElementById('from').value; const to=document.getElementById('to').value;
+    const bytes = unitToBytes(v, from); const out = bytesToUnit(bytes, to);
+    document.getElementById('result').textContent = 'Result: ' + out.toFixed(6) + ' ' + to;
+  });
+</script>
+</body></html>

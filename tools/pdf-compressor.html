@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Compressor — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>PDF Compressor</h1>
+      <p>Reduce PDF file size. True recompression requires a PDF processing engine; here is a polished flow and best‑practice guidance.</p>
+    </div>
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="pdfFile">Upload PDF</label>
+        <input id="pdfFile" class="form-control" type="file" accept="application/pdf" />
+      </div>
+
+      <div class="result-area">
+        <strong>About compression</strong>
+        <ul style="margin-top:8px;">
+          <li>Lossless structural compression is limited; biggest savings come from downsampling/recompressing embedded images.</li>
+          <li>Accurate client‑side compression needs a WASM PDF engine. We plan to integrate one for private, offline processing.</li>
+        </ul>
+        <strong>In the meantime</strong>
+        <ol style="margin-left:20px;margin-top:8px;">
+          <li>Use Ghostscript locally:
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:10px;margin-top:6px;">
+              <code>gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=out.pdf in.pdf</code>
+            </div>
+          </li>
+          <li>Reduce image resolution before embedding; avoid huge scans.</li>
+          <li>Remove unused fonts and pages; flatten transparency if possible.</li>
+        </ol>
+      </div>
+
+      <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+
+      <div class="result-area" style="margin-top:12px;">
+        <strong>Planned upgrade</strong>
+        <p>Integrate a WebAssembly PDF toolkit to recompress images (JPEG/JPX) and streams fully in your browser.</p>
+      </div>
+    </div>
+  </main>
+  <div id="footer-container"></div>
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

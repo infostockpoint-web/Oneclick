@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Lock/Unlock — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>PDF Lock/Unlock</h1>
+      <p>Add or remove password protection from PDFs. This typically requires a PDF encryption engine; here’s a polished workflow and guidance.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="pdfFile">Upload PDF</label>
+        <input id="pdfFile" class="form-control" type="file" accept="application/pdf" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" class="form-control" type="password" placeholder="Enter password" />
+      </div>
+
+      <div class="result-area">
+        <strong>About locking/unlocking</strong>
+        <ul style="margin-top:8px;">
+          <li>Setting/removing PDF passwords in-browser requires encryption support (AES-128/256) at the PDF object stream level.</li>
+          <li>We plan to integrate a WebAssembly PDF toolkit for fully client‑side, private processing.</li>
+        </ul>
+        <strong>Until then</strong>
+        <ol style="margin-left:20px;margin-top:8px;">
+          <li>Use a trusted desktop tool (Adobe Acrobat, qpdf, etc.)</li>
+          <li>qpdf examples:
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:10px;margin-top:6px;">
+              <div><code>qpdf --encrypt yourpass yourpass 256 -- input.pdf output-locked.pdf</code></div>
+              <div><code>qpdf --password=yourpass --decrypt input-locked.pdf output.pdf</code></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+
+      <div class="result-area" style="margin-top:12px;">
+        <strong>Planned upgrade</strong>
+        <p>Integrate client‑side PDF encryption for add/remove password entirely in your browser.</p>
+      </div>
+    </div>
+  </main>
+  <div id="footer-container"></div>
+  <script src="../assets/js/common.js"></script>
+</body>
+</html>

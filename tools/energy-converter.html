@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Energy Converter — One Click</title><link rel="stylesheet" href="../assets/css/style.css"></head>
+<body>
+<div id="header-container"></div>
+<main class="tool-container">
+  <div class="tool-header"><h1>Energy Converter</h1><p>Convert between joule (J), kilojoule (kJ), calorie (cal), kilocalorie (kcal), watt-hour (Wh), kilowatt-hour (kWh), BTU.</p></div>
+  <div class="tool-interface">
+    <div class="form-group"><label for="value">Value</label><input id="value" class="form-control" type="number" placeholder="Enter value" /></div>
+    <div class="form-group"><label for="from">From</label>
+      <select id="from" class="form-control">
+        <option value="J">Joule (J)</option>
+        <option value="kJ">Kilojoule (kJ)</option>
+        <option value="cal">Calorie (cal)</option>
+        <option value="kcal">Kilocalorie (kcal)</option>
+        <option value="Wh">Watt-hour (Wh)</option>
+        <option value="kWh">Kilowatt-hour (kWh)</option>
+        <option value="BTU">BTU</option>
+      </select></div>
+    <div class="form-group"><label for="to">To</label>
+      <select id="to" class="form-control">
+        <option value="J">Joule (J)</option>
+        <option value="kJ">Kilojoule (kJ)</option>
+        <option value="cal">Calorie (cal)</option>
+        <option value="kcal">Kilocalorie (kcal)</option>
+        <option value="Wh">Watt-hour (Wh)</option>
+        <option value="kWh">Kilowatt-hour (kWh)</option>
+        <option value="BTU">BTU</option>
+      </select></div>
+    <button id="convert" class="btn btn-primary">Convert</button>
+    <div id="result" class="result-area mt-2">Result: —</div>
+  </div>
+  <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+</main>
+<div id="footer-container"></div>
+<script src="../assets/js/common.js"></script>
+<script>
+  const toJ = { J:1, kJ:1000, cal:4.184, kcal:4184, Wh:3600, kWh:3.6e6, BTU:1055.05585 };
+  document.getElementById('convert').addEventListener('click', ()=>{
+    const v=parseFloat(document.getElementById('value').value); if(isNaN(v)) return showNotification('Enter a number','error');
+    const from=document.getElementById('from').value; const to=document.getElementById('to').value;
+    const J=v*toJ[from]; const out=J/toJ[to];
+    document.getElementById('result').textContent='Result: '+out.toFixed(6)+' '+to;
+  });
+</script>
+</body></nhtml>

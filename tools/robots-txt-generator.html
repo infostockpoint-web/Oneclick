@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>robots.txt Generator — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>robots.txt Generator</h1>
+      <p>Create a robots.txt file to control crawler access. Copy or download the generated file.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="sitemap">Sitemap URL (optional)</label>
+        <input id="sitemap" class="form-control" placeholder="https://example.com/sitemap.xml" />
+      </div>
+
+      <div class="form-group">
+        <label>Default Policy</label>
+        <select id="policy" class="form-control">
+          <option value="allow">Allow all</option>
+          <option value="disallow">Disallow all</option>
+          <option value="custom">Custom rules</option>
+        </select>
+      </div>
+
+      <div id="customRules" class="d-none">
+        <div class="form-group">
+          <label for="userAgent">User-agent</label>
+          <input id="userAgent" class="form-control" value="*" />
+        </div>
+        <div class="form-group">
+          <label for="allow">Allow paths (one per line)</label>
+          <textarea id="allow" class="form-control" rows="4" placeholder="/images/\n/assets/"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="disallow">Disallow paths (one per line)</label>
+          <textarea id="disallow" class="form-control" rows="4" placeholder="/admin/\n/private/"></textarea>
+        </div>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="genBtn" class="btn btn-primary">Generate</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+        <button id="downloadBtn" class="btn btn-primary">Download robots.txt</button>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="output">robots.txt</label>
+        <textarea id="output" class="form-control" rows="14" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const policy = document.getElementById('policy');
+    const custom = document.getElementById('customRules');
+    policy.addEventListener('change', ()=>custom.classList.toggle('d-none', policy.value !== 'custom'));
+
+    function generate(){
+      const sitemap = document.getElementById('sitemap').value.trim();
+      let lines = [];
+      if (policy.value === 'allow') {
+        lines.push('User-agent: *');
+        lines.push('Disallow:');
+      } else if (policy.value === 'disallow') {
+        lines.push('User-agent: *');
+        lines.push('Disallow: /');
+      } else {
+        const ua = document.getElementById('userAgent').value.trim() || '*';
+        lines.push('User-agent: ' + ua);
+        const allow = document.getElementById('allow').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        const disallow = document.getElementById('disallow').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        allow.forEach(a => lines.push('Allow: ' + a));
+        disallow.forEach(d => lines.push('Disallow: ' + d));
+      }
+      if (sitemap) {
+        lines.push('Sitemap: ' + sitemap);
+      }
+      document.getElementById('output').value = lines.join('\n') + '\n';
+    }
+    document.getElementById('genBtn').addEventListener('click', ()=>{ generate(); showNotification('Generated robots.txt','success'); });
+    document.getElementById('copyBtn').addEventListener('click', ()=>copyToClipboard(document.getElementById('output').value));
+    document.getElementById('downloadBtn').addEventListener('click', ()=>downloadFile(document.getElementById('output').value, 'robots.txt', 'text/plain'));
+  </script>
+</body>
+</html>

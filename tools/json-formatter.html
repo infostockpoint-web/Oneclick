@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Formatter — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>JSON Formatter</h1>
+      <p>Beautify and validate JSON with syntax error feedback.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="jsonInput">JSON Input</label>
+        <textarea id="jsonInput" class="form-control" rows="10" placeholder='{"name":"One Click"}'></textarea>
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="formatBtn" class="btn btn-primary">Format</button>
+        <button id="minifyBtn" class="btn btn-primary">Minify</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+      <div class="result-area mt-3">
+        <label for="jsonOutput" class="mb-2"><strong>Output</strong></label>
+        <textarea id="jsonOutput" class="form-control" rows="10" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const input = document.getElementById('jsonInput');
+    const output = document.getElementById('jsonOutput');
+
+    function formatJSON() {
+      try {
+        const obj = JSON.parse(input.value);
+        output.value = JSON.stringify(obj, null, 2);
+        showNotification('Valid JSON', 'success');
+      } catch (e) {
+        showNotification('Invalid JSON: ' + e.message, 'error');
+      }
+    }
+
+    function minifyJSON() {
+      try {
+        const obj = JSON.parse(input.value);
+        output.value = JSON.stringify(obj);
+        showNotification('Minified', 'success');
+      } catch (e) {
+        showNotification('Invalid JSON: ' + e.message, 'error');
+      }
+    }
+
+    document.getElementById('formatBtn').addEventListener('click', formatJSON);
+    document.getElementById('minifyBtn').addEventListener('click', minifyJSON);
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(output.value));
+  </script>
+</body>
+</html>

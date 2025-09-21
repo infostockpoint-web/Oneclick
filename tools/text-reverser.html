@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Reverser — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Text Reverser</h1>
+      <p>Reverse text by characters or by words. Copy result easily.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="input">Input</label>
+        <textarea id="input" class="form-control" rows="8" placeholder="Enter text to reverse..."></textarea>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <label><input type="radio" name="mode" value="chars" checked> Reverse by characters</label>
+        <label><input type="radio" name="mode" value="words"> Reverse by words</label>
+      </div>
+
+      <div class="d-flex mt-3" style="gap:10px;flex-wrap:wrap;">
+        <button id="runBtn" class="btn btn-primary">Reverse</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="output">Output</label>
+        <textarea id="output" class="form-control" rows="8" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    function reverseByChars(s){ return s.split('').reverse().join(''); }
+    function reverseByWords(s){ return s.split(/\s+/).reverse().join(' '); }
+
+    document.getElementById('runBtn').addEventListener('click', () => {
+      const text = document.getElementById('input').value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const out = mode === 'chars' ? reverseByChars(text) : reverseByWords(text);
+      document.getElementById('output').value = out;
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(document.getElementById('output').value));
+  </script>
+</body>
+</html>

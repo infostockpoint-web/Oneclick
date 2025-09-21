@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BMI Calculator — One Click</title><link rel="stylesheet" href="../assets/css/style.css"></head>
+<body>
+<div id="header-container"></div>
+<main class="tool-container">
+  <div class="tool-header"><h1>BMI Calculator</h1><p>Calculate Body Mass Index and see category.</p></div>
+  <div class="tool-interface">
+    <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+      <div><label for="height">Height (cm)</label><input id="height" class="form-control" type="number" value="170"></div>
+      <div><label for="weight">Weight (kg)</label><input id="weight" class="form-control" type="number" value="65"></div>
+    </div>
+    <button id="calcBtn" class="btn btn-primary mt-2">Calculate</button>
+    <div id="result" class="result-area mt-2">—</div>
+  </div>
+  <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+</main>
+<div id="footer-container"></div>
+<script src="../assets/js/common.js"></script>
+<script>
+  document.getElementById('calcBtn').addEventListener('click', ()=>{
+    const h = parseFloat(document.getElementById('height').value)||0;
+    const w = parseFloat(document.getElementById('weight').value)||0;
+    if (!h||!w) return showNotification('Enter valid height and weight', 'error');
+    const bmi = w / Math.pow(h/100, 2);
+    let cat = 'Underweight';
+    if (bmi>=18.5 && bmi<25) cat='Normal';
+    else if (bmi>=25 && bmi<30) cat='Overweight';
+    else if (bmi>=30) cat='Obese';
+    document.getElementById('result').innerHTML = `<strong>BMI:</strong> ${bmi.toFixed(2)} (${cat})`;
+  });
+</script>
+</body></html>

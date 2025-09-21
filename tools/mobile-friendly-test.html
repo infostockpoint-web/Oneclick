@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile-Friendly Test — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>.tips li{margin-bottom:8px;}</style>
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Mobile-Friendly Test</h1>
+      <p>Open Google’s Mobile-Friendly Test for your URL and review common responsive best practices.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="url">URL</label>
+        <input id="url" class="form-control" placeholder="https://example.com" />
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="openBtn" class="btn btn-primary">Open Google Mobile-Friendly Test</button>
+      </div>
+
+      <div class="result-area mt-3">
+        <strong>Responsive Design Tips</strong>
+        <ul class="tips">
+          <li>Use the meta viewport tag: <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</code></li>
+          <li>Adopt a mobile-first CSS approach with media queries.</li>
+          <li>Use responsive units (%, rem, vw, vh) instead of fixed pixels where possible.</li>
+          <li>Ensure tap targets are large enough and spaced adequately.</li>
+          <li>Optimize images for smaller screens and use lazy loading.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    document.getElementById('openBtn').addEventListener('click', () => {
+      const u = document.getElementById('url').value.trim();
+      if (!u) return showNotification('Enter a valid URL', 'error');
+      const link = `https://search.google.com/test/mobile-friendly?url=${encodeURIComponent(u)}`;
+      window.open(link, '_blank', 'noopener');
+    });
+  </script>
+</body>
+</html>

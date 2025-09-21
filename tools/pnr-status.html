@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PNR Status — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; }
+    .card { background:#fff; border:1px solid #e9ecef; border-radius:10px; padding:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .label { color:#6c757d; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+    .value { font-weight:600; color:#0c2d6b; }
+    .warn { color:#dc3545; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>PNR Status (India)</h1>
+      <p>Check Indian Railways PNR status. Requires an API key (RapidAPI). Your query runs in your browser.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="pnr">PNR Number</label>
+        <input id="pnr" class="form-control" placeholder="Enter 10-digit PNR" maxlength="10" />
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="checkBtn" class="btn btn-primary">Check Status</button>
+      </div>
+
+      <div id="notice" class="result-area mt-3">
+        <strong>Setup required:</strong> Add your RapidAPI key in this page’s script (API_KEY). Without a key, live results cannot be fetched.
+      </div>
+
+      <div id="summary" class="grid mt-3"></div>
+
+      <div class="form-group mt-3">
+        <label>Passengers</label>
+        <div id="passengers" class="result-area">—</div>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    // Configure your RapidAPI credentials
+    // Endpoint reference: irctc1 on RapidAPI (example: https://irctc1.p.rapidapi.com/api/v3/getPNRStatus?pnrNumber=XXXXXXXXXX)
+    const API_URL = 'https://irctc1.p.rapidapi.com/api/v3/getPNRStatus?pnrNumber=';
+    const API_HOST = 'irctc1.p.rapidapi.com';
+    const API_KEY = '';// <-- Put your RapidAPI key here
+
+    function hasKey(){ return (API_KEY && API_KEY.trim().length > 10); }
+
+    function formatSummary(data){
+      const grid = document.getElementById('summary');
+      grid.innerHTML = '';
+      const rows = [];
+      const p = data?.data || {};
+      const items = [
+        ['PNR', p?.pnrNumber],
+        ['Train', `${p?.trainInfo?.trainName || ''} (${p?.trainInfo?.trainNo || ''})`],
+        ['From → To', `${p?.from?.stationName || ''} (${p?.from?.stationCode || ''}) → ${p?.to?.stationName || ''} (${p?.to?.stationCode || ''})`],
+        ['Journey Date', p?.journeyDate],
+        ['Class', p?.class || p?.journeyClass],
+        ['Chart Status', p?.chartStatus],
+      ];
+      items.forEach(([label,val])=>{
+        if (!val) return;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div class="label">${label}</div><div class="value">${val}</div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function formatPassengers(list){
+      const box = document.getElementById('passengers');
+      if (!Array.isArray(list) || list.length === 0){ box.textContent = '—'; return; }
+      const html = list.map((p,i)=>{
+        const cur = p?.currentStatus || p?.bookingStatus || '—';
+        const bk = p?.bookingStatus || '—';
+        return `<div style="padding:6px 0;border-bottom:1px dashed #eee;">Passenger ${i+1}: <strong>${cur}</strong> <small style="color:#6c757d;">(Booked: ${bk})</small></div>`;
+      }).join('');
+      box.innerHTML = html;
+    }
+
+    async function fetchPNR(pnr){
+      const url = API_URL + encodeURIComponent(pnr);
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': API_HOST,
+          'x-rapidapi-key': API_KEY
+        }
+      });
+      if (!res.ok) throw new Error('Network error');
+      return res.json();
+    }
+
+    document.getElementById('checkBtn').addEventListener('click', async ()=>{
+      const pnr = document.getElementById('pnr').value.trim();
+      if (pnr.length !== 10){ showNotification('Enter a valid 10-digit PNR','error'); return; }
+      if (!hasKey()){
+        showNotification('Add your RapidAPI key in the script to enable live lookup','error');
+        return;
+      }
+      try{
+        document.getElementById('notice').innerHTML = 'Fetching PNR details...';
+        const data = await fetchPNR(pnr);
+        if (data?.status !== true){
+          document.getElementById('notice').innerHTML = '<span class="warn">No data found or API error.</span>';
+          return;
+        }
+        document.getElementById('notice').innerHTML = 'Success.';
+        formatSummary(data);
+        formatPassengers(data?.data?.passengerInfo || []);
+        showNotification('PNR status loaded','success');
+      } catch(e){
+        document.getElementById('notice').innerHTML = '<span class="warn">Failed to fetch PNR status.</span>';
+        showNotification('Network/API error','error');
+      }
+    });
+  </script>
+</body>
+</html>

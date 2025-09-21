@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Converter — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Case Converter</h1>
+      <p>Convert text to UPPERCASE, lowercase, Title Case, or Sentence case.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="textInput">Enter text</label>
+        <textarea id="textInput" class="form-control" rows="10" placeholder="Type or paste your text here..."></textarea>
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" data-mode="upper">UPPERCASE</button>
+        <button class="btn btn-primary" data-mode="lower">lowercase</button>
+        <button class="btn btn-primary" data-mode="title">Title Case</button>
+        <button class="btn btn-primary" data-mode="sentence">Sentence case</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const input = document.getElementById('textInput');
+
+    function toTitleCase(s) {
+      return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function toSentenceCase(s) {
+      return s.toLowerCase().replace(/(^\s*\w|[\.!?]\s*\w)/g, c => c.toUpperCase());
+    }
+
+    document.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode');
+        if (mode === 'upper') input.value = input.value.toUpperCase();
+        if (mode === 'lower') input.value = input.value.toLowerCase();
+        if (mode === 'title') input.value = toTitleCase(input.value);
+        if (mode === 'sentence') input.value = toSentenceCase(input.value);
+      });
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(input.value));
+  </script>
+</body>
+</html>

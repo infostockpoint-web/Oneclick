@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sitemap Generator — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Sitemap (XML) Generator</h1>
+      <p>Generate a simple XML sitemap from a list of URLs. Copy or download.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="base">Site Base URL</label>
+        <input id="base" class="form-control" placeholder="https://example.com" />
+      </div>
+      <div class="form-group">
+        <label for="urls">URLs (one per line; relative or absolute)</label>
+        <textarea id="urls" class="form-control" rows="10" placeholder="/\n/tools/word-counter.html\n/tools/json-formatter.html"></textarea>
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="genBtn" class="btn btn-primary">Generate</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+        <button id="downloadBtn" class="btn btn-primary">Download sitemap.xml</button>
+      </div>
+      <div class="form-group mt-3">
+        <label for="output">XML Sitemap</label>
+        <textarea id="output" class="form-control" rows="14" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    function joinUrl(base, path){
+      if (!path) return '';
+      if (/^https?:\/\//i.test(path)) return path;
+      return (base.replace(/\/$/, '')) + '/' + path.replace(/^\//,'');
+    }
+    function generate(){
+      const base = document.getElementById('base').value.trim();
+      const lines = document.getElementById('urls').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const urls = lines.map(u => joinUrl(base || '', u));
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        urls.map(u => `  <url>\n    <loc>${u}</loc>\n  </url>`).join('\n') +
+        `\n</urlset>\n`;
+      document.getElementById('output').value = xml;
+    }
+    document.getElementById('genBtn').addEventListener('click', ()=>{ generate(); showNotification('Sitemap generated','success'); });
+    document.getElementById('copyBtn').addEventListener('click', ()=>copyToClipboard(document.getElementById('output').value));
+    document.getElementById('downloadBtn').addEventListener('click', ()=>downloadFile(document.getElementById('output').value, 'sitemap.xml', 'application/xml'));
+  </script>
+</body>
+</html>

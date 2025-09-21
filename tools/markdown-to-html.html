@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown to HTML — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .preview { background:#fff;border:1px solid #e9ecef;border-radius:8px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .two-col { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+    @media (max-width: 768px){ .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Markdown to HTML</h1>
+      <p>Type Markdown on the left and see HTML preview on the right (client-side).</p>
+    </div>
+    <div class="tool-interface">
+      <div class="two-col">
+        <div class="form-group">
+          <label for="md">Markdown</label>
+          <textarea id="md" class="form-control" rows="16" placeholder="# Title\n\n**Bold** and *italic*.\n\n- List item\n\n[Link](https://example.com)"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Preview</label>
+          <div id="preview" class="preview"></div>
+        </div>
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="copyHtml" class="btn btn-primary">Copy HTML</button>
+      </div>
+    </div>
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+  <script src="../assets/js/common.js"></script>
+  <script>
+    // Minimal Markdown renderer (basic features)
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function mdToHtml(md){
+      let html = md;
+      // Escape then unescape formatting areas by replacing progressively
+      html = html.replace(/\r\n?|\n/g, '\n');
+      // Code blocks ```
+      html = html.replace(/```([\s\S]*?)```/g, (m, p1)=>`<pre><code>${escapeHtml(p1)}</code></pre>`);
+      // Inline code `code`
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Headings
+      html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>')
+                 .replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>')
+                 .replace(/^####\s+(.+)$/gm, '<h4>$1</h4>')
+                 .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
+                 .replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
+                 .replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+      // Bold/italic
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      // Links
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      // Lists
+      html = html.replace(/^(?:-\s+.+\n?)+/gm, block => '<ul>\n' + block.trim().split(/\n/).map(l=>l.replace(/^-\s+/, '<li>') + '</li>').join('\n') + '\n</ul>');
+      // Paragraphs (wrap lines that are not HTML tags)
+      html = html.split(/\n\n+/).map(chunk => (/^\s*<.+>/.test(chunk.trim())? chunk : `<p>${chunk.replace(/\n/g,'<br>')}</p>`)).join('\n');
+      return html;
+    }
+
+    const md = document.getElementById('md');
+    const preview = document.getElementById('preview');
+    function render(){ preview.innerHTML = mdToHtml(md.value || ''); }
+    md.addEventListener('input', render);
+    render();
+
+    document.getElementById('copyHtml').addEventListener('click', ()=>copyToClipboard(preview.innerHTML));
+  </script>
+</body>
+</html>

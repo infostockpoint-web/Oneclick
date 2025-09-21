@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Resizer — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Image Resizer</h1>
+      <p>Resize image by width/height or by scale percentage. Processing happens in your browser.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="imgInput">Choose an image</label>
+        <input id="imgInput" type="file" accept="image/*" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>Resize Mode</label>
+        <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+          <label><input type="radio" name="mode" value="dimension" checked> By dimensions</label>
+          <label><input type="radio" name="mode" value="scale"> By scale (%)</label>
+        </div>
+      </div>
+
+      <div id="dimensionInputs" class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <div>
+          <label for="width">Width (px)</label>
+          <input id="width" type="number" class="form-control" placeholder="e.g., 800" />
+        </div>
+        <div>
+          <label for="height">Height (px)</label>
+          <input id="height" type="number" class="form-control" placeholder="e.g., 600" />
+        </div>
+        <div style="align-self:end;">
+          <label><input type="checkbox" id="keepAspect" checked> Keep aspect ratio</label>
+        </div>
+      </div>
+
+      <div id="scaleInputs" class="d-none">
+        <label for="scale">Scale (%)</label>
+        <input id="scale" type="number" class="form-control" placeholder="e.g., 50 for half size" />
+      </div>
+
+      <div class="d-flex mt-3" style="gap:10px;flex-wrap:wrap;">
+        <button id="resizeBtn" class="btn btn-primary">Resize</button>
+        <button id="downloadBtn" class="btn btn-success" disabled>Download</button>
+      </div>
+
+      <div class="result-area mt-3" id="info">No image loaded.</div>
+      <div id="preview" class="mt-2"></div>
+      <canvas id="canvas" class="d-none"></canvas>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const fileInput = document.getElementById('imgInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const preview = document.getElementById('preview');
+    const info = document.getElementById('info');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const keepAspect = document.getElementById('keepAspect');
+    const scaleInput = document.getElementById('scale');
+
+    let img = null;
+    let original = { w: 0, h: 0 };
+
+    document.querySelectorAll('input[name="mode"]').forEach(r => {
+      r.addEventListener('change', () => {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        document.getElementById('dimensionInputs').classList.toggle('d-none', mode !== 'dimension');
+        document.getElementById('scaleInputs').classList.toggle('d-none', mode !== 'scale');
+      });
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        img = new Image();
+        img.onload = () => {
+          original.w = img.width; original.h = img.height;
+          widthInput.value = img.width; heightInput.value = img.height;
+          info.textContent = `Original: ${img.width} x ${img.height}`;
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);"/>`;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('resizeBtn').addEventListener('click', () => {
+      if (!img) return showNotification('Please choose an image', 'error');
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+
+      let targetW, targetH;
+      if (mode === 'dimension') {
+        targetW = parseInt(widthInput.value, 10);
+        targetH = parseInt(heightInput.value, 10);
+        if (keepAspect.checked) {
+          if (!targetW && targetH) targetW = Math.round((targetH / original.h) * original.w);
+          if (!targetH && targetW) targetH = Math.round((targetW / original.w) * original.h);
+        }
+      } else {
+        const scale = parseFloat(scaleInput.value);
+        if (isNaN(scale) || scale <= 0) return showNotification('Enter a valid scale %', 'error');
+        targetW = Math.round(original.w * (scale/100));
+        targetH = Math.round(original.h * (scale/100));
+      }
+
+      if (!targetW || !targetH) return showNotification('Enter valid dimensions', 'error');
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      preview.innerHTML = `<img src="${dataUrl}" alt="Result" style="max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);"/>`;
+      document.getElementById('downloadBtn').disabled = false;
+      info.textContent = `Resized: ${targetW} x ${targetH}`;
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url; a.download = 'resized.png'; a.click();
+    });
+  </script>
+</body>
+</html>

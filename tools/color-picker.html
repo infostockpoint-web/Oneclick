@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Picker & Converter — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media (max-width:768px){ .grid{ grid-template-columns:1fr; } }
+    .swatch { width:100%; height:60px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); border:1px solid #e9ecef; }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Color Picker & Converter</h1>
+      <p>Pick a color and convert between HEX, RGB and HSL formats. Values stay in sync.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="grid">
+        <div class="form-group">
+          <label for="picker">Pick Color</label>
+          <input id="picker" type="color" class="form-control" value="#1a56db" />
+          <div id="swatch" class="swatch mt-2"></div>
+        </div>
+        <div class="form-group">
+          <label for="hex">HEX</label>
+          <input id="hex" class="form-control" value="#1a56db" />
+        </div>
+        <div class="form-group">
+          <label for="rgb">RGB</label>
+          <input id="rgb" class="form-control" value="26, 86, 219" />
+        </div>
+        <div class="form-group">
+          <label for="hsl">HSL</label>
+          <input id="hsl" class="form-control" value="221, 79%, 48%" />
+        </div>
+      </div>
+
+      <div class="d-flex mt-2" style="gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="copyHex">Copy HEX</button>
+        <button class="btn btn-primary" id="copyRgb">Copy RGB</button>
+        <button class="btn btn-primary" id="copyHsl">Copy HSL</button>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const picker = document.getElementById('picker');
+    const hex = document.getElementById('hex');
+    const rgb = document.getElementById('rgb');
+    const hsl = document.getElementById('hsl');
+    const swatch = document.getElementById('swatch');
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function hexToRgb(hexStr){
+      const s = hexStr.replace('#','').trim();
+      if (s.length === 3){
+        const r = parseInt(s[0]+s[0],16), g=parseInt(s[1]+s[1],16), b=parseInt(s[2]+s[2],16);
+        return {r,g,b};
+      }
+      const r = parseInt(s.slice(0,2),16), g=parseInt(s.slice(2,4),16), b=parseInt(s.slice(4,6),16);
+      return {r,g,b};
+    }
+    function rgbToHex(r,g,b){ return '#' + [r,g,b].map(v => clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join(''); }
+
+    function rgbToHsl(r,g,b){
+      r/=255; g/=255; b/=255;
+      const max=Math.max(r,g,b), min=Math.min(r,g,b);
+      let h,s,l=(max+min)/2;
+      if(max===min){ h=s=0; }
+      else{
+        const d=max-min;
+        s=l>0.5? d/(2-max-min) : d/(max+min);
+        switch(max){
+          case r: h=(g-b)/d+(g<b?6:0); break;
+          case g: h=(b-r)/d+2; break;
+          case b: h=(r-g)/d+4; break;
+        }
+        h/=6;
+      }
+      return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+    }
+
+    function hslToRgb(h,s,l){
+      h/=360; s/=100; l/=100;
+      function hue2rgb(p,q,t){
+        if(t<0) t+=1; if(t>1) t-=1;
+        if(t<1/6) return p+(q-p)*6*t;
+        if(t<1/2) return q;
+        if(t<2/3) return p+(q-p)*(2/3 - t)*6;
+        return p;
+      }
+      let r,g,b;
+      if(s===0){ r=g=b=l; }
+      else{
+        const q = l < 0.5 ? l * (1+s) : l + s - l*s;
+        const p = 2*l - q;
+        r = hue2rgb(p,q,h+1/3);
+        g = hue2rgb(p,q,h);
+        b = hue2rgb(p,q,h-1/3);
+      }
+      return {r:Math.round(r*255), g:Math.round(g*255), b:Math.round(b*255)};
+    }
+
+    function setFromHex(){
+      try{
+        const {r,g,b} = hexToRgb(hex.value);
+        rgb.value = `${r}, ${g}, ${b}`;
+        const {h,s,l} = rgbToHsl(r,g,b);
+        hsl.value = `${h}, ${s}%, ${l}%`;
+        picker.value = rgbToHex(r,g,b);
+        swatch.style.background = picker.value;
+      }catch{}
+    }
+    function setFromRgb(){
+      const m = rgb.value.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if(!m) return; const r=+m[1], g=+m[2], b=+m[3];
+      hex.value = rgbToHex(r,g,b);
+      const {h,s,l} = rgbToHsl(r,g,b);
+      hsl.value = `${h}, ${s}%, ${l}%`;
+      picker.value = hex.value;
+      swatch.style.background = picker.value;
+    }
+    function setFromHsl(){
+      const m = hsl.value.match(/(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%/);
+      if(!m) return; const h=+m[1], s=+m[2], l=+m[3];
+      const {r,g,b} = hslToRgb(h,s,l);
+      hex.value = rgbToHex(r,g,b);
+      rgb.value = `${r}, ${g}, ${b}`;
+      picker.value = hex.value;
+      swatch.style.background = picker.value;
+    }
+
+    picker.addEventListener('input',()=>{ hex.value = picker.value; setFromHex(); });
+    hex.addEventListener('input', setFromHex);
+    rgb.addEventListener('input', setFromRgb);
+    hsl.addEventListener('input', setFromHsl);
+
+    document.getElementById('copyHex').addEventListener('click', ()=>copyToClipboard(hex.value));
+    document.getElementById('copyRgb').addEventListener('click', ()=>copyToClipboard(rgb.value));
+    document.getElementById('copyHsl').addEventListener('click', ()=>copyToClipboard(hsl.value));
+
+    setFromHex();
+  </script>
+</body>
+</html>

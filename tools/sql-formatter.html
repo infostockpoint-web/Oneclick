@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Formatter — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .two-col { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+    @media (max-width: 768px){ .two-col { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>SQL Formatter</h1>
+      <p>Beautify SQL queries for readability. Lightweight in-browser formatter.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="two-col">
+        <div class="form-group">
+          <label for="input">SQL Input</label>
+          <textarea id="input" class="form-control" rows="16" placeholder="select id,name from users where status='active' and created_at>='2024-01-01' order by created_at desc;"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="output">Formatted Output</label>
+          <textarea id="output" class="form-control" rows="16" readonly></textarea>
+        </div>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="formatBtn" class="btn btn-primary">Format</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const KEYWORDS = [
+      'SELECT','FROM','WHERE','GROUP BY','HAVING','ORDER BY','LIMIT','OFFSET',
+      'INSERT INTO','VALUES','UPDATE','SET','DELETE','JOIN','LEFT JOIN','RIGHT JOIN','INNER JOIN','OUTER JOIN',
+      'ON','AND','OR','CASE','WHEN','THEN','ELSE','END','DISTINCT','AS','IN','IS','NULL','NOT','BETWEEN','EXISTS'
+    ];
+
+    function formatSQL(sql){
+      let s = sql.replace(/\r\n?|\n/g,'\n').trim();
+      // Uppercase keywords (rough)
+      KEYWORDS.forEach(k=>{
+        const re = new RegExp('\\b'+k.replace(/\s+/g,'\\s+')+'\\b','gi');
+        s = s.replace(re, k);
+      });
+      // Ensure spaces around commas and operators
+      s = s.replace(/\s*,\s*/g, ', ')
+           .replace(/\s*(=|<>|!=|<=|>=|<|>|\+|\-|\*|\/)\s*/g, ' $1 ');
+      // Line breaks before main clauses
+      ['SELECT','FROM','WHERE','GROUP BY','HAVING','ORDER BY','LIMIT','OFFSET','VALUES','SET','JOIN','LEFT JOIN','RIGHT JOIN','INNER JOIN','OUTER JOIN']
+        .forEach(k=>{ s = s.replace(new RegExp('\\s+'+k,'g'), '\n'+k); });
+      // Indentation logic
+      const lines = s.split(/\n/);
+      let indent = 0; const IND = '  ';
+      const out = [];
+      for (let line of lines){
+        let l = line.trim();
+        if (!l) { out.push(''); continue; }
+        // decrease indent before closing )
+        if (/^\)/.test(l)) indent = Math.max(0, indent-1);
+        out.push(IND.repeat(indent) + l);
+        // increase indent after ( or after certain clauses
+        if (/[\(]$/.test(l)) indent++;
+        if (/^(SELECT|FROM|WHERE|GROUP BY|HAVING|ORDER BY|VALUES|SET|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN|OUTER JOIN)\b/.test(l)) indent = Math.min(indent+0, indent); // keep level
+      }
+      return out.join('\n');
+    }
+
+    document.getElementById('formatBtn').addEventListener('click', ()=>{
+      const input = document.getElementById('input').value;
+      document.getElementById('output').value = formatSQL(input);
+      showNotification('SQL formatted', 'success');
+    });
+    document.getElementById('copyBtn').addEventListener('click', ()=>copyToClipboard(document.getElementById('output').value));
+  </script>
+</body>
+</html>

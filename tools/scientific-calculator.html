@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scientific Calculator — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .calc { max-width: 480px; margin: 0 auto; }
+    .display { background:#fff; border:1px solid #e9ecef; border-radius:8px; padding:12px; font-size:20px; min-height:48px; box-shadow:0 2px 8px rgba(0,0,0,.05); word-break:break-all; }
+    .keys { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-top:10px; }
+    .keys button { padding:12px; border:none; border-radius:8px; background:#f0f5ff; color:#0c2d6b; font-weight:600; cursor:pointer; }
+    .keys button.op { background:#e8f0fe; }
+    .keys button.eq { background:#1a56db; color:#fff; }
+    .keys button.clr { background:#dc3545; color:#fff; }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Scientific Calculator</h1>
+      <p>Evaluate expressions with common functions: sin, cos, tan, log, ln, sqrt, pow, pi, e, factorial (!). Use parentheses for precedence.</p>
+    </div>
+
+    <div class="tool-interface calc">
+      <div id="display" class="display"></div>
+      <div class="keys">
+        <button>(</button><button>)</button><button class="op">^</button><button class="op">!</button><button class="clr">AC</button>
+        <button>7</button><button>8</button><button>9</button><button class="op">/</button><button class="op">sqrt(</button>
+        <button>4</button><button>5</button><button>6</button><button class="op">*</button><button class="op">pow(</button>
+        <button>1</button><button>2</button><button>3</button><button class="op">-</button><button class="op">log(</button>
+        <button>0</button><button>.</button><button class="op">+</button><button class="eq">=</button><button class="op">ln(</button>
+        <button class="op">sin(</button><button class="op">cos(</button><button class="op">tan(</button><button class="op">pi</button><button class="op">e</button>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const d = document.getElementById('display');
+    function append(t){ d.textContent += t; }
+    document.querySelectorAll('.keys button').forEach(b=>{
+      const t = b.textContent;
+      if (b.classList.contains('eq')) return;
+      if (b.classList.contains('clr')) { b.addEventListener('click', ()=> d.textContent=''); return; }
+      b.addEventListener('click', ()=> append(t));
+    });
+
+    function factorial(n){ if(n<0) return NaN; let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
+    function safeEval(expr){
+      let e = expr.trim();
+      if (!e) return '';
+      e = e.replace(/pi\b/gi, 'Math.PI').replace(/\be\b/g, 'Math.E');
+      e = e.replace(/\bsin\(/g, 'Math.sin(')
+           .replace(/\bcos\(/g, 'Math.cos(')
+           .replace(/\btan\(/g, 'Math.tan(')
+           .replace(/\bsqrt\(/g, 'Math.sqrt(')
+           .replace(/\blog\(/g, 'Math.log10(')
+           .replace(/\bln\(/g, 'Math.log(')
+           .replace(/\bpow\(/g, 'Math.pow(')
+           .replace(/(\d+)\s*!/g, 'factorial($1)');
+      e = e.replace(/\^/g, '**');
+      if (!/^[-+/*()0-9.\sA-Za-z_,]*$/.test(e)) throw new Error('Invalid characters');
+      // eslint-disable-next-line no-new-func
+      const fn = new Function('factorial', `return (${e});`);
+      return fn(factorial);
+    }
+
+    document.querySelector('.eq').addEventListener('click', ()=>{
+      try{ d.textContent = String(safeEval(d.textContent)); }
+      catch(e){ showNotification('Invalid expression', 'error'); }
+    });
+  </script>
+</body>
+</html>

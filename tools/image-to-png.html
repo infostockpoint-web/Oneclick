@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image to PNG — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Image to PNG Converter</h1>
+      <p>Convert JPG, WEBP, BMP, GIF to PNG in your browser. No upload.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="imgInput">Choose an image</label>
+        <input id="imgInput" type="file" accept="image/*" class="form-control" />
+      </div>
+      <canvas id="canvas" class="d-none"></canvas>
+      <div id="preview" class="mt-2"></div>
+      <button id="downloadBtn" class="btn btn-primary mt-3" disabled>Download PNG</button>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const input = document.getElementById('imgInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const preview = document.getElementById('preview');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let pngDataUrl = null;
+
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          pngDataUrl = canvas.toDataURL('image/png');
+          preview.innerHTML = '<img src="' + pngDataUrl + '" alt="Preview" style="max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);" />';
+          downloadBtn.disabled = false;
+          showNotification('Converted to PNG preview', 'success');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!pngDataUrl) return;
+      const link = document.createElement('a');
+      link.href = pngDataUrl;
+      link.download = 'converted.png';
+      link.click();
+    });
+  </script>
+</body>
+</html>

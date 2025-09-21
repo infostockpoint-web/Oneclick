@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remove Duplicate Lines — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Remove Duplicate Lines</h1>
+      <p>Remove duplicate lines from your text. Optionally trim, ignore case, and sort.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="input">Input</label>
+        <textarea id="input" class="form-control" rows="10" placeholder="Enter lines..."></textarea>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <label><input id="trim" type="checkbox" checked> Trim lines</label>
+        <label><input id="ignoreCase" type="checkbox"> Ignore case</label>
+        <label><input id="sort" type="checkbox"> Sort result</label>
+      </div>
+
+      <div class="d-flex mt-3" style="gap:10px;flex-wrap:wrap;">
+        <button id="runBtn" class="btn btn-primary">Remove Duplicates</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="output">Output</label>
+        <textarea id="output" class="form-control" rows="10" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    function removeDuplicates(text, opts){
+      const lines = text.split(/\r?\n/);
+      const seen = new Set();
+      const out = [];
+      for (let line of lines){
+        if (opts.trim) line = line.trim();
+        const key = opts.ignoreCase ? line.toLowerCase() : line;
+        if (!seen.has(key)){
+          seen.add(key);
+          out.push(line);
+        }
+      }
+      if (opts.sort) out.sort((a,b)=>a.localeCompare(b));
+      return out.join('\n');
+    }
+
+    document.getElementById('runBtn').addEventListener('click', () => {
+      const text = document.getElementById('input').value;
+      const opts = {
+        trim: document.getElementById('trim').checked,
+        ignoreCase: document.getElementById('ignoreCase').checked,
+        sort: document.getElementById('sort').checked
+      };
+      const result = removeDuplicates(text, opts);
+      document.getElementById('output').value = result;
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(document.getElementById('output').value));
+  </script>
+</body>
+</html>

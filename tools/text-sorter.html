@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Sorter — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Text Sorter</h1>
+      <p>Sort lines ascending/descending, case-sensitive or insensitive, with optional numeric sort.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="input">Input</label>
+        <textarea id="input" class="form-control" rows="10" placeholder="Enter lines to sort..."></textarea>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <div>
+          <label for="order">Order</label>
+          <select id="order" class="form-control">
+            <option value="asc">Ascending (A→Z)</option>
+            <option value="desc">Descending (Z→A)</option>
+          </select>
+        </div>
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode" class="form-control">
+            <option value="text">Text</option>
+            <option value="numeric">Numeric</option>
+          </select>
+        </div>
+        <div style="align-self:end;">
+          <label><input type="checkbox" id="ignoreCase"> Ignore case</label>
+        </div>
+        <div style="align-self:end;">
+          <label><input type="checkbox" id="unique"> Unique lines</label>
+        </div>
+      </div>
+
+      <div class="d-flex mt-3" style="gap:10px;flex-wrap:wrap;">
+        <button id="sortBtn" class="btn btn-primary">Sort</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="output">Output</label>
+        <textarea id="output" class="form-control" rows="10" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    document.getElementById('sortBtn').addEventListener('click', () => {
+      const lines = document.getElementById('input').value.split(/\r?\n/);
+      const order = document.getElementById('order').value;
+      const mode = document.getElementById('mode').value;
+      const ignoreCase = document.getElementById('ignoreCase').checked;
+      const unique = document.getElementById('unique').checked;
+
+      let arr = lines.slice();
+      if (ignoreCase) arr = arr.map(s => ({ raw: s, key: s.toLowerCase() }));
+
+      const compareText = (a, b) => (ignoreCase ? a.key.localeCompare(b.key) : a.localeCompare(b));
+      const compareNumeric = (a, b) => {
+        const av = parseFloat(ignoreCase ? a.key : a);
+        const bv = parseFloat(ignoreCase ? b.key : b);
+        if (isNaN(av) && isNaN(bv)) return compareText(a, b);
+        if (isNaN(av)) return -1;
+        if (isNaN(bv)) return 1;
+        return av - bv;
+      };
+
+      if (mode === 'numeric') arr.sort(compareNumeric); else arr.sort(compareText);
+      if (order === 'desc') arr.reverse();
+
+      if (unique) {
+        const seen = new Set();
+        arr = arr.filter(item => {
+          const val = ignoreCase ? item.key : item;
+          if (seen.has(val)) return false;
+          seen.add(val);
+          return true;
+        });
+      }
+
+      const out = arr.map(v => ignoreCase ? v.raw : v).join('\n');
+      document.getElementById('output').value = out;
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(document.getElementById('output').value));
+  </script>
+</body>
+</html>

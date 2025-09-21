@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="One Click - 100+ free online tools. Image converters, calculators, SEO tools, text utilities, developer tools and more." />
+  <title>One Click — Free Online Tools</title>
+  <link rel="icon" href="assets/images/favicon.ico" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <!-- Header injected by JS -->
+  <div id="header-container"></div>
+
+  <!-- Hero Section (matched to provided design) -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Your Daily Tools, All in One Place</h1>
+        <p>Convert, calculate, compress, and simplify your everyday tasks — fast and free.</p>
+        <a href="#tools" class="cta-button">Explore Tools</a>
+
+        <div class="tool-icons">
+          <div class="tool-icon"><i class="fas fa-image"></i></div>
+          <div class="tool-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="tool-icon"><i class="fas fa-calculator"></i></div>
+          <div class="tool-icon"><i class="fas fa-code"></i></div>
+          <div class="tool-icon"><i class="fas fa-film"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Section (matched to provided design) -->
+  <section class="search-section">
+    <div class="container">
+      <div class="search-container hero-search">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="Search a tool..." id="searchInput">
+        <button class="search-btn hero" id="searchBtn" aria-label="Search">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <main class="main-content">
+    <div id="tools"></div>
+    
+
+    <div class="ad-space">
+      <h4>Advertisement</h4>
+      <p>Place your 728x90 banner ad here</p>
+    </div>
+
+    <!-- IMAGE TOOLS -->
+    <section id="image-tools" class="category-section">
+      <h2 class="category-title">🖼️ Image Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/image-to-png.html">
+          <div class="tool-icon">🖼️</div>
+          <h3 class="tool-title">Image to PNG</h3>
+          <p class="tool-description">Convert images to PNG quickly in your browser.</p>
+        </a>
+        <a class="tool-card" href="tools/image-to-jpg.html">
+          <div class="tool-icon">📸</div>
+          <h3 class="tool-title">Image to JPG</h3>
+          <p class="tool-description">Convert images to JPG with adjustable quality.</p>
+        </a>
+        <a class="tool-card" href="tools/image-resizer.html">
+          <div class="tool-icon">📏</div>
+          <h3 class="tool-title">Image Resizer</h3>
+          <p class="tool-description">Resize by pixels, percent, or presets.</p>
+        </a>
+        <a class="tool-card" href="tools/image-compressor.html">
+          <div class="tool-icon">🗜️</div>
+          <h3 class="tool-title">Image Compressor</h3>
+          <p class="tool-description">Reduce file size without visible quality loss.</p>
+        </a>
+        <a class="tool-card" href="tools/image-cropper.html">
+          <div class="tool-icon">✂️</div>
+          <h3 class="tool-title">Image Cropper</h3>
+          <p class="tool-description">Crop to aspect ratios and custom sizes.</p>
+        </a>
+        <a class="tool-card" href="tools/image-to-base64.html">
+          <div class="tool-icon">🔢</div>
+          <h3 class="tool-title">Image to Base64</h3>
+          <p class="tool-description">Encode images to Base64 data URIs.</p>
+        </a>
+        <a class="tool-card" href="tools/webp-to-png.html">
+          <div class="tool-icon">🔄</div>
+          <h3 class="tool-title">WebP to PNG</h3>
+          <p class="tool-description">Convert WebP images to PNG.</p>
+        </a>
+        <a class="tool-card" href="tools/gif-maker.html">
+          <div class="tool-icon">🎬</div>
+          <h3 class="tool-title">GIF Maker</h3>
+          <p class="tool-description">Create animated GIFs from images.</p>
+        </a>
+        <a class="tool-card" href="tools/screenshot-to-pdf.html">
+          <div class="tool-icon">📄</div>
+          <h3 class="tool-title">Screenshot to PDF</h3>
+          <p class="tool-description">Turn images into a PDF document.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- DOCUMENT TOOLS (from your provided file) -->
+    <section id="document-tools" class="category-section">
+      <h2 class="category-title">📄 Document Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/pdf-to-word.html">
+          <div class="tool-icon">📄</div>
+          <h3 class="tool-title">PDF to Word</h3>
+          <p class="tool-description">Convert PDF files to editable Word documents.</p>
+        </a>
+        <a class="tool-card" href="tools/word-to-pdf.html">
+          <div class="tool-icon">📝</div>
+          <h3 class="tool-title">Word to PDF</h3>
+          <p class="tool-description">Convert Word documents to PDF format.</p>
+        </a>
+        <a class="tool-card" href="tools/pdf-compressor.html">
+          <div class="tool-icon">🗜️</div>
+          <h3 class="tool-title">PDF Compressor</h3>
+          <p class="tool-description">Reduce PDF file size without quality loss.</p>
+        </a>
+        <a class="tool-card" href="tools/pdf-merger.html">
+          <div class="tool-icon">🧩</div>
+          <h3 class="tool-title">PDF Merger & Splitter</h3>
+          <p class="tool-description">Combine or split PDF files easily.</p>
+        </a>
+        <a class="tool-card" href="tools/pdf-lock.html">
+          <div class="tool-icon">🔒</div>
+          <h3 class="tool-title">PDF Lock/Unlock</h3>
+          <p class="tool-description">Add or remove password protection from PDFs.</p>
+        </a>
+        <a class="tool-card" href="tools/esign-pdf.html">
+          <div class="tool-icon">✍️</div>
+          <h3 class="tool-title">eSign PDF</h3>
+          <p class="tool-description">Draw and place a signature onto your PDF.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- VIDEO TOOLS -->
+    <section id="video-tools" class="category-section">
+      <h2 class="category-title">🎥 Video Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/youtube-downloader.html">
+          <div class="tool-icon">▶️</div>
+          <h3 class="tool-title">YouTube Video Downloader</h3>
+          <p class="tool-description">Download videos from YouTube.</p>
+        </a>
+        <a class="tool-card" href="tools/facebook-downloader.html">
+          <div class="tool-icon">📘</div>
+          <h3 class="tool-title">Facebook Video Downloader</h3>
+          <p class="tool-description">Download videos from Facebook.</p>
+        </a>
+        <a class="tool-card" href="tools/instagram-downloader.html">
+          <div class="tool-icon">📷</div>
+          <h3 class="tool-title">Instagram Video Downloader</h3>
+          <p class="tool-description">Download videos from Instagram.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- EXTRA CALCULATORS -->
+    <section id="more-calculators" class="category-section">
+      <h2 class="category-title">➕ More Calculators</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/sip-calculator.html">
+          <div class="tool-icon">📈</div>
+          <h3 class="tool-title">SIP Calculator</h3>
+          <p class="tool-description">Calculate returns on SIP investments.</p>
+        </a>
+        <a class="tool-card" href="tools/gst-calculator.html">
+          <div class="tool-icon">%</div>
+          <h3 class="tool-title">GST Calculator</h3>
+          <p class="tool-description">Compute GST amounts easily.</p>
+        </a>
+        <a class="tool-card" href="tools/currency-converter.html">
+          <div class="tool-icon">💱</div>
+          <h3 class="tool-title">Currency Converter</h3>
+          <p class="tool-description">Convert currencies with latest rates.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- UTILITY TOOLS -->
+    <section id="utility-tools" class="category-section">
+      <h2 class="category-title">🛠️ Utility Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/qr-generator.html">
+          <div class="tool-icon">🔳</div>
+          <h3 class="tool-title">QR Code Generator</h3>
+          <p class="tool-description">Create QR codes for text/URLs.</p>
+        </a>
+        <a class="tool-card" href="tools/uuid-generator.html">
+          <div class="tool-icon">🆔</div>
+          <h3 class="tool-title">UUID Generator</h3>
+          <p class="tool-description">Generate unique identifiers.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- COLOR TOOLS -->
+    <section id="color-tools" class="category-section">
+      <h2 class="category-title">🎨 Color Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/color-picker.html">
+          <div class="tool-icon">🎨</div>
+          <h3 class="tool-title">Color Picker & Converter</h3>
+          <p class="tool-description">Pick and convert HEX/RGB/HSL.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- SEO TOOLS (placeholder section) -->
+    <section id="seo-tools-2" class="category-section">
+      <h2 class="category-title">🌍 SEO & Marketing Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/meta-tag-generator.html">
+          <div class="tool-icon">🏷️</div>
+          <h3 class="tool-title">Meta Tag Generator</h3>
+          <p class="tool-description">Create SEO-friendly meta tags.</p>
+        </a>
+        <a class="tool-card" href="tools/keyword-density-checker.html">
+          <div class="tool-icon">🔍</div>
+          <h3 class="tool-title">Keyword Density Checker</h3>
+          <p class="tool-description">Analyze keyword frequency and density.</p>
+        </a>
+        <a class="tool-card" href="tools/robots-txt-generator.html">
+          <div class="tool-icon">🤖</div>
+          <h3 class="tool-title">robots.txt Generator</h3>
+          <p class="tool-description">Create crawl directives for bots.</p>
+        </a>
+        <a class="tool-card" href="tools/sitemap-generator.html">
+          <div class="tool-icon">🗺️</div>
+          <h3 class="tool-title">Sitemap Generator</h3>
+          <p class="tool-description">Generate an XML sitemap quickly.</p>
+        </a>
+        <a class="tool-card" href="tools/xml-sitemap-validator.html">
+          <div class="tool-icon">✅</div>
+          <h3 class="tool-title">XML Sitemap Validator</h3>
+          <p class="tool-description">Validate sitemap structure and URLs.</p>
+        </a>
+        <a class="tool-card" href="tools/page-speed-checker.html">
+          <div class="tool-icon">⚡</div>
+          <h3 class="tool-title">Page Speed Checker</h3>
+          <p class="tool-description">Open PSI and get optimization tips.</p>
+        </a>
+        <a class="tool-card" href="tools/mobile-friendly-test.html">
+          <div class="tool-icon">📱</div>
+          <h3 class="tool-title">Mobile-Friendly Test</h3>
+          <p class="tool-description">Open Google mobile-friendly test.</p>
+        </a>
+        <a class="tool-card" href="tools/google-index-checker.html">
+          <div class="tool-icon">🔎</div>
+          <h3 class="tool-title">Google Index Checker</h3>
+          <p class="tool-description">Open site: query to check indexing.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- INDIAN TOOLS (placeholder section) -->
+    <section id="indian-tools" class="category-section">
+      <h2 class="category-title">🚆 Indian Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/pnr-status.html">
+          <div class="tool-icon">🛤️</div>
+          <h3 class="tool-title">PNR Status</h3>
+          <p class="tool-description">Check Indian Railways PNR status (requires API key).</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- TEXT TOOLS -->
+    <section id="text-tools" class="category-section">
+      <h2 class="category-title">📝 Text Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/word-counter.html">
+          <div class="tool-icon">🔢</div>
+          <h3 class="tool-title">Word Counter</h3>
+          <p class="tool-description">Count words, characters, and sentences instantly.</p>
+        </a>
+        <a class="tool-card" href="tools/character-counter.html">
+          <div class="tool-icon">🔠</div>
+          <h3 class="tool-title">Character Counter</h3>
+          <p class="tool-description">Character count with and without spaces.</p>
+        </a>
+        <a class="tool-card" href="tools/case-converter.html">
+          <div class="tool-icon">🔤</div>
+          <h3 class="tool-title">Case Converter</h3>
+          <p class="tool-description">UPPERCASE, lowercase, Title Case, Sentence case.</p>
+        </a>
+        <a class="tool-card" href="tools/url-encoder-decoder.html">
+          <div class="tool-icon">🔗</div>
+          <h3 class="tool-title">URL Encoder/Decoder</h3>
+          <p class="tool-description">Encode and decode URLs safely.</p>
+        </a>
+        <a class="tool-card" href="tools/fancy-text-generator.html">
+          <div class="tool-icon">✨</div>
+          <h3 class="tool-title">Fancy Text Generator</h3>
+          <p class="tool-description">Generate stylish text for social media.</p>
+        </a>
+        <a class="tool-card" href="tools/random-text-generator.html">
+          <div class="tool-icon">🎲</div>
+          <h3 class="tool-title">Random Text Generator</h3>
+          <p class="tool-description">Create lorem ipsum and random strings.</p>
+        </a>
+        <a class="tool-card" href="tools/remove-duplicates.html">
+          <div class="tool-icon">♻️</div>
+          <h3 class="tool-title">Remove Duplicate Lines</h3>
+          <p class="tool-description">Delete duplicate lines with options to trim and sort.</p>
+        </a>
+        <a class="tool-card" href="tools/text-sorter.html">
+          <div class="tool-icon">🔽</div>
+          <h3 class="tool-title">Text Sorter</h3>
+          <p class="tool-description">Sort lines A–Z/Z–A, text or numeric, unique.</p>
+        </a>
+        <a class="tool-card" href="tools/text-reverser.html">
+          <div class="tool-icon">↔️</div>
+          <h3 class="tool-title">Text Reverser</h3>
+          <p class="tool-description">Reverse by characters or by words.</p>
+        </a>
+        <a class="tool-card" href="tools/text-to-speech.html">
+          <div class="tool-icon">🔊</div>
+          <h3 class="tool-title">Text to Speech</h3>
+          <p class="tool-description">Speak text using your browser’s voices.</p>
+        </a>
+      </div>
+    </section>
+
+    <div class="ad-space">
+      <h4>Advertisement</h4>
+      <p>Place your 300x250 rectangle ad here</p>
+    </div>
+
+    <!-- DEVELOPER TOOLS -->
+    <section id="developer-tools" class="category-section">
+      <h2 class="category-title">💻 Developer Tools</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/json-formatter.html">
+          <div class="tool-icon">{ }</div>
+          <h3 class="tool-title">JSON Formatter</h3>
+          <p class="tool-description">Beautify and validate JSON with highlighting.</p>
+        </a>
+        <a class="tool-card" href="tools/html-to-markdown.html">
+          <div class="tool-icon">📝</div>
+          <h3 class="tool-title">HTML to Markdown</h3>
+          <p class="tool-description">Convert HTML into Markdown syntax.</p>
+        </a>
+        <a class="tool-card" href="tools/markdown-to-html.html">
+          <div class="tool-icon">📄</div>
+          <h3 class="tool-title">Markdown to HTML</h3>
+          <p class="tool-description">Live preview Markdown to HTML.</p>
+        </a>
+        <a class="tool-card" href="tools/css-minifier.html">
+          <div class="tool-icon">🎨</div>
+          <h3 class="tool-title">CSS Minifier</h3>
+          <p class="tool-description">Minify CSS for faster page loads.</p>
+        </a>
+        <a class="tool-card" href="tools/javascript-minifier.html">
+          <div class="tool-icon">⚡</div>
+          <h3 class="tool-title">JavaScript Minifier</h3>
+          <p class="tool-description">Lightweight in-browser JS minifier.</p>
+        </a>
+        <a class="tool-card" href="tools/sql-formatter.html">
+          <div class="tool-icon">🗄️</div>
+          <h3 class="tool-title">SQL Formatter</h3>
+          <p class="tool-description">Beautify SQL queries for readability.</p>
+        </a>
+        <a class="tool-card" href="tools/htaccess-redirect-generator.html">
+          <div class="tool-icon">🔄</div>
+          <h3 class="tool-title">.htaccess Redirect Generator</h3>
+          <p class="tool-description">Generate Apache redirect rules quickly.</p>
+        </a>
+        <a class="tool-card" href="tools/color-picker.html">
+          <div class="tool-icon">🎨</div>
+          <h3 class="tool-title">Color Picker & Converter</h3>
+          <p class="tool-description">Sync HEX, RGB, and HSL values.</p>
+        </a>
+        <a class="tool-card" href="tools/base64-encoder-decoder.html">
+          <div class="tool-icon">🔐</div>
+          <h3 class="tool-title">Base64 Encoder & Decoder</h3>
+          <p class="tool-description">Encode/decode Base64 text and files.</p>
+        </a>
+        <a class="tool-card" href="tools/ip-lookup.html">
+          <div class="tool-icon">🌐</div>
+          <h3 class="tool-title">IP Address Lookup</h3>
+          <p class="tool-description">Get detailed information about any IP address including location.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- CALCULATORS -->
+    <section id="calculators" class="category-section">
+      <h2 class="category-title">🧮 Calculators</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/percentage-calculator.html">
+          <div class="tool-icon">%</div>
+          <h3 class="tool-title">Percentage Calculator</h3>
+          <p class="tool-description">Find percentages and changes easily.</p>
+        </a>
+        <a class="tool-card" href="tools/age-calculator.html">
+          <div class="tool-icon">🎂</div>
+          <h3 class="tool-title">Age Calculator</h3>
+          <p class="tool-description">Calculate exact age from DOB.</p>
+        </a>
+        <a class="tool-card" href="tools/bmi-calculator.html">
+          <div class="tool-icon">⚖️</div>
+          <h3 class="tool-title">BMI Calculator</h3>
+          <p class="tool-description">Body Mass Index with ranges.</p>
+        </a>
+        <a class="tool-card" href="tools/loan-emi-calculator.html">
+          <div class="tool-icon">🏦</div>
+          <h3 class="tool-title">Loan EMI Calculator</h3>
+          <p class="tool-description">Monthly EMI and amortization.</p>
+        </a>
+        <a class="tool-card" href="tools/discount-calculator.html">
+          <div class="tool-icon">💰</div>
+          <h3 class="tool-title">Discount Calculator</h3>
+          <p class="tool-description">Sale price and savings.</p>
+        </a>
+        <a class="tool-card" href="tools/tip-calculator.html">
+          <div class="tool-icon">💵</div>
+          <h3 class="tool-title">Tip Calculator</h3>
+          <p class="tool-description">Split bills and add tips.</p>
+        </a>
+        <a class="tool-card" href="tools/scientific-calculator.html">
+          <div class="tool-icon">🔬</div>
+          <h3 class="tool-title">Scientific Calculator</h3>
+          <p class="tool-description">Evaluate expressions with scientific functions.</p>
+        </a>
+        <a class="tool-card" href="tools/timezone-converter.html">
+          <div class="tool-icon">🌍</div>
+          <h3 class="tool-title">Time Zone Converter</h3>
+          <p class="tool-description">Convert date & time between time zones.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- UNIT CONVERTERS -->
+    <section id="converters" class="category-section">
+      <h2 class="category-title">📐 Unit Converters</h2>
+      <div class="tools-grid">
+        <a class="tool-card" href="tools/length-converter.html">
+          <div class="tool-icon">📏</div>
+          <h3 class="tool-title">Length Converter</h3>
+          <p class="tool-description">Meters, feet, inches, miles, and more.</p>
+        </a>
+        <a class="tool-card" href="tools/weight-converter.html">
+          <div class="tool-icon">⚖️</div>
+          <h3 class="tool-title">Weight Converter</h3>
+          <p class="tool-description">Kg, lb, oz, g conversions.</p>
+        </a>
+        <a class="tool-card" href="tools/temperature-converter.html">
+          <div class="tool-icon">🌡️</div>
+          <h3 class="tool-title">Temperature Converter</h3>
+          <p class="tool-description">Celsius, Fahrenheit, Kelvin.</p>
+        </a>
+        <a class="tool-card" href="tools/volume-converter.html">
+          <div class="tool-icon">🥤</div>
+          <h3 class="tool-title">Volume Converter</h3>
+          <p class="tool-description">Liters, mL, gallons, quarts, pints, cups.</p>
+        </a>
+        <a class="tool-card" href="tools/data-storage-converter.html">
+          <div class="tool-icon">💾</div>
+          <h3 class="tool-title">Data Storage Converter</h3>
+          <p class="tool-description">Bytes, KB, MB, GB, TB.</p>
+        </a>
+        <a class="tool-card" href="tools/speed-converter.html">
+          <div class="tool-icon">🏃</div>
+          <h3 class="tool-title">Speed Converter</h3>
+          <p class="tool-description">km/h, mph, m/s, knots.</p>
+        </a>
+        <a class="tool-card" href="tools/angle-converter.html">
+          <div class="tool-icon">📐</div>
+          <h3 class="tool-title">Angle Converter</h3>
+          <p class="tool-description">Degrees, radians, gradians.</p>
+        </a>
+        <a class="tool-card" href="tools/energy-converter.html">
+          <div class="tool-icon">⚡</div>
+          <h3 class="tool-title">Energy Converter</h3>
+          <p class="tool-description">J, kJ, cal, kcal, Wh, kWh, BTU.</p>
+        </a>
+        <a class="tool-card" href="tools/pressure-converter.html">
+          <div class="tool-icon">🌪️</div>
+          <h3 class="tool-title">Pressure Converter</h3>
+          <p class="tool-description">Pa, kPa, bar, atm, psi.</p>
+        </a>
+      </div>
+    </section>
+
+    <div class="ad-space">
+      <h4>Advertisement</h4>
+      <p>Place your 970x250 billboard ad here</p>
+    </div>
+  </main>
+
+  <!-- Footer injected by JS -->
+  <div id="footer-container"></div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>

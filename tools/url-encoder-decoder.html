@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Encoder & Decoder — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>URL Encoder & Decoder</h1>
+      <p>Safely encode or decode URL strings.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="inputText">Text</label>
+        <textarea id="inputText" class="form-control" rows="6" placeholder="Enter text or URL..."></textarea>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="encodeBtn" class="btn btn-primary">Encode</button>
+        <button id="decodeBtn" class="btn btn-primary">Decode</button>
+        <button id="copyBtn" class="btn btn-success">Copy</button>
+      </div>
+
+      <div class="result-area mt-3">
+        <label for="outputText" class="mb-2"><strong>Result</strong></label>
+        <textarea id="outputText" class="form-control" rows="6" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+
+    document.getElementById('encodeBtn').addEventListener('click', () => {
+      outputText.value = encodeURIComponent(inputText.value);
+    });
+
+    document.getElementById('decodeBtn').addEventListener('click', () => {
+      try { outputText.value = decodeURIComponent(inputText.value); }
+      catch { showNotification('Invalid encoded string', 'error'); }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(outputText.value));
+  </script>
+</body>
+</html>

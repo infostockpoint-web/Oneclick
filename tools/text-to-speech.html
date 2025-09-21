@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text to Speech — One Click</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" href="../assets/images/favicon.ico" />
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <main class="tool-container">
+    <div class="tool-header">
+      <h1>Text to Speech</h1>
+      <p>Use your browser's speech synthesis to read text aloud. Works best in modern browsers.</p>
+    </div>
+
+    <div class="tool-interface">
+      <div class="form-group">
+        <label for="voiceSelect">Voice</label>
+        <select id="voiceSelect" class="form-control"></select>
+      </div>
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <div>
+          <label for="rate">Rate</label>
+          <input id="rate" class="form-control" type="range" min="0.5" max="2" step="0.1" value="1" />
+        </div>
+        <div>
+          <label for="pitch">Pitch</label>
+          <input id="pitch" class="form-control" type="range" min="0" max="2" step="0.1" value="1" />
+        </div>
+        <div>
+          <label for="volume">Volume</label>
+          <input id="volume" class="form-control" type="range" min="0" max="1" step="0.1" value="1" />
+        </div>
+      </div>
+
+      <div class="form-group mt-2">
+        <label for="textInput">Text</label>
+        <textarea id="textInput" class="form-control" rows="8" placeholder="Type text to speak..."></textarea>
+      </div>
+
+      <div class="d-flex" style="gap:10px;flex-wrap:wrap;">
+        <button id="speakBtn" class="btn btn-primary">Speak</button>
+        <button id="pauseBtn" class="btn btn-primary">Pause</button>
+        <button id="resumeBtn" class="btn btn-primary">Resume</button>
+        <button id="stopBtn" class="btn btn-danger">Stop</button>
+      </div>
+
+      <div class="result-area mt-3" id="status">Status: idle</div>
+    </div>
+
+    <div class="ad-space"><h4>Advertisement</h4><p>300x250</p></div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    const synth = window.speechSynthesis;
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rate = document.getElementById('rate');
+    const pitch = document.getElementById('pitch');
+    const volume = document.getElementById('volume');
+    const textInput = document.getElementById('textInput');
+    const statusEl = document.getElementById('status');
+
+    let voices = [];
+    let utterance = null;
+
+    function populateVoices(){
+      voices = synth.getVoices();
+      voiceSelect.innerHTML = '';
+      voices.forEach((v, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${v.name} (${v.lang})${v.default ? ' — default' : ''}`;
+        voiceSelect.appendChild(opt);
+      });
+    }
+
+    populateVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    function updateStatus(msg){ statusEl.textContent = 'Status: ' + msg; }
+
+    document.getElementById('speakBtn').addEventListener('click', () => {
+      const text = textInput.value.trim();
+      if (!text) return showNotification('Please enter text', 'error');
+      if (synth.speaking) synth.cancel();
+      utterance = new SpeechSynthesisUtterance(text);
+      const selected = voices[parseInt(voiceSelect.value, 10)] || voices[0];
+      if (selected) utterance.voice = selected;
+      utterance.rate = parseFloat(rate.value);
+      utterance.pitch = parseFloat(pitch.value);
+      utterance.volume = parseFloat(volume.value);
+      utterance.onstart = () => updateStatus('speaking');
+      utterance.onend = () => updateStatus('finished');
+      utterance.onerror = () => updateStatus('error');
+      synth.speak(utterance);
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click', () => { if (synth.speaking && !synth.paused) { synth.pause(); updateStatus('paused'); } });
+    document.getElementById('resumeBtn').addEventListener('click', () => { if (synth.paused) { synth.resume(); updateStatus('resumed'); } });
+    document.getElementById('stopBtn').addEventListener('click', () => { if (synth.speaking) { synth.cancel(); updateStatus('stopped'); } });
+  </script>
+</body>
+</html>
