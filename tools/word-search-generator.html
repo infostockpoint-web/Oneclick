@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word Search Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;gap:2px;justify-content:center}
+    .cell{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font-weight:700}
+    .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:start}
+    textarea{width:100%;min-height:120px;padding:10px;border:1px solid #ddd;border-radius:8px}
+    .wordlist{display:flex;flex-wrap:wrap;gap:8px}
+    .word{background:#f1f5ff;padding:4px 8px;border-radius:999px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-spell-check tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Word Search Generator</div>
+        <div class="tool-desc">Enter words, choose size and allow diagonals; generate a printable puzzle and answer key.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="panel">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Words (one per line)</label>
+            <textarea id="words" placeholder="apple
+banana
+orange"></textarea>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Grid Size</label>
+            <input id="size" type="number" min="6" max="20" value="12" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Allow Diagonals</label>
+            <select id="diag" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"><option value="1">Yes</option><option value="0">No</option></select>
+          </div>
+          <div>
+            <button id="generate" class="tool-button">Generate</button>
+            <button id="print" class="tool-button"><i class="fas fa-print"></i> Print</button>
+            <button id="download" class="tool-button"><i class="fas fa-download"></i> Download HTML</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="wordlist" id="wordlist"></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Puzzle</div>
+        <div id="grid" class="grid"></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Answer Key</div>
+        <div id="answer" class="grid"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function letters(n){ const a=[]; for(let i=0;i<n;i++){ a.push(String.fromCharCode(65+Math.floor(Math.random()*26))); } return a; }
+    function emptyGrid(size){ return Array.from({length:size},()=>Array(size).fill('')); }
+    function dirs(diag){ return diag? [[1,0],[0,1],[1,1],[-1,1]]: [[1,0],[0,1]]; }
+    function placeWords(size, words, allowDiag){ const G=emptyGrid(size); const placed=[]; const D=dirs(allowDiag); const rnd=(n)=>Math.floor(Math.random()*n);
+      const ws = words.map(w=>w.toUpperCase().replace(/[^A-Z]/g,'')).filter(w=>w.length>1).sort((a,b)=>b.length-a.length);
+      for(const w of ws){ let ok=false; for(let tries=0; tries<500 && !ok; tries++){
+          const d=D[rnd(D.length)]; let r=rnd(size), c=rnd(size);
+          const rr=r + d[1]*(w.length-1), cc=c + d[0]*(w.length-1); if(rr<0||rr>=size||cc<0||cc>=size) continue;
+          // check
+          let can=true; for(let k=0;k<w.length;k++){ const ch=w[k]; const R=r + d[1]*k, C=c + d[0]*k; const cur=G[R][C]; if (cur && cur!==ch){ can=false; break; } }
+          if(!can) continue; ok=true; for(let k=0;k<w.length;k++){ const R=r + d[1]*k, C=c + d[0]*k; G[R][C]=w[k]; }
+          placed.push({word:w, r, c, dx:d[0], dy:d[1]});
+        }
+      }
+      // fill
+      for(let i=0;i<size;i++) for(let j=0;j<size;j++) if(!G[i][j]) G[i][j]=letters(1)[0];
+      return {grid:G, placed};
+    }
+    function drawGrid(el, G){ el.style.gridTemplateColumns=`repeat(${G.length}, 34px)`; el.innerHTML=''; for(let i=0;i<G.length;i++){ for(let j=0;j<G.length;j++){ const d=document.createElement('div'); d.className='cell'; d.textContent=G[i][j]; el.appendChild(d); } } }
+    function drawAnswer(el, size, placed){ const A=emptyGrid(size); for(const p of placed){ for(let k=0;k<p.word.length;k++){ const r=p.r + p.dy*k, c=p.c + p.dx*k; A[r][c]=p.word[k]; } } for(let i=0;i<size;i++) for(let j=0;j<size;j++) if(!A[i][j]) A[i][j]='Â·'; drawGrid(el,A); }
+    function renderWordlist(words){ const box=document.getElementById('wordlist'); box.innerHTML=''; words.forEach(w=>{ const b=document.createElement('span'); b.className='word'; b.textContent=w; box.appendChild(b); }); }
+
+    function generate(){ const size=+document.getElementById('size').value||12; const allowDiag=document.getElementById('diag').value==='1'; const words=(document.getElementById('words').value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const {grid, placed}=placeWords(size, words, allowDiag); drawGrid(document.getElementById('grid'), grid); drawAnswer(document.getElementById('answer'), size, placed); renderWordlist(words.map(w=>w.toUpperCase()));
+      window._lastWS = {size, words, allowDiag, grid, placed};
+    }
+
+    function makeHtml(){ const d=window._lastWS; const table=(G)=>`<table style='border-collapse:collapse'>${G.map(r=>`<tr>${r.map(ch=>`<td style='border:1px solid #ddd;padding:6px 8px;text-align:center;font-family:monospace'>${ch}</td>`).join('')}</tr>`).join('')}</table>`; const ans=(()=>{ const A=Array.from({length:d.size},()=>Array(d.size).fill('Â·')); d.placed.forEach(p=>{ for(let k=0;k<p.word.length;k++){ A[p.r+p.dy*k][p.c+p.dx*k]=p.word[k]; } }); return A; })();
+      return `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Word Search</title></head><body style='font-family:Arial,Helvetica,sans-serif'>
+        <h1>Word Search</h1>
+        <div>${d.words.map(w=>`<span style='display:inline-block;background:#eef;padding:4px 8px;margin:4px;border-radius:16px'>${w.toUpperCase()}</span>`).join('')}</div>
+        <h2>Puzzle</h2>${table(d.grid)}<h2>Answer</h2>${table(ans)}
+      </body></html>`;
+    }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    document.getElementById('print').addEventListener('click', ()=>{ if(!window._lastWS){ generate(); } const w=window.open('about:blank'); w.document.open(); w.document.write(makeHtml()+"<script>window.onload=()=>window.print()<\/script>"); w.document.close(); });
+    document.getElementById('download').addEventListener('click', ()=>{ if(!window._lastWS){ generate(); } const a=document.createElement('a'); const blob=new Blob([makeHtml()],{type:'text/html'}); a.href=URL.createObjectURL(blob); a.download='word-search.html'; a.click(); });
+
+    generate();
+  </script>
+</body>
+</html>
+
+

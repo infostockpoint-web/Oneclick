@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workout Log - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f3f3f3;text-align:left}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-dumbbell tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Workout Log</div>
+        <div class="tool-desc">Log workouts with exercise, sets x reps, weight, duration, and notes. Filter and export. Local only.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Date</label>
+            <input id="date" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Exercise</label>
+            <input id="exercise" type="text" placeholder="Bench Press" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Sets x Reps</label>
+            <input id="sr" type="text" placeholder="3 x 10" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Weight (kg)</label>
+            <input id="wt" type="number" min="0" step="0.5" placeholder="60" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Duration (min)</label>
+            <input id="dur" type="number" min="0" step="1" placeholder="45" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="add" class="tool-button">Add</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="search" type="search" placeholder="Search..." style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+          <button id="exportCsv" class="tool-button"><i class="fas fa-file-export"></i> Export CSV</button>
+          <button id="exportJson" class="tool-button"><i class="fas fa-file-export"></i> Export JSON</button>
+          <button id="importJsonBtn" class="tool-button"><i class="fas fa-file-import"></i> Import JSON</button>
+          <input id="importJson" type="file" accept="application/json" style="display:none;"/>
+          <button id="reset" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Reset</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;overflow:auto;">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Exercise</th><th>Sets x Reps</th><th>Weight</th><th>Duration</th><th>Action</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_workout_log_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function add(){
+      const date=document.getElementById('date').value;
+      const exercise=document.getElementById('exercise').value.trim();
+      const sr=document.getElementById('sr').value.trim();
+      const wt=+document.getElementById('wt').value||0;
+      const dur=+document.getElementById('dur').value||0;
+      if (!date || !exercise){ alert('Enter date and exercise.'); return; }
+      const d=load(); d.push({id:crypto.randomUUID(), date, exercise, sr, wt, dur}); save(d);
+      ['exercise','sr','wt','dur'].forEach(id=>document.getElementById(id).value='');
+      render();
+    }
+
+    function render(){
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const rows=load().filter(r=> !q || r.exercise.toLowerCase().includes(q));
+      const tb=document.getElementById('tbody'); tb.innerHTML='';
+      for (const r of rows.slice().reverse()){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${escapeHtml(r.date)}</td><td>${escapeHtml(r.exercise)}</td><td>${escapeHtml(r.sr)}</td><td>${r.wt||0}</td><td>${r.dur||0}</td><td>
+          <button class="tool-button" data-act="edit" data-id="${r.id}"><i class="fas fa-pen"></i></button>
+          <button class="tool-button" data-act="del" data-id="${r.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+        </td>`;
+        tb.appendChild(tr);
+      }
+    }
+
+    function exportCsv(){
+      const rows=load();
+      const header=['date','exercise','sets_reps','weight_kg','duration_min'];
+      const csv=[header.join(',')].concat(rows.map(r=>[r.date, r.exercise, r.sr, r.wt, r.dur].map(x=>`"${String(x).replaceAll('"','""')}"`).join(','))).join('\n');
+      const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='workout-log.csv'; a.click();
+    }
+
+    function resetAll(){ if(!confirm('Clear all logs?')) return; localStorage.removeItem(KEY); render(); }
+
+    document.getElementById('add').addEventListener('click', add);
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('exportCsv').addEventListener('click', exportCsv);
+    document.getElementById('reset').addEventListener('click', resetAll);
+
+    // Export / Import JSON
+    function exportJson(){
+      const data = load();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'workout-log.json'; a.click();
+    }
+    function isEntry(o){ return o && typeof o.id==='string' && typeof o.date==='string' && typeof o.exercise==='string'; }
+    function importJson(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const incoming = JSON.parse(reader.result);
+          if (!Array.isArray(incoming)) throw new Error('File must contain a JSON array.');
+          const cur = load(); const map = new Map(cur.map(x=>[x.id,x]));
+          let added=0, updated=0;
+          for (const it of incoming){
+            if (!isEntry(it)) continue;
+            if (map.has(it.id)){ map.set(it.id, {...map.get(it.id), ...it}); updated++; }
+            else { map.set(it.id, it); added++; }
+          }
+          const merged = Array.from(map.values());
+          save(merged); render();
+          alert(`Import complete. Added: ${added}, Updated: ${updated}.`);
+        } catch(e){ alert('Invalid JSON: ' + e.message); }
+      };
+      reader.readAsText(file);
+    }
+    document.getElementById('exportJson').addEventListener('click', exportJson);
+    document.getElementById('importJsonBtn').addEventListener('click', ()=> document.getElementById('importJson').click());
+    document.getElementById('importJson').addEventListener('change', (e)=>{ const f=e.target.files[0]; if (f) importJson(f); e.target.value=''; });
+
+    document.getElementById('tbody').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id'); const act=btn.getAttribute('data-act');
+      const d=load(); const idx=d.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this entry?')){ d.splice(idx,1); save(d); render(); } }
+      if (act==='edit'){
+        const r=d[idx]; const ex=prompt('Exercise', r.exercise); if(ex===null) return; const sr=prompt('Sets x Reps', r.sr); if(sr===null) return; const wt=prompt('Weight (kg)', r.wt||0); if(wt===null) return; const dur=prompt('Duration (min)', r.dur||0); if(dur===null) return; d[idx]={...r, exercise:ex.trim(), sr:sr.trim(), wt:+wt||0, dur:+dur||0}; save(d); render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>XML to PDF - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">XML to PDF Converter</div>
+      <div class="tool-desc">Convert XML documents to formatted PDF with syntax highlighting and structure.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="xmlInput" style="display:block; font-weight:600; margin-bottom:6px;">XML Content</label>
+          <textarea id="xmlInput" rows="8" placeholder="<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <person>
+    <name>John Doe</name>
+    <age>30</age>
+  </person>
+</root>" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:monospace;"></textarea>
+        </div>
+        <div>
+          <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">Page Size</label>
+          <select id="pageSize" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="a4">A4</option>
+            <option value="a3">A3</option>
+            <option value="letter">Letter</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="formatBtn" class="tool-button" style="background:#28a745;">Format XML</button>
+          <button id="convertBtn" class="tool-button">Convert to PDF</button>
+          <button id="copyBtn" class="tool-button" style="background:#555;">Copy XML</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">XML Preview</div>
+        <div id="xmlPreview" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:monospace; white-space:pre-wrap; overflow:auto; margin-top:10px;">
+          Your XML will be displayed here with syntax highlighting...
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Conversion Options</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="syntaxHighlight" checked> Include syntax highlighting in PDF</label><br>
+          <label><input type="checkbox" id="lineNumbers" checked> Include line numbers</label><br>
+          <label><input type="checkbox" id="collapseTags" checked> Collapse empty tags</label>
+          <label><input type="checkbox" id="showAttributes" checked> Show all attributes</label>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none; background:#007bff;">Download PDF</button>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  const xmlInput = document.getElementById('xmlInput');
+  const formatBtn = document.getElementById('formatBtn');
+  const convertBtn = document.getElementById('convertBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const xmlPreview = document.getElementById('xmlPreview');
+  const pageSize = document.getElementById('pageSize');
+  const syntaxHighlight = document.getElementById('syntaxHighlight');
+  const lineNumbers = document.getElementById('lineNumbers');
+  const collapseTags = document.getElementById('collapseTags');
+  const showAttributes = document.getElementById('showAttributes');
+
+  let formattedXml = '';
+
+  function formatXML(xmlString) {
+    try {
+      // Basic XML parsing to check validity
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+
+      // Check for parser errors
+      const parseErrors = xmlDoc.querySelector('parsererror');
+      if (parseErrors) {
+        throw new Error('Invalid XML format: ' + parseErrors.textContent);
+      }
+
+      // Simple XML formatting (you could use a proper XML formatter library here)
+      let formatted = xmlString;
+
+      // Basic indentation
+      formatted = formatted.replace(/></g, '>\n<');
+      formatted = formatted.replace(/<([^/][^>]*)>/g, '\n<$1>');
+      formatted = formatted.replace(/<\/([^>]*)>/g, '\n</$1>');
+
+      // Remove excessive newlines
+      formatted = formatted.replace(/\n\s*\n/g, '\n');
+      formatted = formatted.replace(/^\n/, '');
+
+      return formatted;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  function createSyntaxHighlightedXML(xmlString) {
+    if (!syntaxHighlight.checked) {
+      return xmlString;
+    }
+
+    let highlighted = xmlString;
+
+    // Highlight tags
+    highlighted = highlighted.replace(/&lt;([^&]*)&gt;/g, '<span style="color: #e91e63;">&lt;$1&gt;</span>');
+    highlighted = highlighted.replace(/&lt;\/([^&]*)&gt;/g, '<span style="color: #e91e63;">&lt;/$1&gt;</span>');
+    highlighted = highlighted.replace(/&lt;\?([^?]*)\?&gt;/g, '<span style="color: #2196f3;">&lt;?$1?&gt;</span>');
+
+    // Highlight attributes
+    highlighted = highlighted.replace(/(\w+)\s*=\s*(["'])([^"']*)/g, '<span style="color: #ff9800;">$1</span>=<span style="color: #4caf50;">$2$3$2</span>');
+
+    // Highlight comments
+    highlighted = highlighted.replace(/&lt;!--([^-]*)--&gt;/g, '<span style="color: #757575;">&lt;!--$1--&gt;</span>');
+
+    return highlighted;
+  }
+
+  function addLineNumbers(text) {
+    if (!lineNumbers.checked) {
+      return text;
+    }
+
+    const lines = text.split('\n');
+    const maxLineNum = lines.length.toString().length;
+    const numberedLines = lines.map((line, index) => {
+      const lineNum = (index + 1).toString().padStart(maxLineNum, ' ');
+      return `<span style="color: #999; margin-right: 10px;">${lineNum}</span>${line}`;
+    });
+
+    return numberedLines.join('\n');
+  }
+
+  function updatePreview() {
+    const xml = xmlInput.value.trim();
+    if (!xml) {
+      xmlPreview.innerHTML = 'Your XML will be displayed here with syntax highlighting...';
+      return;
+    }
+
+    try {
+      formattedXml = formatXML(xml);
+      let previewText = formattedXml;
+
+      previewText = createSyntaxHighlightedXML(previewText);
+      previewText = addLineNumbers(previewText);
+
+      xmlPreview.innerHTML = previewText;
+    } catch (error) {
+      xmlPreview.innerHTML = `<span style="color: #f44336;">Error: ${error.message}</span>`;
+    }
+  }
+
+  async function convertToPDF() {
+    const xml = xmlInput.value.trim();
+    if (!xml) {
+      alert('Please enter XML content to convert.');
+      return;
+    }
+
+    try {
+      // Validate XML
+      formatXML(xml);
+    } catch (error) {
+      alert('Invalid XML format: ' + error.message);
+      return;
+    }
+
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+    convertBtn.disabled = true;
+
+    try {
+      const size = pageSize.value;
+      const format = size === 'a3' ? 'a3' : size === 'letter' ? 'letter' : 'a4';
+      const pdf = new jspdf.jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: format
+      });
+
+      // Add title
+      pdf.setFontSize(16);
+      pdf.text('XML Document', 10, 15);
+      pdf.setFontSize(12);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 10, 25);
+
+      // Prepare XML content for PDF
+      let content = formattedXml || formatXML(xml);
+      content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      content = content.replace(/&lt;!--([^-]*)&gt;/g, '&lt;!--$1--&gt;');
+
+      // Split into lines for PDF
+      const lines = pdf.splitTextToSize(content, pdf.internal.pageSize.getWidth() - 20);
+      let yPosition = 35;
+      const lineHeight = 6;
+
+      // Add content to PDF
+      for (let i = 0; i < lines.length; i++) {
+        if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.text(lines[i], 10, yPosition);
+        yPosition += lineHeight;
+      }
+
+      // Save PDF
+      const pdfBlob = pdf.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      downloadBtn.href = url;
+      downloadBtn.download = 'xml-to-pdf.pdf';
+      downloadBtn.style.display = 'block';
+      downloadBtn.textContent = 'Download PDF';
+
+    } catch (error) {
+      alert('Error converting to PDF: ' + error.message);
+    }
+
+    convertBtn.innerHTML = 'Convert to PDF';
+    convertBtn.disabled = false;
+  }
+
+  function formatXMLContent() {
+    const xml = xmlInput.value.trim();
+    if (!xml) {
+      alert('Please enter XML content to format.');
+      return;
+    }
+
+    try {
+      const formatted = formatXML(xml);
+      xmlInput.value = formatted;
+      updatePreview();
+    } catch (error) {
+      alert('Invalid XML format: ' + error.message);
+    }
+  }
+
+  function copyXML() {
+    const xml = xmlInput.value.trim();
+    if (xml) {
+      navigator.clipboard.writeText(xml).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.background = '#28a745';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+          copyBtn.style.background = '#555';
+        }, 2000);
+      });
+    }
+  }
+
+  function downloadPDF() {
+    if (downloadBtn.href) {
+      downloadBtn.click();
+    } else {
+      alert('No PDF available for download. Please convert first.');
+    }
+  }
+
+  // Event listeners
+  xmlInput.addEventListener('input', updatePreview);
+  formatBtn.addEventListener('click', formatXMLContent);
+  convertBtn.addEventListener('click', convertToPDF);
+  copyBtn.addEventListener('click', copyXML);
+  downloadBtn.addEventListener('click', downloadPDF);
+
+  // Sample XML for demonstration
+  const sampleXML = `<?xml version="1.0" encoding="UTF-8"?>
+<bookstore>
+  <book category="cooking">
+    <title lang="en">Everyday Italian</title>
+    <author>Giada De Laurentiis</author>
+    <year>2005</year>
+    <price>30.00</price>
+  </book>
+  <book category="children">
+    <title lang="en">Harry Potter</title>
+    <author>J.K. Rowling</author>
+    <year>2005</year>
+    <price>29.99</price>
+  </book>
+</bookstore>`;
+
+  // Initialize with sample data
+  xmlInput.value = sampleXML;
+  updatePreview();
+</script>
+</body></html>
+
+

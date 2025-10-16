@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>YouTube Tags Extractor - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fab fa-youtube tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">YouTube Tags Extractor</div>
+      <div class="tool-desc">Paste a YouTube URL or page HTML to extract tags/keywords. Copy or export.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="ytUrl" style="display:block; font-weight:600; margin-bottom:6px;">YouTube URL (optional)</label>
+          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ytId" style="display:block; font-weight:600; margin-bottom:6px;">Video ID (optional)</label>
+          <input id="ytId" type="text" placeholder="e.g. dQw4w9WgXcQ" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ytMax" style="display:block; font-weight:600; margin-bottom:6px;">Max tags</label>
+          <input id="ytMax" type="number" min="1" max="200" value="50" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+          <button id="ytParse" class="tool-button">Extract</button>
+          <button id="ytCopy" class="tool-button" style="background:#555;">Copy</button>
+          <button id="ytExport" class="tool-button" style="background:#888;">Export CSV</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label for="ytHtml" style="display:block; font-weight:600; margin-bottom:6px;">Or paste video page HTML source</label>
+        <textarea id="ytHtml" rows="8" placeholder="Paste the HTML source of the YouTube video page here (Ctrl+U on the video page, then copy all)" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:12px;">
+      <div class="tool-name" style="margin-bottom:8px;">Extracted Tags</div>
+      <div id="ytTags" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function extractFromHtml(html){
+    const tags = new Set();
+    try {
+      // 1) meta name="keywords" content="tag1, tag2"
+      const kwMatch = html.match(/<meta[^>]+name=["']keywords["'][^>]+content=["']([^"']+)["']/i);
+      if (kwMatch && kwMatch[1]){
+        kwMatch[1].split(',').forEach(t => tags.add(t.trim()));
+      }
+      // 2) og:video:tag
+      const ogTagRegex = /<meta[^>]+property=["']og:video:tag["'][^>]+content=["']([^"']+)["']/ig;
+      let m;
+      while ((m = ogTagRegex.exec(html)) !== null){ tags.add((m[1]||'').trim()); }
+      // 3) ytInitialData or JSON with keywords
+      const jsonKw = html.match(/"keywords"\s*:\s*\[(.*?)\]/);
+      if (jsonKw && jsonKw[1]){
+        jsonKw[1].split(',').forEach(x => tags.add(x.replace(/["\[\]]/g,'').trim()));
+      }
+    } catch(e){}
+    return Array.from(tags).filter(Boolean);
+  }
+  function showTags(list, max){
+    const wrap = document.getElementById('ytTags');
+    wrap.innerHTML='';
+    list.slice(0, max).forEach(t => {
+      const chip = document.createElement('span');
+      chip.textContent = '#'+t.replace(/\s+/g,'');
+      chip.style.cssText='padding:8px 10px; background:#f6f8ff; border:1px solid #e3e9ff; border-radius:999px; font-weight:600;';
+      wrap.appendChild(chip);
+    });
+  }
+  function parseId(url){
+    if (!url) return '';
+    const u = new URL(url);
+    if (u.hostname.includes('youtube.com')) return u.searchParams.get('v')||'';
+    if (u.hostname==='youtu.be') return (u.pathname||'').substring(1);
+    return '';
+  }
+  document.getElementById('ytParse').addEventListener('click', ()=>{
+    const html = document.getElementById('ytHtml').value;
+    const max = Math.max(1, Math.min(200, Number(document.getElementById('ytMax').value)||50));
+    let tags = [];
+    if (html.trim()){
+      tags = extractFromHtml(html);
+    } else {
+      const url = document.getElementById('ytUrl').value.trim();
+      const id = document.getElementById('ytId').value.trim() || parseId(url);
+      // Offline: we cannot fetch live page due to CORS in file:// context. Ask user to paste HTML instead.
+      if (!id) {
+        alert('For best results, paste the video page HTML into the textarea (View Source and copy all).');
+      }
+    }
+    if (!tags.length){ alert('No tags found. Try pasting the video page HTML source.'); }
+    showTags(tags, max);
+  });
+  document.getElementById('ytCopy').addEventListener('click', async ()=>{
+    const tags = Array.from(document.querySelectorAll('#ytTags span')).map(s=>s.textContent);
+    if (!tags.length) return;
+    try { await navigator.clipboard.writeText(tags.join(' ')); } catch(e){}
+  });
+  document.getElementById('ytExport').addEventListener('click', ()=>{
+    const tags = Array.from(document.querySelectorAll('#ytTags span')).map(s=>s.textContent.replace(/^#/,''));
+    if (!tags.length) return;
+    const lines = ['tag']; tags.forEach(t=>lines.push(t));
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'youtube-tags.csv'; a.click(); URL.revokeObjectURL(a.href);
+  });
+</script>
+</body></html>
+
+

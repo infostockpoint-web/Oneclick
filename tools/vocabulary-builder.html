@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vocabulary Builder - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-book-reader tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Vocabulary Builder</div>
+        <div class="tool-desc">Create word lists with meanings and examples. Practice with quizzes. Data is stored locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Word</label>
+            <input id="word" type="text" placeholder="e.g., ubiquitous" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Meaning</label>
+            <input id="meaning" type="text" placeholder="present everywhere" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Example</label>
+            <input id="example" type="text" placeholder="Smartphones are ubiquitous today." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <button id="add" class="tool-button" style="height:42px;">Add</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="tool-name">Word List</div>
+            <input id="search" type="search" placeholder="Search..." style="padding:8px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div id="list" style="display:grid; gap:10px; margin-top:10px;"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Quiz</div>
+          <div id="quiz" style="display:grid; gap:10px; margin-top:8px;">
+            <div id="prompt" class="tool-card" style="padding:16px; text-align:center;">Add words to start. Quiz shows a meaning; type the word.</div>
+            <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
+              <input id="answer" type="text" placeholder="Type the word" style="flex:1; max-width:360px; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <button id="check" class="tool-button">Check</button>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="reveal" class="tool-button">Reveal</button>
+              <button id="next" class="tool-button">Next</button>
+            </div>
+            <div id="feedback" class="tool-desc" style="text-align:center;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_vocab_builder_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function render(){
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const list=document.getElementById('list'); list.innerHTML='';
+      const data=load().filter(w=>!q || w.w.toLowerCase().includes(q) || w.m.toLowerCase().includes(q) || (w.e||'').toLowerCase().includes(q));
+      if (!data.length){ list.innerHTML='<div class="tool-desc">No words yet.</div>'; return; }
+      for (const w of data){
+        const el=document.createElement('div'); el.className='tool-card'; el.style.padding='12px';
+        el.innerHTML=`
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px;">
+            <div>
+              <div style="font-weight:700; font-size:1.05rem;">${escapeHtml(w.w)}</div>
+              <div class="tool-desc"><strong>Meaning:</strong> ${escapeHtml(w.m)}</div>
+              ${w.e?`<div class="tool-desc"><strong>Example:</strong> ${escapeHtml(w.e)}</div>`:''}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="tool-button" data-act="edit" data-id="${w.id}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-id="${w.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+    }
+
+    document.getElementById('add').addEventListener('click',()=>{
+      const w=document.getElementById('word').value.trim();
+      const m=document.getElementById('meaning').value.trim();
+      const e=document.getElementById('example').value.trim();
+      if (!w || !m){ alert('Please enter both word and meaning.'); return; }
+      const data=load(); data.push({id:crypto.randomUUID(), w, m, e}); save(data);
+      document.getElementById('word').value=''; document.getElementById('meaning').value=''; document.getElementById('example').value='';
+      render();
+    });
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id');
+      const act=btn.getAttribute('data-act'); const data=load(); const idx=data.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this word?')){ data.splice(idx,1); save(data); render(); } }
+      if (act==='edit'){
+        const w=prompt('Edit word', data[idx].w); if(w===null) return;
+        const m=prompt('Edit meaning', data[idx].m); if(m===null) return;
+        const e=prompt('Edit example (optional)', data[idx].e||''); if(e===null) return;
+        data[idx].w=w.trim(); data[idx].m=m.trim(); data[idx].e=e.trim(); save(data); render();
+      }
+    });
+
+    // Quiz
+    let bank=[]; let qi=0; let current=null;
+    function next(){
+      const all=load(); if(!all.length){ document.getElementById('prompt').textContent='Add words to start.'; current=null; return; }
+      if (!bank.length){ bank=all.slice().sort(()=>Math.random()-0.5); qi=0; }
+      current=bank[qi++ % bank.length];
+      document.getElementById('prompt').innerHTML=`<div><strong>Meaning:</strong> ${escapeHtml(current.m)}</div>`;
+      document.getElementById('answer').value=''; document.getElementById('feedback').textContent='';
+    }
+
+    document.getElementById('check').addEventListener('click',()=>{
+      if (!current) return; const ans=document.getElementById('answer').value.trim();
+      if (!ans){ document.getElementById('feedback').textContent='Type your answer.'; return; }
+      const ok = ans.toLowerCase()===current.w.toLowerCase();
+      document.getElementById('feedback').textContent = ok ? 'Correct! âœ…' : `Not quite. Correct word: ${current.w}`;
+    });
+    document.getElementById('reveal').addEventListener('click',()=>{ if(current) document.getElementById('feedback').textContent=`Answer: ${current.w}`; });
+    document.getElementById('next').addEventListener('click', next);
+
+    document.getElementById('search').addEventListener('input', render);
+
+    render(); next();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XML Sitemap Validator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-check tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">XML Sitemap Validator</div>
+        <div class="tool-desc">Validate your XML sitemap structure and URLs. Paste XML or fetch from a URL.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="sitemapUrl" style="display:block; font-weight:600; margin-bottom:6px;">Sitemap URL (optional)</label>
+            <input id="sitemapUrl" type="url" placeholder="https://example.com/sitemap.xml" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="fetchBtn" class="tool-button">Fetch</button>
+            <button id="validateBtn" class="tool-button" style="background:#28a745;">Validate</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Sitemap XML</div>
+        <textarea id="xmlInput" rows="10" placeholder="Paste your sitemap XML here..." style="margin-top:10px; width:100%; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Results</div>
+          <div id="results" style="margin-top:10px; color:#2c3e50; font-size:0.95rem;">
+            Paste XML or fetch a URL, then click Validate.
+          </div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Found URLs</div>
+          <div id="urlList" style="margin-top:10px; max-height:300px; overflow:auto; font-size:0.95rem; color:#34495e;">
+            â€”
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const sitemapUrl = document.getElementById('sitemapUrl');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const validateBtn = document.getElementById('validateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const xmlInput = document.getElementById('xmlInput');
+    const results = document.getElementById('results');
+    const urlList = document.getElementById('urlList');
+
+    function setResults(html){ results.innerHTML = html; }
+    function setUrls(items){ urlList.innerHTML = items && items.length ? ('<ol style="padding-left:20px;">' + items.map(u=>`<li><a href="${u}" target="_blank" rel="noopener">${u}</a></li>`).join('') + '</ol>') : 'â€”'; }
+
+    async function tryFetch(url){
+      try{
+        const r = await fetch(url);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const t = await r.text();
+        xmlInput.value = t;
+        setResults('<span style="color:#28a745;">Fetched sitemap content. Click Validate.</span>');
+      }catch(e){
+        setResults(`<span style="color:#e74c3c;">Fetch failed (CORS or network). Paste the XML manually and click Validate. Error: ${e.message}</span>`);
+      }
+    }
+
+    function validate(){
+      const xml = xmlInput.value.trim();
+      if(!xml){ setResults('<span style="color:#e67e22;">No XML provided.</span>'); setUrls([]); return; }
+      let doc;
+      try{
+        const p = new DOMParser();
+        doc = p.parseFromString(xml, 'application/xml');
+        const parserErr = doc.querySelector('parsererror');
+        if(parserErr){ throw new Error('Invalid XML: ' + parserErr.textContent.slice(0,120)); }
+      }catch(err){ setResults(`<span style=\"color:#e74c3c;\">${err.message}</span>`); setUrls([]); return; }
+
+      // Detect sitemapindex or urlset
+      const urlset = doc.querySelectorAll('url');
+      const indexes = doc.querySelectorAll('sitemap');
+      let messages = [];
+      let urls = [];
+
+      if (urlset.length){
+        messages.push(`<strong>URL entries:</strong> ${urlset.length}`);
+        urlset.forEach(u => {
+          const loc = (u.querySelector('loc')||{}).textContent||'';
+          if(loc){ urls.push(loc); }
+        });
+      }
+      if (indexes.length){
+        messages.push(`<strong>Sitemap index entries:</strong> ${indexes.length}`);
+      }
+
+      // Basic checks
+      const hasUrlset = !!doc.querySelector('urlset');
+      const hasIndex = !!doc.querySelector('sitemapindex');
+      if(!hasUrlset && !hasIndex){ messages.push('<span style="color:#e67e22;">No <code>urlset</code> or <code>sitemapindex</code> found.</span>'); }
+
+      // URL validity check
+      const invalids = urls.filter(u => { try{ new URL(u); return false; } catch(_) { return true; } });
+      if(invalids.length){ messages.push(`<span style=\"color:#e74c3c;\">Invalid URL(s): ${invalids.length}</span>`); }
+
+      setResults(messages.join('<br>') || 'No issues found.');
+      setUrls(urls);
+    }
+
+    fetchBtn.addEventListener('click', ()=>{ const u = sitemapUrl.value.trim(); if(u) tryFetch(u); });
+    validateBtn.addEventListener('click', validate);
+    clearBtn.addEventListener('click', ()=>{ sitemapUrl.value=''; xmlInput.value=''; setResults('Paste XML or fetch a URL, then click Validate.'); setUrls([]); });
+  </script>
+</body>
+</html>
+
+

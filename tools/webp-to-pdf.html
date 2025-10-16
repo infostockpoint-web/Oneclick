@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebP to PDF - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:960px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">WebP to PDF</div>
+        <div class="tool-desc">Convert WebP images (and other common images) into a multi-page PDF.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="imageInput" style="display:block; font-weight:600; margin-bottom:6px;">Select Images</label>
+            <input type="file" id="imageInput" accept="image/webp,image/png,image/jpeg,image/jpg" multiple style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            <div style="color:#6b7280; font-size:.9rem; margin-top:6px;">Tip: Use Shift/Ctrl to select multiple files</div>
+          </div>
+          <div>
+            <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">Page Size</label>
+            <select id="pageSize" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="a4">A4</option>
+              <option value="a3">A3</option>
+              <option value="letter">Letter</option>
+            </select>
+          </div>
+          <div>
+            <label for="orientation" style="display:block; font-weight:600; margin-bottom:6px;">Orientation</label>
+            <select id="orientation" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="convertBtn" class="tool-button">Convert to PDF</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Selected Images</div>
+          <div id="imageList" style="max-height:300px; overflow-y:auto;">No images selected</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Actions</div>
+          <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none;">Download PDF</button>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const imageList = document.getElementById('imageList');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const pageSize = document.getElementById('pageSize');
+    const orientation = document.getElementById('orientation');
+
+    let selectedFiles = [];
+    let pdfBlob = null;
+
+    function updateList(){
+      if (!selectedFiles.length){ imageList.textContent = 'No images selected'; return; }
+      let html = `<div style="font-weight:600; margin-bottom:10px;">${selectedFiles.length} image(s) selected:</div>`;
+      selectedFiles.forEach(f => {
+        html += `<div style="padding:5px; border-bottom:1px solid #eee; margin-bottom:5px;"><strong>${f.name}</strong> (${(f.size/1024).toFixed(1)} KB)</div>`;
+      });
+      imageList.innerHTML = html;
+    }
+
+    imageInput.addEventListener('change', e => { selectedFiles = Array.from(e.target.files); updateList(); downloadBtn.style.display='none'; pdfBlob=null; });
+    clearBtn.addEventListener('click', () => { imageInput.value=''; selectedFiles=[]; updateList(); downloadBtn.style.display='none'; pdfBlob=null; });
+
+    convertBtn.addEventListener('click', () => {
+      if (!selectedFiles.length){ alert('Please select images.'); return; }
+      const { jsPDF } = window.jspdf;
+      const fmt = pageSize.value;
+      const orient = orientation.value;
+      const pdf = new jsPDF({ orientation: orient, unit:'mm', format: fmt });
+
+      let processed = 0;
+      const total = selectedFiles.length;
+      selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width; canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            // WebP data may be converted to JPEG in jsPDF; we draw via canvas to get data URL
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdfW = pdf.internal.pageSize.getWidth();
+            const pdfH = pdf.internal.pageSize.getHeight();
+
+            const ratio = img.width / img.height;
+            const pageRatio = pdfW / pdfH;
+            let w, h, x, y;
+            if (ratio > pageRatio){ w = pdfW; h = w / ratio; x = 0; y = (pdfH - h)/2; }
+            else { h = pdfH; w = h * ratio; x = (pdfW - w)/2; y = 0; }
+
+            if (index > 0) pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', x, y, w, h);
+            processed++;
+            if (processed === total){
+              pdfBlob = pdf.output('blob');
+              downloadBtn.style.display = 'block';
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!pdfBlob) return;
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'webp-to-pdf.pdf';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

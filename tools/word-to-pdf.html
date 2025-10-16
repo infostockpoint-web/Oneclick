@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word to PDF - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    input[type=file], select{padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff}
+    #preview{background:#fff;border:1px solid #eee;border-radius:8px;padding:16px;max-height:420px;overflow:auto}
+  </style>
+  <!-- Mammoth: DOCX -> HTML -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <!-- html2pdf: HTML -> PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">Word to PDF</div>
+        <div class="tool-desc">Convert .docx files to PDF directly in your browser.</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <input id="docx" type="file" accept=".docx"/>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label>Page Size
+              <select id="size">
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+                <option value="legal">Legal</option>
+              </select>
+            </label>
+            <label>Margins
+              <select id="margin">
+                <option value="10">Small</option>
+                <option value="20" selected>Normal</option>
+                <option value="30">Large</option>
+              </select>
+            </label>
+          </div>
+          <div style="text-align:right">
+            <button id="convert" class="tool-button">Convert to PDF</button>
+          </div>
+          <div id="status" class="tool-desc">1) Choose a .docx file. 2) Click Convert.</div>
+          <div id="preview" aria-label="HTML preview">â€”</div>
+        </div>
+      </div>
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('docx');
+    const preview = document.getElementById('preview');
+    const statusEl = document.getElementById('status');
+
+    async function docxToHtml(arrayBuffer){
+      const { value } = await window.mammoth.convertToHtml({ arrayBuffer }, {
+        styleMap: [
+          'p[style-name="Title"] => h1:fresh',
+          'p[style-name="Heading 1"] => h1:fresh',
+          'p[style-name="Heading 2"] => h2:fresh'
+        ]
+      });
+      return value;
+    }
+
+    async function convert(){
+      const file = fileInput.files[0];
+      if(!file){ alert('Select a .docx file'); return; }
+      statusEl.textContent = 'Reading fileâ€¦';
+      const buf = await file.arrayBuffer();
+      try{
+        statusEl.textContent = 'Converting DOCX to HTMLâ€¦';
+        const html = await docxToHtml(buf);
+        preview.innerHTML = html;
+        statusEl.textContent = 'Rendering PDFâ€¦';
+        const size = document.getElementById('size').value;
+        const margin = parseInt(document.getElementById('margin').value,10) || 20;
+        const opt = {
+          filename: (file.name.replace(/\.docx$/i,'')||'document') + '.pdf',
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: size, orientation: 'portrait' },
+          pagebreak: { mode: ['css','legacy'] },
+          margin: margin
+        };
+        await html2pdf().from(preview).set(opt).save();
+        statusEl.textContent = 'Done! Saved as PDF.';
+      }catch(e){
+        console.error(e);
+        alert('Conversion failed. Make sure the file is a valid .docx.');
+        statusEl.textContent = 'Error converting file.';
+      }
+    }
+    document.getElementById('convert').addEventListener('click', convert);
+  </script>
+</body></html>
+
+

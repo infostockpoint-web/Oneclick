@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Counter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:40px 0;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-sort-amount-down tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Word & Character Counter</div>
+      <div class="tool-desc">Count words, characters, lines, and reading time in your text.</div>
+    </div>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div style="display:grid; gap:16px; margin-top:20px;">
+      <textarea id="text" rows="10" placeholder="Paste or type your text here..." style="padding:12px; border-radius:10px; border:1px solid #ddd;"></textarea>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Words</div>
+          <div id="words" class="tool-desc" style="font-size:1.4rem; color:#000;">0</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Characters</div>
+          <div id="chars" class="tool-desc" style="font-size:1.4rem; color:#000;">0</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Characters (no spaces)</div>
+          <div id="charsNoSpace" class="tool-desc" style="font-size:1.4rem; color:#000;">0</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Lines</div>
+          <div id="lines" class="tool-desc" style="font-size:1.4rem; color:#000;">0</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Reading Time</div>
+          <div id="read" class="tool-desc" style="font-size:1.1rem; color:#000;">0 min</div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const text = document.getElementById('text');
+    const words = document.getElementById('words');
+    const chars = document.getElementById('chars');
+    const charsNoSpace = document.getElementById('charsNoSpace');
+    const lines = document.getElementById('lines');
+    const read = document.getElementById('read');
+
+    function update() {
+      const t = text.value;
+      const wordCount = (t.trim().match(/\b\w+\b/g) || []).length;
+      const charCount = t.length;
+      const charNoSpace = t.replace(/\s/g, '').length;
+      const lineCount = t.split(/\n/).length;
+      const minutes = Math.max(1, Math.ceil(wordCount / 200));
+
+      words.textContent = wordCount;
+      chars.textContent = charCount;
+      charsNoSpace.textContent = charNoSpace;
+      lines.textContent = t ? lineCount : 0;
+      read.textContent = minutes + ' min';
+    }
+
+    text.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>
+
+

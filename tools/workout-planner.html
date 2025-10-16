@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workout Planner - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-dumbbell tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Workout Planner</div>
+        <div class="tool-desc">Create weekly workout routines, track sets and reps, and check-off completed exercises. Stored locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Day</label>
+            <select id="day" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Exercise</label>
+            <input id="exercise" type="text" placeholder="e.g., Push-ups" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Sets x Reps</label>
+            <input id="setsreps" type="text" placeholder="e.g., 3 x 12" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="add" class="tool-button" style="height:42px;">Add</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="tool-button" data-filter="All">All</button>
+          <button class="tool-button" data-filter="Monday">Mon</button>
+          <button class="tool-button" data-filter="Tuesday">Tue</button>
+          <button class="tool-button" data-filter="Wednesday">Wed</button>
+          <button class="tool-button" data-filter="Thursday">Thu</button>
+          <button class="tool-button" data-filter="Friday">Fri</button>
+          <button class="tool-button" data-filter="Saturday">Sat</button>
+          <button class="tool-button" data-filter="Sunday">Sun</button>
+        </div>
+      </div>
+
+      <div id="list" style="display:grid;gap:10px;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_workout_planner_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    let filter='All';
+
+    function render(){
+      const items = load().filter(it => filter==='All' || it.day===filter);
+      const list=document.getElementById('list'); list.innerHTML='';
+      if (!items.length){ list.innerHTML='<div class="tool-card" style="padding:16px;">No workouts yet.</div>'; return; }
+      for (const it of items){
+        const el=document.createElement('div'); el.className='tool-card'; el.style.padding='12px';
+        el.innerHTML=`
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(it.exercise)} <small class="tool-desc">(${escapeHtml(it.setsreps)})</small></div>
+              <div class="tool-desc">${escapeHtml(it.day)}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label><input type="checkbox" data-act="done" data-id="${it.id}" ${it.done?'checked':''}/> Done</label>
+              <button class="tool-button" data-act="edit" data-id="${it.id}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-id="${it.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+    }
+
+    document.getElementById('add').addEventListener('click',()=>{
+      const day=document.getElementById('day').value;
+      const exercise=document.getElementById('exercise').value.trim();
+      const setsreps=document.getElementById('setsreps').value.trim();
+      if (!exercise || !setsreps){ alert('Enter exercise and sets x reps.'); return; }
+      const d=load(); d.push({id:crypto.randomUUID(), day, exercise, setsreps, done:false}); save(d); document.getElementById('exercise').value=''; document.getElementById('setsreps').value=''; render();
+    });
+
+    document.querySelector('[data-filter="All"]').parentElement.addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-filter]'); if(!btn) return; filter=btn.getAttribute('data-filter'); render();
+    });
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]');
+      const chk=e.target.closest('input[data-act="done"]');
+      const d=load();
+      if (chk){ const id=chk.getAttribute('data-id'); const idx=d.findIndex(x=>x.id===id); if(idx>-1){ d[idx].done=chk.checked; save(d); } return; }
+      if (!btn) return; const id=btn.getAttribute('data-id'); const act=btn.getAttribute('data-act'); const idx=d.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this exercise?')){ d.splice(idx,1); save(d); render(); } }
+      if (act==='edit'){ const ex=prompt('Edit exercise', d[idx].exercise); if(ex===null) return; const sr=prompt('Edit sets x reps', d[idx].setsreps); if(sr===null) return; d[idx].exercise=ex.trim(); d[idx].setsreps=sr.trim(); save(d); render(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

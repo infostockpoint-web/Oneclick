@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube Video Downloader - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    input[type=url]{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+    .thumbs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .thumb{border:1px solid #eee;border-radius:10px;overflow:hidden;background:#fff}
+    .thumb img{display:block;width:100%;height:auto}
+    .thumb .meta{padding:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .thumb .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .note{font-size:0.95rem;color:#555}
+    .warn{background:#fff7e6;border:1px solid #ffe0a3;color:#8a6d3b;padding:10px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fab fa-youtube tool-icon-small" style="font-size:3rem;color:#ff0000"></i>
+        <div class="tool-name" style="font-size:1.6rem;">YouTube Video Downloader</div>
+        <div class="tool-desc">Compliant helper: fetch title/thumbnail and open privacy front-ends. No stream fetching (ToS-safe).</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <label style="font-weight:600">YouTube URL</label>
+          <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"/>
+          <div class="row" style="justify-content:space-between">
+            <div class="row">
+              <button id="analyze" class="tool-button">Analyze</button>
+              <button id="clear" class="tool-button" style="background:#6b7280">Clear</button>
+            </div>
+            <div id="status" class="tool-desc">Paste a video link and click Analyze.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="infoCard" class="tool-card" style="padding:16px;display:none">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;min-width:280px">
+            <div class="tool-name" id="vtitle">—</div>
+            <div class="tool-desc" id="vchan">—</div>
+            <div class="warn" style="margin-top:8px">This tool avoids direct video downloads to respect YouTube's Terms of Service. Use the safe options below.</div>
+          </div>
+          <div style="text-align:right">
+            <div class="row" style="justify-content:flex-end">
+              <button id="openYt" class="tool-button"><i class="fab fa-youtube"></i> Open YouTube</button>
+              <button id="openPiped" class="tool-button"><i class="fas fa-external-link-alt"></i> Open Piped</button>
+              <button id="openYewtu" class="tool-button"><i class="fas fa-external-link-alt"></i> Open Yewtu.be</button>
+              <button id="openInvidious" class="tool-button"><i class="fas fa-external-link-alt"></i> Open Invidious</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="thumbsCard" class="tool-card" style="padding:16px;display:none">
+        <div class="tool-name">Thumbnails</div>
+        <div class="thumbs" id="thumbs"></div>
+        <div class="note" style="margin-top:8px">Tip: Right-click any image and "Save image as..." if the download button is blocked by the browser.</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function getId(u){
+      try{
+        const url=new URL(u);
+        if(url.hostname.includes('youtu.be')){ return url.pathname.split('/')[1]||''; }
+        if(url.searchParams.get('v')) return url.searchParams.get('v');
+        const m=url.pathname.match(/\/shorts\/([\w-]{5,})/); if(m) return m[1];
+        const m2=url.pathname.match(/\/embed\/([\w-]{5,})/); if(m2) return m2[1];
+      }catch(_){ return ''; }
+      return '';
+    }
+    function makeThumbs(id){
+      const sizes=[
+        {name:'maxresdefault', label:'Max (1280x720)'},
+        {name:'sddefault', label:'SD (640x480)'},
+        {name:'hqdefault', label:'HQ (480x360)'},
+        {name:'mqdefault', label:'MQ (320x180)'}
+      ];
+      const cont=document.getElementById('thumbs'); cont.innerHTML='';
+      sizes.forEach(s=>{
+        const src=`https://i.ytimg.com/vi/${id}/${s.name}.jpg`;
+        const div=document.createElement('div'); div.className='thumb';
+        div.innerHTML=`<img src="${src}" alt="${s.label}"><div class="meta"><span>${s.label}</span><div class="actions"><a class="tool-button" href="${src}" download="${id}-${s.name}.jpg">Download</a><a class="tool-button" href="${src}" target="_blank" rel="noopener">Open</a><button class="tool-button copy" data-url="${src}">Copy Link</button></div></div>`;
+        cont.appendChild(div);
+      });
+    }
+    function openFrontEnd(kind, id){
+      const map={
+        yt: `https://www.youtube.com/watch?v=${id}`,
+        piped: `https://piped.video/watch?v=${id}`,
+        yewtu: `https://yewtu.be/watch?v=${id}`,
+        inv: `https://vid.puffyan.us/watch?v=${id}`
+      };
+      window.open(map[kind], '_blank');
+    }
+    async function fetchOEmbed(url){
+      const ep=`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+      const r=await fetch(ep); if(!r.ok) throw new Error('oEmbed failed'); return r.json();
+    }
+    function setStatus(t){ document.getElementById('status').textContent=t; }
+
+    document.getElementById('analyze').addEventListener('click', async ()=>{
+      const url=(document.getElementById('url').value||'').trim();
+      const id=getId(url);
+      if(!id){ alert('Please enter a valid YouTube URL'); return; }
+      setStatus('Fetching metadata...');
+      try{
+        const data=await fetchOEmbed(`https://www.youtube.com/watch?v=${id}`);
+        document.getElementById('vtitle').textContent=data.title||'Untitled';
+        document.getElementById('vchan').textContent=(data.author_name?('Channel: '+data.author_name):'');
+      }catch(_){ /* non-fatal */ }
+      document.getElementById('infoCard').style.display='block';
+      document.getElementById('thumbsCard').style.display='block';
+      makeThumbs(id);
+      setStatus('Ready. Use buttons below.');
+
+      document.getElementById('openYt').onclick=()=>openFrontEnd('yt', id);
+      document.getElementById('openPiped').onclick=()=>openFrontEnd('piped', id);
+      document.getElementById('openYewtu').onclick=()=>openFrontEnd('yewtu', id);
+      document.getElementById('openInvidious').onclick=()=>openFrontEnd('inv', id);
+    });
+    document.getElementById('clear').addEventListener('click', ()=>{
+      document.getElementById('url').value='';
+      document.getElementById('infoCard').style.display='none';
+      document.getElementById('thumbsCard').style.display='none';
+      document.getElementById('thumbs').innerHTML='';
+      setStatus('Paste a video link and click Analyze.');
+    });
+
+    // Delegate copy buttons
+    document.addEventListener('click', async (e)=>{
+      const btn = e.target.closest('button.copy');
+      if(!btn) return;
+      const url = btn.getAttribute('data-url');
+      try{
+        await navigator.clipboard.writeText(url);
+        btn.textContent = 'Copied!';
+        setTimeout(()=>{ btn.textContent = 'Copy Link'; }, 1200);
+      }catch(_){
+        // Fallback: prompt
+        const ok = prompt('Copy this link:', url);
+      }
+    });
+  </script>
+</body></html>
+
+

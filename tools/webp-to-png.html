@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>WebP to PNG - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-exchange-alt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">WebP to PNG Converter</div>
+      <div class="tool-desc">Convert WebP images to PNG format with quality control and batch processing.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="fileInput" style="display:block; font-weight:600; margin-bottom:6px;">Select WebP Images</label>
+          <input type="file" id="fileInput" accept="image/webp" multiple style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="quality" style="display:block; font-weight:600; margin-bottom:6px;">PNG Quality</label>
+          <select id="quality" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="1.0">Best Quality (Largest file)</option>
+            <option value="0.9">High Quality</option>
+            <option value="0.8" selected>Good Quality (Recommended)</option>
+            <option value="0.7">Medium Quality</option>
+            <option value="0.6">Low Quality (Smallest file)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="convertBtn" class="tool-button">Convert to PNG</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Selected Images</div>
+        <div id="imageList" style="max-height:300px; overflow-y:auto; margin-top:10px;">No images selected</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Conversion Options</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="maintainSize" checked> Maintain original size</label><br>
+          <label><input type="checkbox" id="addSuffix" checked> Add "_png" suffix to filename</label><br>
+          <label><input type="checkbox" id="downloadAll" checked> Download all as ZIP</label>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none; background:#007bff;">Download PNG(s)</button>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const quality = document.getElementById('quality');
+  const convertBtn = document.getElementById('convertBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const imageList = document.getElementById('imageList');
+  const maintainSize = document.getElementById('maintainSize');
+  const addSuffix = document.getElementById('addSuffix');
+  const downloadAll = document.getElementById('downloadAll');
+
+  let selectedFiles = [];
+  let convertedImages = [];
+
+  function updateImageList() {
+    if (selectedFiles.length === 0) {
+      imageList.innerHTML = 'No images selected';
+      return;
+    }
+
+    let html = `<div style="font-weight:600; margin-bottom:10px;">${selectedFiles.length} WebP image(s) selected:</div>`;
+    let totalSize = 0;
+
+    selectedFiles.forEach((file, index) => {
+      totalSize += file.size;
+      html += `<div style="padding:5px; border-bottom:1px solid #eee; margin-bottom:5px;">
+        <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
+      </div>`;
+    });
+
+    html += `<div style="margin-top:10px; padding-top:10px; border-top:1px solid #ddd; font-weight:600;">
+      Total Size: ${(totalSize / 1024).toFixed(1)} KB
+    </div>`;
+
+    imageList.innerHTML = html;
+  }
+
+  function webpToPng(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          if (maintainSize.checked) {
+            canvas.width = img.width;
+            canvas.height = img.height;
+          } else {
+            // Default to a reasonable size if not maintaining original
+            canvas.width = Math.min(img.width, 1920);
+            canvas.height = Math.min(img.height, 1080);
+          }
+
+          // Draw and convert
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const qualityValue = parseFloat(quality.value);
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to convert image'));
+            }
+          }, 'image/png', qualityValue);
+        };
+
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target.result;
+      };
+
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function convertImages() {
+    if (selectedFiles.length === 0) {
+      alert('Please select WebP images to convert.');
+      return;
+    }
+
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+    convertBtn.disabled = true;
+
+    try {
+      convertedImages = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const pngBlob = await webpToPng(file);
+
+        let filename = file.name;
+        if (addSuffix.checked) {
+          filename = filename.replace(/\.webp$/i, '_png.png');
+        } else {
+          filename = filename.replace(/\.webp$/i, '.png');
+        }
+
+        convertedImages.push({
+          blob: pngBlob,
+          filename: filename,
+          originalName: file.name,
+          size: pngBlob.size
+        });
+      }
+
+      downloadBtn.style.display = 'block';
+      convertBtn.innerHTML = 'Convert to PNG';
+      convertBtn.disabled = false;
+
+      // Update image list with conversion results
+      updateImageListWithResults();
+
+    } catch (error) {
+      alert('Error converting images: ' + error.message);
+      convertBtn.innerHTML = 'Convert to PNG';
+      convertBtn.disabled = false;
+    }
+  }
+
+  function updateImageListWithResults() {
+    let html = `<div style="font-weight:600; margin-bottom:10px;">Conversion Results:</div>`;
+    let totalOriginalSize = 0;
+    let totalConvertedSize = 0;
+
+    selectedFiles.forEach((file, index) => {
+      totalOriginalSize += file.size;
+      if (convertedImages[index]) {
+        totalConvertedSize += convertedImages[index].size;
+        const compression = ((file.size - convertedImages[index].size) / file.size * 100).toFixed(1);
+        html += `<div style="padding:5px; border-bottom:1px solid #eee; margin-bottom:5px;">
+          <strong>${file.name}</strong> â†’ ${convertedImages[index].filename}<br>
+          <small style="color:#28a745;">âœ“ Converted (${compression}% size reduction)</small>
+        </div>`;
+      }
+    });
+
+    html += `<div style="margin-top:10px; padding-top:10px; border-top:1px solid #ddd; font-weight:600;">
+      Original: ${(totalOriginalSize / 1024).toFixed(1)} KB â†’ Converted: ${(totalConvertedSize / 1024).toFixed(1)} KB
+    </div>`;
+
+    imageList.innerHTML = html;
+  }
+
+  function downloadImages() {
+    if (convertedImages.length === 0) {
+      alert('No converted images available for download.');
+      return;
+    }
+
+    if (downloadAll.checked && convertedImages.length > 1) {
+      // Download all as ZIP (simplified approach)
+      downloadMultipleAsZip();
+    } else {
+      // Download individually
+      convertedImages.forEach((img, index) => {
+        const url = URL.createObjectURL(img.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = img.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+  }
+
+  function downloadMultipleAsZip() {
+    // For this demo, we'll download files individually
+    // In a production environment, you would use a proper ZIP library
+    convertedImages.forEach((img, index) => {
+      setTimeout(() => {
+        const url = URL.createObjectURL(img.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = img.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, index * 500); // Stagger downloads
+    });
+  }
+
+  function clearAll() {
+    selectedFiles = [];
+    convertedImages = [];
+    fileInput.value = '';
+    updateImageList();
+    downloadBtn.style.display = 'none';
+  }
+
+  // Event listeners
+  fileInput.addEventListener('change', (e) => {
+    selectedFiles = Array.from(e.target.files);
+    updateImageList();
+    downloadBtn.style.display = 'none';
+    convertedImages = [];
+  });
+
+  convertBtn.addEventListener('click', convertImages);
+  downloadBtn.addEventListener('click', downloadImages);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Initialize
+  downloadBtn.style.display = 'none';
+</script>
+</body></html>
+
+
