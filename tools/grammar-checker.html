@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-spell-check tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Grammar Checker</div>
+        <div class="tool-desc">Check your text for common grammar, punctuation, and spelling issues. Runs locally in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div>
+            <label for="inputText" style="display:block; font-weight:600; margin-bottom:6px;">Your Text</label>
+            <textarea id="inputText" rows="10" placeholder="Paste or type your text here..." spellcheck="true" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+            <div class="tool-desc" style="margin-top:6px;">
+              Tip: Browser spellcheck is enabled. Right-click red-underlined words for suggestions.
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button id="runCheck" class="tool-button"><i class="fas fa-magic"></i> Check Grammar</button>
+            <button id="applyFixes" class="tool-button" style="background:#2ecc71;"><i class="fas fa-wand-magic-sparkles"></i> Apply Auto-Fixes</button>
+            <button id="copyFixed" class="tool-button"><i class="far fa-copy"></i> Copy Corrected</button>
+            <button id="clearAll" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Issues Found</div>
+          <div id="issues" class="tool-desc">Run the checker to see results.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Corrected Text (Preview)</div>
+          <textarea id="correctedText" rows="10" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // Very lightweight client-side checks. Not a replacement for professional grammar tools.
+    const COMMON_MISSPELLINGS = {
+      'teh':'the','adn':'and','recieve':'receive','occured':'occurred','seperate':'separate','wich':'which','becuase':'because','definately':'definitely','goverment':'government','wich':'which','enviroment':'environment','thier':'their','wierd':'weird','acommodate':'accommodate','adress':'address','untill':'until'
+    };
+
+    function analyze(text){
+      const issues = [];
+      let fixed = text;
+
+      // 1) Normalize whitespace: collapse multiple spaces
+      if (/ {2,}/.test(fixed)){
+        const count = (fixed.match(/ {2,}/g)||[]).length;
+        issues.push({type:'Spacing', msg:`Found ${count} instance(s) of double/multiple spaces.`});
+        fixed = fixed.replace(/ {2,}/g,' ');
+      }
+
+      // 2) Double words (e.g., "the the")
+      const dblWordRe = /\b(\w+)\s+\1\b/gi;
+      if (dblWordRe.test(text)){
+        const matches = [...text.matchAll(dblWordRe)].map(m=>m[0]);
+        issues.push({type:'Repetition', msg:`Repeated word(s): ${[...new Set(matches)].join(', ')}`});
+        fixed = fixed.replace(dblWordRe, (m,w)=>w);
+      }
+
+      // 3) Common misspellings
+      const miss = [];
+      for (const [wrong, right] of Object.entries(COMMON_MISSPELLINGS)){
+        const re = new RegExp(`\\b${wrong}\\b`, 'gi');
+        if (re.test(fixed)){
+          miss.push(`${wrong}â†’${right}`);
+          fixed = fixed.replace(re, (m)=> preserveCase(m, right));
+        }
+      }
+      if (miss.length){ issues.push({type:'Spelling', msg:`Fixed common misspelling(s): ${miss.join(', ')}`}); }
+
+      // 4) Punctuation spacing: no space before ,.;:!? and one space after
+      const beforePunct = /\s+([,.;:!?])/g;
+      const afterCommaPeriod = /([,.;:!?])(\S)/g;
+      if (beforePunct.test(fixed)){
+        issues.push({type:'Punctuation', msg:'Removed space(s) before punctuation.'});
+        fixed = fixed.replace(beforePunct, '$1');
+      }
+      if (afterCommaPeriod.test(fixed)){
+        issues.push({type:'Punctuation', msg:'Added missing space after punctuation.'});
+        fixed = fixed.replace(afterCommaPeriod, '$1 $2');
+      }
+
+      // 5) Sentence capitalization (basic): capitalize first letter after .!? and at start
+      const sentences = fixed.split(/([.!?]\s+)/);
+      if (sentences.length > 1){
+        let rebuilt = '';
+        for (let i=0; i<sentences.length; i++){
+          if (i === 0){
+            rebuilt += capitalizeFirst(sentences[i]);
+          } else if (/^[.!?]\s+$/.test(sentences[i])){
+            rebuilt += sentences[i];
+            const next = sentences[i+1]||'';
+            rebuilt += capitalizeFirst(next);
+            i++;
+          } else {
+            rebuilt += sentences[i];
+          }
+        }
+        if (rebuilt !== fixed){
+          issues.push({type:'Capitalization', msg:'Capitalized sentence starts.'});
+          fixed = rebuilt;
+        }
+      } else {
+        const cap = capitalizeFirst(fixed);
+        if (cap !== fixed){ issues.push({type:'Capitalization', msg:'Capitalized start of text.'}); fixed = cap; }
+      }
+
+      // 6) Trim stray spaces around newlines
+      if (/[ \t]+\n/.test(fixed) || /\n[ \t]+/.test(fixed)){
+        fixed = fixed.replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n');
+      }
+
+      return { issues, fixed };
+    }
+
+    function preserveCase(src, repl){
+      if (src.toUpperCase() === src) return repl.toUpperCase();
+      if (src[0] === src[0].toUpperCase()) return repl[0].toUpperCase() + repl.slice(1);
+      return repl;
+    }
+    function capitalizeFirst(s){ return s.replace(/^[\s\n]*([a-z])/, (m, c)=> m.replace(c, c.toUpperCase())); }
+
+    function renderIssues(list){
+      const box = document.getElementById('issues');
+      if (!list.length){ box.innerHTML = 'No major issues found. Review browser spellcheck suggestions if any.'; return; }
+      const html = list.map(it => `<div style="margin:6px 0;"><strong>${escapeHtml(it.type)}:</strong> ${escapeHtml(it.msg)}</div>`).join('');
+      box.innerHTML = html;
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    document.getElementById('runCheck').addEventListener('click', () => {
+      const text = document.getElementById('inputText').value || '';
+      const {issues, fixed} = analyze(text);
+      renderIssues(issues);
+      document.getElementById('correctedText').value = fixed;
+    });
+
+    document.getElementById('applyFixes').addEventListener('click', () => {
+      const text = document.getElementById('inputText').value || '';
+      const {issues, fixed} = analyze(text);
+      renderIssues(issues);
+      document.getElementById('inputText').value = fixed;
+      document.getElementById('correctedText').value = fixed;
+    });
+
+    document.getElementById('copyFixed').addEventListener('click', () => {
+      const txt = document.getElementById('correctedText').value || '';
+      navigator.clipboard.writeText(txt).then(()=>{
+        alert('Corrected text copied to clipboard.');
+      });
+    });
+
+    document.getElementById('clearAll').addEventListener('click', () => {
+      if (!confirm('Clear text and results?')) return;
+      document.getElementById('inputText').value = '';
+      document.getElementById('correctedText').value = '';
+      document.getElementById('issues').textContent = 'Run the checker to see results.';
+    });
+  </script>
+</body>
+</html>
+
+

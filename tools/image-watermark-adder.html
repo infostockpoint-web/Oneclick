@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Watermark Adder - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-water tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Image Watermark Adder</div>
+        <div class="tool-desc">Upload an image, then add a text or logo watermark. Adjust position, opacity, and size. Download the result.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="wmImage" style="display:block; font-weight:600; margin-bottom:6px;">Base Image</label>
+            <input id="wmImage" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Watermark Type</label>
+            <div style="display:flex; gap:12px;">
+              <label><input type="radio" name="wmType" value="text" checked> Text</label>
+              <label><input type="radio" name="wmType" value="logo"> Logo</label>
+            </div>
+          </div>
+          <div>
+            <label for="wmPos" style="display:block; font-weight:600; margin-bottom:6px;">Position</label>
+            <select id="wmPos" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="bottom-right" selected>Bottom Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="top-right">Top Right</option>
+              <option value="top-left">Top Left</option>
+              <option value="center">Center</option>
+            </select>
+          </div>
+          <div>
+            <label for="wmOpacity" style="display:block; font-weight:600; margin-bottom:6px;">Opacity</label>
+            <input id="wmOpacity" type="range" min="0" max="1" step="0.05" value="0.5" style="width:100%;"/>
+          </div>
+        </div>
+
+        <div id="textControls" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:12px;">
+          <div>
+            <label for="wmText" style="display:block; font-weight:600; margin-bottom:6px;">Watermark Text</label>
+            <input id="wmText" type="text" placeholder="Â© Your Brand" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="wmFont" style="display:block; font-weight:600; margin-bottom:6px;">Font Size</label>
+            <input id="wmFont" type="number" min="8" max="200" value="32" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="wmColor" style="display:block; font-weight:600; margin-bottom:6px;">Color</label>
+            <input id="wmColor" type="color" value="#ffffff" style="width:100%; height:44px; padding:6px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="wmShadow" style="display:block; font-weight:600; margin-bottom:6px;">Text Shadow</label>
+            <select id="wmShadow" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="none" selected>None</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="logoControls" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:12px; display:none;">
+          <div>
+            <label for="wmLogo" style="display:block; font-weight:600; margin-bottom:6px;">Logo Image</label>
+            <input id="wmLogo" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="wmScale" style="display:block; font-weight:600; margin-bottom:6px;">Logo Scale (%)</label>
+            <input id="wmScale" type="number" min="5" max="200" value="30" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="wmApply" class="tool-button">Apply Watermark</button>
+          <button id="wmDownload" class="tool-button" style="background:#555;">Download PNG</button>
+          <button id="wmClear" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:8px; margin-top:12px; text-align:center;">
+        <canvas id="wmCanvas" style="max-width:100%; border-radius:10px; background:#f8f9ff;"></canvas>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const canvas = document.getElementById('wmCanvas');
+    const ctx = canvas.getContext('2d');
+    let baseImg = new Image();
+    let logoImg = new Image();
+
+    function setCanvasToImage(img){
+      const maxW = 1200; // constrain for preview
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h * (maxW / w)); w = maxW; }
+      canvas.width = w; canvas.height = h;
+    }
+    function drawBase(){ if (!baseImg.src) return; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(baseImg,0,0,canvas.width,canvas.height); }
+    function applyWatermark(){
+      if (!baseImg.src){ alert('Please upload a base image first.'); return; }
+      drawBase();
+      const type = document.querySelector('input[name="wmType"]:checked').value;
+      const pos = document.getElementById('wmPos').value;
+      const opacity = parseFloat(document.getElementById('wmOpacity').value||'0.5');
+      ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
+      if (type === 'text'){
+        const txt = document.getElementById('wmText').value || 'Â© Your Brand';
+        const fontSize = Math.max(8, parseInt(document.getElementById('wmFont').value||'32',10));
+        const color = document.getElementById('wmColor').value || '#ffffff';
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.fillStyle = color;
+        const metrics = ctx.measureText(txt);
+        let x = 0, y = 0;
+        const pad = 16;
+        switch(pos){
+          case 'bottom-right': x = canvas.width - metrics.width - pad; y = canvas.height - pad; break;
+          case 'bottom-left': x = pad; y = canvas.height - pad; break;
+          case 'top-right': x = canvas.width - metrics.width - pad; y = pad + fontSize; break;
+          case 'top-left': x = pad; y = pad + fontSize; break;
+          case 'center': x = (canvas.width - metrics.width)/2; y = (canvas.height + fontSize)/2; break;
+        }
+        const shadow = document.getElementById('wmShadow').value;
+        if (shadow !== 'none'){
+          ctx.shadowColor = shadow==='dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
+          ctx.shadowBlur = 4; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
+        }
+        ctx.fillText(txt, x, y);
+      } else {
+        if (!logoImg.src){ alert('Please upload a logo image.'); ctx.restore(); return; }
+        const scalePct = Math.max(5, Math.min(200, parseInt(document.getElementById('wmScale').value||'30',10)));
+        const targetW = Math.round(canvas.width * (scalePct/100));
+        const ratio = logoImg.height / logoImg.width;
+        const targetH = Math.round(targetW * ratio);
+        let x = 0, y = 0; const pad = 16;
+        switch(pos){
+          case 'bottom-right': x = canvas.width - targetW - pad; y = canvas.height - targetH - pad; break;
+          case 'bottom-left': x = pad; y = canvas.height - targetH - pad; break;
+          case 'top-right': x = canvas.width - targetW - pad; y = pad; break;
+          case 'top-left': x = pad; y = pad; break;
+          case 'center': x = Math.round((canvas.width - targetW)/2); y = Math.round((canvas.height - targetH)/2); break;
+        }
+        ctx.drawImage(logoImg, x, y, targetW, targetH);
+      }
+      ctx.restore();
+    }
+
+    // Handlers
+    document.getElementById('wmImage').addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      const url = URL.createObjectURL(f);
+      baseImg = new Image();
+      baseImg.onload = ()=>{ setCanvasToImage(baseImg); drawBase(); URL.revokeObjectURL(url); };
+      baseImg.src = url;
+    });
+    document.getElementsByName('wmType').forEach(r=> r.addEventListener('change', ()=>{
+      const type = document.querySelector('input[name="wmType"]:checked').value;
+      document.getElementById('textControls').style.display = type==='text' ? 'grid' : 'none';
+      document.getElementById('logoControls').style.display = type==='logo' ? 'grid' : 'none';
+    }));
+    document.getElementById('wmLogo').addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      const url = URL.createObjectURL(f);
+      logoImg = new Image(); logoImg.onload = ()=> URL.revokeObjectURL(url); logoImg.src = url;
+    });
+    document.getElementById('wmApply').addEventListener('click', applyWatermark);
+    document.getElementById('wmDownload').addEventListener('click', ()=>{
+      if (!baseImg.src){ alert('Please upload a base image first.'); return; }
+      // Ensure watermark applied before download
+      applyWatermark();
+      const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'watermarked.png'; a.click();
+    });
+    document.getElementById('wmClear').addEventListener('click', ()=>{
+      baseImg = new Image(); logoImg = new Image(); ctx.clearRect(0,0,canvas.width,canvas.height);
+      document.getElementById('wmImage').value = '';
+      document.getElementById('wmLogo').value = '';
+    });
+  </script>
+</body>
+</html>
+
+

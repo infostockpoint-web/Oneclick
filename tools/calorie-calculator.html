@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calorie Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-utensils tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Calorie Calculator</div>
+        <div class="tool-desc">Estimate your daily calorie needs using Mifflinâ€“St Jeor equation and choose a goal.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Sex</label>
+            <select id="sex" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Age (years)</label>
+            <input id="age" type="number" min="0" step="1" placeholder="30" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Height (cm)</label>
+            <input id="height" type="number" min="0" step="0.1" placeholder="175" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Weight (kg)</label>
+            <input id="weight" type="number" min="0" step="0.1" placeholder="70" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Activity</label>
+            <select id="activity" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="1.2">Sedentary (little or no exercise)</option>
+              <option value="1.375">Lightly active (1â€“3 days/week)</option>
+              <option value="1.55">Moderately active (3â€“5 days/week)</option>
+              <option value="1.725">Very active (6â€“7 days/week)</option>
+              <option value="1.9">Extra active (intense daily)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Goal</label>
+            <select id="goal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="0">Maintain</option>
+              <option value="-500">Lose (âˆ’500 kcal/day)</option>
+              <option value="-250">Mild Lose (âˆ’250 kcal/day)</option>
+              <option value="250">Mild Gain (+250 kcal/day)</option>
+              <option value="500">Gain (+500 kcal/day)</option>
+            </select>
+          </div>
+          <button id="calc" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">BMR</div>
+          <div id="bmr" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">TDEE</div>
+          <div id="tdee" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Target Calories</div>
+          <div id="target" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function fmt(n){return Number(n).toLocaleString(undefined,{maximumFractionDigits:0});}
+    function calc(){
+      const sex=document.getElementById('sex').value;
+      const age=+document.getElementById('age').value;
+      const h=+document.getElementById('height').value;
+      const w=+document.getElementById('weight').value;
+      const act=+document.getElementById('activity').value;
+      const goal=+document.getElementById('goal').value;
+      if(!age||!h||!w){alert('Please fill age, height, and weight.');return;}
+      // Mifflinâ€“St Jeor
+      const bmr = sex==='male' ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
+      const tdee = bmr * act;
+      const target = tdee + goal;
+      document.getElementById('bmr').textContent=fmt(bmr);
+      document.getElementById('tdee').textContent=fmt(tdee);
+      document.getElementById('target').textContent=fmt(target);
+    }
+    document.getElementById('calc').addEventListener('click', calc);
+  </script>
+</body>
+</html>
+
+

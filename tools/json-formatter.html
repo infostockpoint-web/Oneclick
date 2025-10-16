@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Formatter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    pre.pretty { background:#0b1020; color:#d7eaff; padding:16px; border-radius:10px; overflow:auto; }
+    .error { color:#b00020; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:40px 0;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-brackets-curly tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">JSON Formatter & Validator</div>
+      <div class="tool-desc">Paste minified or invalid JSON to format and validate.</div>
+    </div>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div style="display:grid; gap:16px; margin-top:20px;">
+      <textarea id="input" rows="10" placeholder='{"hello":"world"}' style="padding:12px; border-radius:10px; border:1px solid #ddd;"></textarea>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="format" class="tool-button">Format</button>
+        <button id="minify" class="tool-button" style="background:#555;">Minify</button>
+        <button id="copy" class="tool-button" style="background:#888;">Copy Output</button>
+      </div>
+      <div id="status" class="error"></div>
+      <pre id="output" class="pretty" aria-live="polite"></pre>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+
+    function tryParse() {
+      try {
+        const obj = JSON.parse(input.value);
+        status.textContent = '';
+        return obj;
+      } catch (e) {
+        status.textContent = 'Invalid JSON: ' + e.message;
+        return null;
+      }
+    }
+
+    document.getElementById('format').addEventListener('click', () => {
+      const obj = tryParse();
+      if (!obj) return;
+      output.textContent = JSON.stringify(obj, null, 2);
+    });
+
+    document.getElementById('minify').addEventListener('click', () => {
+      const obj = tryParse();
+      if (!obj) return;
+      output.textContent = JSON.stringify(obj);
+    });
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(output.textContent || ''); } catch {}
+    });
+
+    // Initial
+    output.textContent = '';
+  </script>
+</body>
+</html>
+
+

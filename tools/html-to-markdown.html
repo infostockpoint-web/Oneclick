@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML to Markdown Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto; padding:16px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <i class="fab fa-markdown tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">HTML to Markdown Converter</div>
+        <div class="tool-desc">Convert HTML content to Markdown in your browser.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+        <div>
+          <div style="font-weight:600; margin-bottom:8px;">HTML Input</div>
+          <textarea id="htmlInput" placeholder="Paste your HTML here" style="width:100%; height:320px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:14px;"></textarea>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="convertBtn" class="tool-button">Convert to Markdown</button>
+            <button id="clearBtn" class="tool-button" style="background:#6c757d;">Clear</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:600; margin-bottom:8px;">Markdown Output</div>
+          <textarea id="mdOutput" placeholder="Markdown will appear here" readonly style="width:100%; height:320px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:14px;"></textarea>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="copyBtn" class="tool-button"><i class="fas fa-copy"></i> Copy</button>
+            <button id="downloadBtn" class="tool-button"><i class="fas fa-download"></i> Download .md</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px; text-align:center;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script src="https://unpkg.com/turndown@7.1.2/dist/turndown.js"></script>
+  <script>
+    const htmlInput = document.getElementById('htmlInput');
+    const mdOutput = document.getElementById('mdOutput');
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    const td = new TurndownService();
+
+    convertBtn.addEventListener('click', () => {
+      const html = htmlInput.value.trim();
+      if (!html) { mdOutput.value = ''; return; }
+      try {
+        const md = td.turndown(html);
+        mdOutput.value = md;
+      } catch (e) {
+        mdOutput.value = 'Conversion error: ' + e.message;
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      htmlInput.value = '';
+      mdOutput.value = '';
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(mdOutput.value || ''); } catch {}
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([mdOutput.value || ''], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'converted.md';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Domain Authority Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end}
+    .kv{display:grid;grid-template-columns:220px 1fr;gap:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-globe tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Domain Authority Checker</div>
+        <div class="tool-desc">Heuristic client-side metrics (not Moz/Ahrefs). Fetch via a public read proxy and compute simple on-page indicators.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">URL or Domain</label><input id="url" type="url" placeholder="https://example.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <button id="check" class="tool-button">Check</button>
+          <button id="export" class="tool-button"><i class="fas fa-file-export"></i> Export JSON</button>
+        </div>
+        <div class="tool-desc" style="margin-top:8px">Disclaimer: This is a heuristic score for quick checks, not an official DA metric.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Metrics</div>
+        <div id="metrics" class="kv tool-desc">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let last=null;
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+    function render(d){ const box=document.getElementById('metrics'); if(!d){ box.textContent='â€”'; return; } const rows=[]; for(const [k,v] of Object.entries(d)){ rows.push(`<div>${k}</div><div>${escapeHtml(String(v))}</div>`);} box.innerHTML=rows.join(''); }
+    function score(d){ // naive 0-100
+      let s=0; if(d.https) s+=10; if(d.titleLen>=10&&d.titleLen<=65) s+=10; if(d.hasDesc) s+=10; if(d.h1>=1) s+=10; if(d.wordCount>300) s+=20; if(d.extLinks>=10) s+=10; if(d.size>20000) s+=10; if(!/noindex/i.test(d.robots||'')) s+=20; return Math.max(0, Math.min(100, s)); }
+
+    async function check(){ const url=(document.getElementById('url').value||'').trim(); if(!url){ alert('Enter a URL.'); return; }
+      try{
+        const u=new URL(url.indexOf('://')>-1? url: 'https://'+url);
+        const https = u.protocol==='https:';
+        const res=await fetch('https://r.jina.ai/http://'+u.host+u.pathname, {cache:'no-cache'});
+        if(!res.ok) throw new Error('Fetch failed'); const text=await res.text();
+        const title=(text.match(/<title>([^<]*)<\/title>/i)||[])[1]||''; const titleLen=title.length;
+        const descMeta=(text.match(/<meta[^>]+name=["']description["'][^>]*>/i)||[''])[0]; const hasDesc=!!descMeta;
+        const robotsMeta=(text.match(/<meta[^>]+name=["']robots["'][^>]*>/i)||[''])[0]; const robots=(robotsMeta.match(/content=["']([^"']+)["']/i)||[])[1]||'';
+        const h1=(text.match(/<h1\b/gi)||[]).length; const words=(text.replace(/<[^>]+>/g,' ').match(/\b\w+\b/g)||[]); const wordCount=words.length;
+        const links=[...(text.matchAll(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi))].map(m=>m[1]); const extLinks=links.filter(h=>/^https?:\/\//i.test(h)).length;
+        const size=text.length;
+        last={ url:u.href, https, title, titleLen, hasDesc, robots, h1, wordCount, extLinks, size, heuristic: score({https,titleLen,hasDesc,h1,wordCount,extLinks,size,robots}) };
+        render(last);
+      }catch(e){ alert('Could not analyze (CORS/proxy or invalid URL).'); }
+    }
+    function exportJson(){ if(!last){ alert('Run Check first.'); return; } const a=document.createElement('a'); const blob=new Blob([JSON.stringify(last,null,2)],{type:'application/json'}); a.href=URL.createObjectURL(blob); a.download='domain-metrics.json'; a.click(); }
+
+    document.getElementById('check').addEventListener('click', check);
+    document.getElementById('export').addEventListener('click', exportJson);
+  </script>
+</body>
+</html>
+
+

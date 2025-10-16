@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Pairing Tool - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .preview{border:1px solid #eee;border-radius:10px;padding:16px;background:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .code{background:#f7f7f7;border-radius:8px;padding:8px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  </style>
+  <link id="gfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Merriweather:wght@400;700&display=swap">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-font tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Font Pairing Tool</div>
+        <div class="tool-desc">Preview popular font pairs. Customize sample text and copy the CSS to use in your project.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Pair</label>
+            <select id="pair" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="Inter|Merriweather|sans-serif|serif">Inter (sans) + Merriweather (serif)</option>
+              <option value="Poppins|Roboto Slab|sans-serif|serif">Poppins + Roboto Slab</option>
+              <option value="Lora|Montserrat|serif|sans-serif">Lora + Montserrat</option>
+              <option value="Playfair Display|Source Sans 3|serif|sans-serif">Playfair Display + Source Sans 3</option>
+              <option value="Nunito|Libre Baskerville|sans-serif|serif">Nunito + Libre Baskerville</option>
+              <option value="Raleway|Georgia|sans-serif|serif">Raleway + Georgia</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Heading Text</label>
+            <input id="hText" type="text" value="The quick brown fox jumps over the lazy dog" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Body Text</label>
+            <input id="bText" type="text" value="Pack my box with five dozen liquor jugs" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Heading Size</label>
+            <input id="hSize" type="number" value="36" min="12" step="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Body Size</label>
+            <input id="bSize" type="number" value="16" min="10" step="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <button id="apply" class="tool-button">Apply</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="preview">
+          <div id="previewH" style="font-weight:800;margin-bottom:8px;">The quick brown fox jumps over the lazy dog</div>
+          <div id="previewB">Pack my box with five dozen liquor jugs. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">CSS Snippet</div>
+          <div id="css" class="code" style="white-space:pre-wrap; word-break:break-word;"></div>
+          <div style="margin-top:8px;"><button id="copyCss" class="tool-button"><i class="far fa-copy"></i> Copy CSS</button></div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function update(){
+      const val=document.getElementById('pair').value; // Head|Body|headFallback|bodyFallback
+      const [head, body, hfb, bfb]=val.split('|');
+      const hText=document.getElementById('hText').value;
+      const bText=document.getElementById('bText').value;
+      const hSize=Number(document.getElementById('hSize').value)||36;
+      const bSize=Number(document.getElementById('bSize').value)||16;
+      // Load Google Fonts (if not system)
+      const fams=[head, body].filter(f=>!['Georgia','serif','sans-serif'].includes(f));
+      const href='https://fonts.googleapis.com/css2?'+fams.map(f=>'family='+encodeURIComponent(f)+':wght@400;600;800').join('&')+'&display=swap';
+      document.getElementById('gfont').href = href;
+      const previewH=document.getElementById('previewH');
+      const previewB=document.getElementById('previewB');
+      previewH.textContent=hText; previewB.textContent=bText;
+      previewH.style.fontFamily=`"${head}", ${hfb||'serif'}`;
+      previewB.style.fontFamily=`"${body}", ${bfb||'sans-serif'}`;
+      previewH.style.fontSize=hSize+'px'; previewB.style.fontSize=bSize+'px';
+      const css=`/* Include in <head> */\n<link rel=\"stylesheet\" href=\"${href}\">\n\n/* Use in CSS */\n:root{\n  --font-heading: \"${head}\", ${hfb||'serif'};\n  --font-body: \"${body}\", ${bfb||'sans-serif'};\n}\nh1,h2,h3{ font-family: var(--font-heading); }\nbody{ font-family: var(--font-body); }`;
+      document.getElementById('css').textContent=css;
+    }
+    document.getElementById('apply').addEventListener('click', update);
+    document.getElementById('copyCss').addEventListener('click',()=>{
+      navigator.clipboard.writeText(document.getElementById('css').textContent||'').then(()=>alert('CSS copied.'));
+    });
+    update();
+  </script>
+</body>
+</html>
+
+

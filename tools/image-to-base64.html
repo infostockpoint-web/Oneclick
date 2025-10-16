@@ -1,0 +1,278 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to Base64 - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-code tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Image to Base64</div>
+        <div class="tool-desc">Convert images to Base64 safely in your browser. Copy or download the encoded string.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="fileInput" style="display:block; font-weight:600; margin-bottom:6px;">Select Image</label>
+            <input id="fileInput" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Output</label>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <label><input type="radio" name="outType" value="dataurl" checked> Data URL</label>
+              <label><input type="radio" name="outType" value="raw"> Raw Base64</label>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="copyBtn" class="tool-button" disabled>Copy</button>
+            <button id="downloadBtn" class="tool-button" style="background:#28a745;" disabled>Download .txt</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Drop Zone & Preview</div>
+          <div id="dropZone" style="margin-top:10px; border:2px dashed #cbd5ff; border-radius:10px; background:#f8faff; min-height:220px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+            <div style="text-align:center; color:#667;">
+              <i class="fas fa-upload" style="font-size:2rem; margin-bottom:8px;"></i>
+              <div>Click or drag-and-drop an image here</div>
+              <div style="font-size:0.9rem;">JPG, PNG, WebP, GIF, etc.</div>
+            </div>
+          </div>
+          <div id="previewWrap" style="margin-top:10px; display:none; text-align:center;">
+            <img id="preview" alt="preview" style="max-width:100%; max-height:260px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+            <div id="meta" style="margin-top:8px; color:#555; font-size:0.92rem;"></div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Encoding Options</div>
+          <div style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; align-items:end;">
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Re-encode via Canvas</label>
+              <label><input type="checkbox" id="reencode"> Enable (choose format and quality)</label>
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Format</label>
+              <select id="formatSelect" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/webp">WebP</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Quality <span id="qVal">92%</span></label>
+              <input id="quality" type="range" min="10" max="100" value="92" style="width:100%;">
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <label><input type="checkbox" id="wrapLines" checked> Wrap lines to 76 chars (for email-safe Base64)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Output</div>
+        <textarea id="output" rows="10" placeholder="Your Base64 will appear here..." style="margin-top:10px; width:100%; resize:vertical;"></textarea>
+        <div id="outInfo" style="margin-top:8px; color:#666; font-size:0.9rem;"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const previewWrap = document.getElementById('previewWrap');
+    const preview = document.getElementById('preview');
+    const meta = document.getElementById('meta');
+    const output = document.getElementById('output');
+    const outInfo = document.getElementById('outInfo');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const qVal = document.getElementById('qVal');
+    const reencode = document.getElementById('reencode');
+    const formatSelect = document.getElementById('formatSelect');
+    const quality = document.getElementById('quality');
+    const wrapLines = document.getElementById('wrapLines');
+
+    let currentFile = null;
+    let currentDataUrl = '';
+
+    function fmtSize(bytes){
+      if(bytes === 0) return '0 B';
+      const k=1024; const units=['B','KB','MB','GB'];
+      const i=Math.floor(Math.log(bytes)/Math.log(k));
+      return (bytes/Math.pow(k,i)).toFixed(2)+' '+units[i];
+    }
+
+    function setOutput(text, info){
+      output.value = text;
+      outInfo.textContent = info || '';
+      const enabled = text && text.length>0;
+      copyBtn.disabled = !enabled;
+      downloadBtn.disabled = !enabled;
+    }
+
+    function toRawBase64(dataUrl){
+      const idx = dataUrl.indexOf(',');
+      return idx !== -1 ? dataUrl.slice(idx+1) : dataUrl;
+    }
+
+    function wrap76(str){
+      return str.replace(/.{1,76}/g, function(s){ return s + '\n'; }).trim();
+    }
+
+    function renderDataUrl(dataUrl, fileLike){
+      currentDataUrl = dataUrl;
+      previewWrap.style.display = 'block';
+      preview.src = dataUrl;
+      const img = new Image();
+      img.onload = function(){
+        meta.innerHTML = '<strong>'+ (fileLike?.name || 'Image') + '</strong><br>' +
+          'Dimensions: ' + img.naturalWidth + ' Ã— ' + img.naturalHeight + ' px<br>' +
+          'Type: ' + (fileLike?.type || dataUrl.substring(5, dataUrl.indexOf(';'))) + '<br>' +
+          'File size: ' + (fileLike?.size ? fmtSize(fileLike.size) : 'â€”');
+      };
+      img.src = dataUrl;
+
+      const outType = document.querySelector('input[name="outType"]:checked').value;
+      let text = outType === 'dataurl' ? dataUrl : toRawBase64(dataUrl);
+      if(outType === 'raw' && wrapLines.checked){
+        text = wrap76(text);
+      }
+      const info = 'Length: ' + text.length + ' chars';
+      setOutput(text, info);
+    }
+
+    function fileToDataUrl(file){
+      return new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=> resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function reencodeDataUrl(srcUrl){
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const q = Math.max(0.1, Math.min(1, Number(quality.value)/100));
+          const url = canvas.toDataURL(formatSelect.value, q);
+          resolve(url);
+        };
+        img.onerror = reject;
+        img.src = srcUrl;
+      });
+    }
+
+    async function handleFile(file){
+      if(!file || !file.type.startsWith('image/')) return;
+      currentFile = file;
+      const originalUrl = await fileToDataUrl(file);
+      if(reencode.checked){
+        try{
+          const newUrl = await reencodeDataUrl(originalUrl);
+          renderDataUrl(newUrl, file);
+        }catch(err){
+          // fallback to original
+          renderDataUrl(originalUrl, file);
+        }
+      }else{
+        renderDataUrl(originalUrl, file);
+      }
+    }
+
+    // Events
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0];
+      handleFile(f);
+    });
+
+    dropZone.addEventListener('click', ()=> fileInput.click());
+    ;['dragenter','dragover'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.background = '#f0f4ff';
+      dropZone.style.borderColor = '#9bb2ff';
+    }));
+    ;['dragleave','drop'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.background = '#f8faff';
+      dropZone.style.borderColor = '#cbd5ff';
+    }));
+    dropZone.addEventListener('drop', (e)=>{
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      handleFile(f);
+    });
+
+    document.querySelectorAll('input[name="outType"]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        if(currentDataUrl){
+          renderDataUrl(currentDataUrl, currentFile);
+        }
+      });
+    });
+    wrapLines.addEventListener('change', ()=>{
+      if(currentDataUrl){ renderDataUrl(currentDataUrl, currentFile); }
+    });
+    quality.addEventListener('input', ()=>{ qVal.textContent = quality.value + '%'; });
+    ;[reencode, formatSelect, quality].forEach(el=>{
+      el.addEventListener('change', ()=>{
+        if(currentFile){ handleFile(currentFile); }
+      });
+    });
+
+    copyBtn.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(output.value);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+      }catch(err){
+        copyBtn.textContent = 'Copy Failed';
+        setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+      }
+    });
+
+    downloadBtn.addEventListener('click', ()=>{
+      const blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const name = (currentFile?.name || 'image') + '_base64.txt';
+      a.href = url; a.download = name; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      currentFile = null; currentDataUrl = '';
+      fileInput.value = '';
+      preview.src = '';
+      previewWrap.style.display = 'none';
+      meta.textContent = '';
+      setOutput('', '');
+    });
+  </script>
+</body>
+</html>
+
+

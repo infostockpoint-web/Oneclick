@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Currency Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:960px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-exchange-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Currency Converter</div>
+        <div class="tool-desc">Offline converter using editable reference rates. For live rates, use your preferred provider.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="ccAmt" style="display:block; font-weight:600; margin-bottom:6px;">Amount</label>
+            <input id="ccAmt" type="number" step="any" value="100" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="ccFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+            <select id="ccFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+          </div>
+          <div>
+            <label for="ccTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+            <select id="ccTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="ccConvert" class="tool-button">Convert</button>
+            <button id="ccSwap" class="tool-button" style="background:#888;">Swap</button>
+            <button id="ccCopy" class="tool-button" style="background:#555;">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="ccResult" style="font-size:1.6rem;">â€”</div>
+        <div id="ccRateUsed" class="tool-desc" style="margin-top:6px; color:#555;">â€”</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div class="tool-name">Reference rates (editable)</div>
+          <small>Base: USD = 1.0000</small>
+        </div>
+        <div id="rateGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-top:10px;"></div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label style="display:flex; align-items:center; gap:8px;"><input id="useCustom" type="checkbox"> Use custom direct rate</label>
+          <input id="customRate" type="number" step="any" placeholder="Custom rate Fromâ†’To" style="flex:1; min-width:220px; padding:10px; border:1px solid #ddd; border-radius:8px;" disabled />
+          <small id="customHint" style="color:#666;">Example: If 1 From = X To, enter X here.</small>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // Offline reference rates (editable). All relative to USD.
+    const DEFAULT_RATES = {
+      USD: 1,
+      EUR: 0.92,
+      INR: 84.0,
+      GBP: 0.78,
+      JPY: 146.0,
+      AED: 3.67,
+      AUD: 1.5,
+      CAD: 1.35
+    };
+
+    const rates = { ...DEFAULT_RATES };
+    const currencies = Object.keys(rates);
+
+    function populateSelect(sel){
+      currencies.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+    }
+    function populateRates(){
+      const grid = document.getElementById('rateGrid');
+      grid.innerHTML='';
+      currencies.forEach(c => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<label style="display:block; font-weight:600; margin-bottom:6px;">${c}</label>`;
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.step='any'; inp.value = rates[c];
+        inp.style.cssText = 'width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;';
+        inp.addEventListener('input', () => { const v = Number(inp.value); if (isFinite(v) && v>0) rates[c] = v; });
+        wrap.appendChild(inp);
+        grid.appendChild(wrap);
+      });
+    }
+
+    function convertAmount(amount, from, to){
+      // If custom is enabled, use it directly
+      const useCustom = document.getElementById('useCustom').checked;
+      const customRate = Number(document.getElementById('customRate').value);
+      if (useCustom && isFinite(customRate) && customRate>0){
+        return { value: amount * customRate, note: `Custom rate used: 1 ${from} = ${customRate} ${to}` };
+      }
+      const rFrom = rates[from];
+      const rTo = rates[to];
+      if (!isFinite(rFrom) || !isFinite(rTo) || rFrom<=0 || rTo<=0) return { value: NaN, note: 'Invalid reference rates' };
+      // amount in USD, then to target
+      const inUsd = amount / rFrom;
+      const out = inUsd * rTo;
+      return { value: out, note: `Ref via USD: ${from}->USD(/${rFrom.toFixed(4)}) -> ${to}(x${rTo.toFixed(4)})` };
+    }
+
+    function fmt(n, cur){
+      if (!isFinite(n)) return 'â€”';
+      try { return new Intl.NumberFormat(undefined, { style:'decimal', maximumFractionDigits: 4 }).format(n) + (cur? ` ${cur}`:''); } catch(e){ return n.toFixed(4) + (cur? ` ${cur}`:''); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const fromSel = document.getElementById('ccFrom');
+      const toSel = document.getElementById('ccTo');
+      populateSelect(fromSel); populateSelect(toSel);
+      fromSel.value = 'USD';
+      toSel.value = 'INR';
+      populateRates();
+      document.getElementById('useCustom').addEventListener('change', (e)=>{
+        document.getElementById('customRate').disabled = !e.target.checked;
+      });
+    });
+
+    document.getElementById('ccSwap').addEventListener('click', ()=>{
+      const a=document.getElementById('ccFrom'); const b=document.getElementById('ccTo'); const t=a.value; a.value=b.value; b.value=t;
+    });
+
+    document.getElementById('ccConvert').addEventListener('click', ()=>{
+      const amt = Number(document.getElementById('ccAmt').value);
+      const from = document.getElementById('ccFrom').value;
+      const to = document.getElementById('ccTo').value;
+      const resEl = document.getElementById('ccResult');
+      const noteEl = document.getElementById('ccRateUsed');
+      if (!isFinite(amt)) { resEl.textContent = 'Please enter a valid amount'; noteEl.textContent='â€”'; return; }
+      const { value, note } = convertAmount(amt, from, to);
+      resEl.textContent = `${fmt(amt, from)} = ${fmt(value, to)}`;
+      noteEl.textContent = note;
+    });
+
+    document.getElementById('ccCopy').addEventListener('click', async ()=>{
+      try { await navigator.clipboard.writeText(document.getElementById('ccResult').textContent); } catch(e){}
+    });
+  </script>
+</body>
+</html>
+
+

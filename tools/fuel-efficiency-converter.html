@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fuel Efficiency Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-gas-pump tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Fuel Efficiency Converter</div>
+      <div class="tool-desc">Convert between km/l, l/100km, mpg (US), and mpg (UK).</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="fVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="fVal" type="number" step="any" placeholder="e.g. 15" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="fFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="fFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="kmpl" selected>km/l</option>
+            <option value="l_per_100">l/100km</option>
+            <option value="mpg_us">mpg (US)</option>
+            <option value="mpg_uk">mpg (UK)</option>
+          </select>
+        </div>
+        <div>
+          <label for="fTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="fTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="kmpl">km/l</option>
+            <option value="l_per_100" selected>l/100km</option>
+            <option value="mpg_us">mpg (US)</option>
+            <option value="mpg_uk">mpg (UK)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="fConvert" class="tool-button">Convert</button>
+          <button id="fSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="fCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="fResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="fTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  // Conversion constants
+  const MPG_US_TO_KMPL = 3.785411784 / 1.609344; // â‰ˆ 2.352145833
+  const MPG_UK_TO_KMPL = 4.54609 / 1.609344;     // â‰ˆ 2.824809363
+
+  function toKmpl(val, unit){
+    switch(unit){
+      case 'kmpl': return val;
+      case 'l_per_100': return (val === 0) ? Infinity : (100 / val);
+      case 'mpg_us': return val / MPG_US_TO_KMPL;
+      case 'mpg_uk': return val / MPG_UK_TO_KMPL;
+      default: return NaN;
+    }
+  }
+  function fromKmpl(kmpl, unit){
+    switch(unit){
+      case 'kmpl': return kmpl;
+      case 'l_per_100': return kmpl === 0 ? Infinity : (100 / kmpl);
+      case 'mpg_us': return kmpl * MPG_US_TO_KMPL;
+      case 'mpg_uk': return kmpl * MPG_UK_TO_KMPL;
+      default: return NaN;
+    }
+  }
+  function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:6}); }
+  function buildTable(kmpl){
+    return [
+      `km/l    : ${fmt(fromKmpl(kmpl,'kmpl'))}`,
+      `l/100km : ${fmt(fromKmpl(kmpl,'l_per_100'))}`,
+      `mpg (US): ${fmt(fromKmpl(kmpl,'mpg_us'))}`,
+      `mpg (UK): ${fmt(fromKmpl(kmpl,'mpg_uk'))}`
+    ].join('\n');
+  }
+  document.getElementById('fSwap').addEventListener('click', ()=>{ const a=document.getElementById('fFrom'); const b=document.getElementById('fTo'); const t=a.value; a.value=b.value; b.value=t; });
+  document.getElementById('fConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('fVal').value);
+    const from = document.getElementById('fFrom').value;
+    const to = document.getElementById('fTo').value;
+    const out = document.getElementById('fResult');
+    const tbl = document.getElementById('fTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const kmpl = toKmpl(val, from);
+    const conv = fromKmpl(kmpl, to);
+    out.textContent = `${fmt(val)} ${from} = ${fmt(conv)} ${to}`;
+    tbl.textContent = buildTable(kmpl);
+  });
+  document.getElementById('fCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('fResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+

@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Pairing Suggestions - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link id="gfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Merriweather:wght@400;700&display=swap">
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .card{border:1px solid #eee;border-radius:10px;overflow:hidden;background:#fff}
+    .prev{padding:16px}
+    .meta{padding:10px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+    .tag{background:#f1f1f1;border-radius:999px;padding:2px 8px;font-size:.75rem;margin-left:6px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-font tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Font Pairing Suggestions</div>
+        <div class="tool-desc">Browse curated font pairs for different vibes. Copy the CSS snippet to use them quickly.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Filter by style</label>
+            <select id="style" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="All">All</option>
+              <option>Modern</option>
+              <option>Elegant</option>
+              <option>Classic</option>
+              <option>Playful</option>
+            </select>
+          </div>
+          <button id="apply" class="tool-button">Apply</button>
+        </div>
+      </div>
+
+      <div id="list" class="grid"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const PAIRS=[
+      {head:'Inter', body:'Merriweather', tags:['Modern','Readable']},
+      {head:'Poppins', body:'Roboto Slab', tags:['Modern']},
+      {head:'Lora', body:'Montserrat', tags:['Elegant']},
+      {head:'Playfair Display', body:'Source Sans 3', tags:['Elegant','Classic']},
+      {head:'Nunito', body:'Libre Baskerville', tags:['Playful','Readable']},
+      {head:'Raleway', body:'Georgia', tags:['Classic']}
+    ];
+
+    function gfontHref(items){
+      const fams=[...new Set(items.flatMap(p=>[p.head,p.body]).filter(f=>!['Georgia','serif','sans-serif'].includes(f)))];
+      if (!fams.length) return document.getElementById('gfont').href;
+      return 'https://fonts.googleapis.com/css2?'+fams.map(f=>'family='+encodeURIComponent(f)+':wght@400;600;800').join('&')+'&display=swap';
+    }
+
+    function render(){
+      const style=document.getElementById('style').value;
+      const items = PAIRS.filter(p=> style==='All' || p.tags.includes(style));
+      document.getElementById('gfont').href = gfontHref(items);
+      const list=document.getElementById('list'); list.innerHTML='';
+      for (const p of items){
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <div class="prev">
+            <div style="font-family:'${p.head}', serif; font-weight:800; font-size:28px;">Heading Using ${p.head}</div>
+            <div style="font-family:'${p.body}', sans-serif; margin-top:8px;">Body sample with ${p.body}. The quick brown fox jumps over the lazy dog.</div>
+          </div>
+          <div class="meta">
+            <div><strong>${p.head}</strong> + <strong>${p.body}</strong>${p.tags.map(t=>`<span class='tag'>${t}</span>`).join('')}</div>
+            <button class="tool-button" data-copy='${p.head}|${p.body}'>Copy CSS</button>
+          </div>`;
+        list.appendChild(card);
+      }
+    }
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-copy]'); if(!btn) return; const [head,body]=btn.getAttribute('data-copy').split('|');
+      const href=document.getElementById('gfont').href;
+      const css=`/* Include in <head> */\n<link rel=\"stylesheet\" href=\"${href}\">\n\n/* Use in CSS */\n:root{\n  --font-heading: \"${head}\", serif;\n  --font-body: \"${body}\", sans-serif;\n}\nh1,h2,h3{ font-family: var(--font-heading); }\nbody{ font-family: var(--font-body); }`;
+      navigator.clipboard.writeText(css).then(()=>alert('CSS copied.'));
+    });
+
+    document.getElementById('apply').addEventListener('click', render);
+    render();
+  </script>
+</body>
+</html>
+
+

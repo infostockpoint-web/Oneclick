@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Length Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-ruler tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Length Converter</div>
+      <div class="tool-desc">Convert between meters, centimeters, inches, feet, yards, miles, and more.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="lenValue" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="lenValue" type="number" step="any" placeholder="e.g. 12.5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="lenFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="lenFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div>
+          <label for="lenTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="lenTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="lenConvert" class="tool-button">Convert</button>
+          <button id="lenSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="lenCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="lenResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="lenTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const UNITS = [
+    { k:'km', name:'Kilometer', to_m: 1000 },
+    { k:'m',  name:'Meter',     to_m: 1 },
+    { k:'cm', name:'Centimeter',to_m: 0.01 },
+    { k:'mm', name:'Millimeter',to_m: 0.001 },
+    { k:'mi', name:'Mile',      to_m: 1609.344 },
+    { k:'yd', name:'Yard',      to_m: 0.9144 },
+    { k:'ft', name:'Foot',      to_m: 0.3048 },
+    { k:'in', name:'Inch',      to_m: 0.0254 }
+  ];
+  function populateUnits(sel){
+    UNITS.forEach(u => { const o=document.createElement('option'); o.value=u.k; o.textContent=`${u.name} (${u.k})`; sel.appendChild(o); });
+  }
+  function toMeters(val, unit){ const u = UNITS.find(x=>x.k===unit); return (u ? val * u.to_m : NaN); }
+  function fromMeters(m, unit){ const u = UNITS.find(x=>x.k===unit); return (u ? m / u.to_m : NaN); }
+  function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:6}); }
+  function buildQuickTable(m){
+    return UNITS.map(u => `${u.k.padEnd(2,' ')} : ${fmt(fromMeters(m, u.k))}`).join('\n');
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const selFrom = document.getElementById('lenFrom');
+    const selTo = document.getElementById('lenTo');
+    populateUnits(selFrom); populateUnits(selTo);
+    selFrom.value='m'; selTo.value='ft';
+  });
+  document.getElementById('lenSwap').addEventListener('click', ()=>{
+    const a=document.getElementById('lenFrom'); const b=document.getElementById('lenTo');
+    const tmp=a.value; a.value=b.value; b.value=tmp;
+  });
+  document.getElementById('lenConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('lenValue').value);
+    const from = document.getElementById('lenFrom').value;
+    const to = document.getElementById('lenTo').value;
+    const out = document.getElementById('lenResult');
+    const tbl = document.getElementById('lenTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const meters = toMeters(val, from);
+    const conv = fromMeters(meters, to);
+    out.textContent = `${fmt(val)} ${from} = ${fmt(conv)} ${to}`;
+    tbl.textContent = buildQuickTable(meters);
+  });
+  document.getElementById('lenCopy').addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText(document.getElementById('lenResult').textContent); } catch(e){}
+  });
+</script>
+</body></html>
+
+

@@ -1,0 +1,434 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Roller Simulator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .dice-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .die {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #ffffff, #f0f0f0);
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: transform 0.2s;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .die:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .die.rolling {
+      animation: roll 1s ease-in-out;
+    }
+    @keyframes roll {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(90deg) scale(1.1); }
+      50% { transform: rotate(180deg) scale(1); }
+      75% { transform: rotate(270deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    .die-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+    }
+    .dots {
+      display: grid;
+      width: 60px;
+      height: 60px;
+      gap: 4px;
+    }
+    .dots-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+    .dots-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+    .dots-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .dots-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .dots-5 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .dots-6 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #333;
+      border-radius: 50%;
+    }
+    .dots-1 .dot { grid-column: 1; grid-row: 1; }
+    .dots-2 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .dots-2 .dot:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .dots-3 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .dots-3 .dot:nth-child(2) { grid-column: 2; grid-row: 2; }
+    .dots-3 .dot:nth-child(3) { grid-column: 2; grid-row: 1; }
+    .dots-4 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .dots-4 .dot:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .dots-4 .dot:nth-child(3) { grid-column: 1; grid-row: 2; }
+    .dots-4 .dot:nth-child(4) { grid-column: 2; grid-row: 2; }
+    .dots-5 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .dots-5 .dot:nth-child(2) { grid-column: 2; grid-row: 2; }
+    .dots-5 .dot:nth-child(3) { grid-column: 2; grid-row: 1; }
+    .dots-5 .dot:nth-child(4) { grid-column: 3; grid-row: 1; }
+    .dots-5 .dot:nth-child(5) { grid-column: 3; grid-row: 2; }
+    .dots-6 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .dots-6 .dot:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .dots-6 .dot:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .dots-6 .dot:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .dots-6 .dot:nth-child(5) { grid-column: 2; grid-row: 2; }
+    .dots-6 .dot:nth-child(6) { grid-column: 3; grid-row: 2; }
+
+    .result-display {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 20px 0;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .control-group label {
+      font-weight: 600;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .history-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .history-item {
+      padding: 8px 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-dice {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .history-count {
+      background: #007bff;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-dice tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Dice Roller Simulator</div>
+        <div class="tool-desc">Roll virtual dice with realistic animation. Track your rolls and see statistics.</div>
+      </div>
+
+      <div style="text-align:center; margin:20px 0;">
+        <label style="font-weight:600;">Number of Dice</label>
+        <input type="number" id="diceCount" min="1" max="10" value="2" style="width:80px; margin-left:10px; padding:8px; border:1px solid #ddd; border-radius:6px;">
+        <button id="addDieBtn" class="tool-button" style="margin-left:10px;">Add Die</button>
+        <button id="removeDieBtn" class="tool-button" style="background:#888; margin-left:10px;">Remove Die</button>
+      </div>
+
+      <div class="dice-container" id="diceContainer">
+        <div class="die" data-index="0">
+          <div class="die-face">
+            <div class="dots dots-1">
+              <div class="dot"></div>
+            </div>
+          </div>
+        </div>
+        <div class="die" data-index="1">
+          <div class="die-face">
+            <div class="dots dots-1">
+              <div class="dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-display" id="resultDisplay">
+        Click "Roll Dice" to start!
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <button id="rollBtn" class="tool-button">Roll Dice!</button>
+          <button id="resetBtn" class="tool-button" style="background:#888;">Reset Stats</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalRolls">0</div>
+          <div>Total Rolls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="averageRoll">0.0</div>
+          <div>Average Roll</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="highRoll">0</div>
+          <div>Highest Roll</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="lowRoll">0</div>
+          <div>Lowest Roll</div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Roll History</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const diceContainer = document.getElementById('diceContainer');
+    const diceCount = document.getElementById('diceCount');
+    const addDieBtn = document.getElementById('addDieBtn');
+    const removeDieBtn = document.getElementById('removeDieBtn');
+    const rollBtn = document.getElementById('rollBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const totalRolls = document.getElementById('totalRolls');
+    const averageRoll = document.getElementById('averageRoll');
+    const highRoll = document.getElementById('highRoll');
+    const lowRoll = document.getElementById('lowRoll');
+    const historyList = document.getElementById('historyList');
+
+    let dice = [];
+    let rollHistory = [];
+    let totalRollsCount = 0;
+    let highestRoll = 0;
+    let lowestRoll = 6;
+    let sumOfAllRolls = 0;
+
+    function createDie(index) {
+      const die = document.createElement('div');
+      die.className = 'die';
+      die.dataset.index = index;
+      die.innerHTML = `
+        <div class="die-face">
+          <div class="dots dots-1">
+            <div class="dot"></div>
+          </div>
+        </div>
+      `;
+      return die;
+    }
+
+    function updateDiceCount() {
+      const count = parseInt(diceCount.value) || 1;
+      diceCount.value = count;
+
+      // Remove excess dice
+      while (diceContainer.children.length > count) {
+        diceContainer.removeChild(diceContainer.lastChild);
+      }
+
+      // Add missing dice
+      while (diceContainer.children.length < count) {
+        const index = diceContainer.children.length;
+        const die = createDie(index);
+        diceContainer.appendChild(die);
+      }
+
+      dice = Array.from(diceContainer.children);
+    }
+
+    function updateDots(dieElement, value) {
+      const dots = dieElement.querySelector('.dots');
+      dots.className = `dots dots-${value}`;
+
+      // Clear existing dots
+      dots.innerHTML = '';
+
+      // Add new dots based on value
+      for (let i = 0; i < value; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dots.appendChild(dot);
+      }
+    }
+
+    function rollDice() {
+      if (dice.length === 0) return;
+
+      const results = [];
+      let total = 0;
+
+      dice.forEach((die, index) => {
+        die.classList.add('rolling');
+
+        setTimeout(() => {
+          const value = Math.floor(Math.random() * 6) + 1;
+          results.push(value);
+          total += value;
+
+          updateDots(die, value);
+
+          // Remove rolling animation
+          setTimeout(() => {
+            die.classList.remove('rolling');
+          }, 100);
+        }, index * 100);
+      });
+
+      // Update results after all dice have rolled
+      setTimeout(() => {
+        totalRollsCount++;
+        sumOfAllRolls += total;
+        highestRoll = Math.max(highestRoll, total);
+        lowestRoll = Math.min(lowestRoll, total);
+
+        updateStats();
+        addToHistory(results, total);
+      }, dice.length * 100 + 500);
+    }
+
+    function updateStats() {
+      totalRolls.textContent = totalRollsCount;
+      averageRoll.textContent = totalRollsCount > 0 ? (sumOfAllRolls / totalRollsCount).toFixed(1) : '0.0';
+      highRoll.textContent = highestRoll;
+      lowRoll.textContent = lowestRoll;
+    }
+
+    function addToHistory(results, total) {
+      const historyItem = {
+        results: [...results],
+        total: total,
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      rollHistory.unshift(historyItem);
+      if (rollHistory.length > 50) rollHistory = rollHistory.slice(0, 50);
+
+      updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+      historyList.innerHTML = rollHistory.map(item => `
+        <div class="history-item">
+          <div class="history-dice">
+            ${item.results.map(r => `<span style="font-weight: bold; margin: 0 2px;">${r}</span>`).join(' + ')}
+            = <strong>${item.total}</strong>
+          </div>
+          <span class="history-count">${item.timestamp}</span>
+        </div>
+      `).join('');
+    }
+
+    function resetStats() {
+      totalRollsCount = 0;
+      highestRoll = 0;
+      lowestRoll = 6;
+      sumOfAllRolls = 0;
+      rollHistory = [];
+
+      updateStats();
+      updateHistoryDisplay();
+      resultDisplay.textContent = 'Click "Roll Dice" to start!';
+      resultDisplay.className = 'result-display';
+
+      // Reset all dice to 1
+      dice.forEach(die => {
+        updateDots(die, 1);
+      });
+    }
+
+    // Event listeners
+    diceCount.addEventListener('change', updateDiceCount);
+    addDieBtn.addEventListener('click', () => {
+      const count = parseInt(diceCount.value) || 1;
+      if (count < 10) {
+        diceCount.value = count + 1;
+        updateDiceCount();
+      }
+    });
+
+    removeDieBtn.addEventListener('click', () => {
+      const count = parseInt(diceCount.value) || 1;
+      if (count > 1) {
+        diceCount.value = count - 1;
+        updateDiceCount();
+      }
+    });
+
+    rollBtn.addEventListener('click', rollDice);
+    resetBtn.addEventListener('click', resetStats);
+
+    // Initialize
+    updateDiceCount();
+    updateStats();
+  </script>
+</body>
+</html>
+
+

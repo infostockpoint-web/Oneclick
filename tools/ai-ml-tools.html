@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI & ML Tools - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .ai-tools-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .ai-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .ai-header h1 {
+      font-size: 2.5rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .ai-header p {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .ai-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+    
+    .ai-tool-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .ai-tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ai-tool-icon {
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+      font-size: 2rem;
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .ai-tool-content {
+      padding: 20px;
+    }
+    
+    .ai-tool-content h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 1.3rem;
+    }
+    
+    .ai-tool-content p {
+      color: #7f8c8d;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .ai-tool-link {
+      display: inline-block;
+      background: #4a6cf7;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+    
+    .ai-tool-link:hover {
+      background: #3a5ce4;
+    }
+    
+    .coming-soon {
+      background: #f8f9fa;
+      color: #6c757d;
+      font-size: 0.9rem;
+      padding: 15px;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+    
+    @media (max-width: 768px) {
+      .ai-tools-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .ai-header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  
+  <main class="ai-tools-container">
+    <div class="ai-header">
+      <h1><i class="fas fa-robot"></i> AI & ML Tools</h1>
+      <p>Explore our collection of artificial intelligence and machine learning tools designed to make your work easier and more efficient.</p>
+    </div>
+    
+    <div class="ai-tools-grid">
+      <!-- AI Text Generator -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon">
+          <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>AI Text Generator</h3>
+          <p>Generate human-like text for articles, stories, and more using advanced AI technology.</p>
+          <a href="ai-text-generator.html" class="ai-tool-link">Try It Now</a>
+        </div>
+        <div class="coming-soon">Demo Available</div>
+      </div>
+      
+      <!-- Image Recognition -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon" style="background: linear-gradient(135deg, #f6d365, #fda085);">
+          <i class="fas fa-eye"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>Image Recognition</h3>
+          <p>Upload images and let our AI identify objects, people, and scenes with high accuracy.</p>
+          <a href="image-recognition.html" class="ai-tool-link">Try It Now</a>
+        </div>
+        <div class="coming-soon">Demo Available</div>
+      </div>
+      
+      <!-- Language Translator -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);">
+          <i class="fas fa-language"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>Language Translator</h3>
+          <p>Translate text between multiple languages with AI-powered accuracy and natural-sounding results.</p>
+          <a href="language-translator.html" class="ai-tool-link">Try It Now</a>
+        </div>
+        <div class="coming-soon">Demo Available</div>
+      </div>
+      
+      <!-- Sentiment Analysis -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon" style="background: linear-gradient(135deg, #ff9a9e, #fad0c4);">
+          <i class="fas fa-smile"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>Sentiment Analysis</h3>
+          <p>Analyze text to determine the sentiment, whether it's positive, negative, or neutral.</p>
+          <a href="sentiment-analysis.html" class="ai-tool-link">Try It Now</a>
+        </div>
+        <div class="coming-soon">Demo Available</div>
+      </div>
+      
+      <!-- AI Code Assistant -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+          <i class="fas fa-code"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>AI Code Assistant</h3>
+          <p>Get AI-powered coding help, suggestions, and debugging assistance in multiple programming languages.</p>
+          <a href="ai-code-assistant.html" class="ai-tool-link">Try It Now</a>
+        </div>
+        <div class="coming-soon">Demo Available</div>
+      </div>
+      
+      <!-- More AI Tools Coming Soon -->
+      <div class="ai-tool-card">
+        <div class="ai-tool-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);">
+          <i class="fas fa-plus"></i>
+        </div>
+        <div class="ai-tool-content">
+          <h3>More AI Tools</h3>
+          <p>We're constantly working on new AI-powered tools to help you be more productive and creative.</p>
+          <a href="#" class="ai-tool-link">Coming Soon</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div id="site-footer"></div>
+  
+  <script src="../js/include.js"></script>
+  <script>
+    // Add active class to current nav item
+    document.addEventListener('DOMContentLoaded', function() {
+      // This will be handled by include.js
+    });
+  </script>
+</body>
+</html>
+
+

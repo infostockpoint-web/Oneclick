@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Business Model Canvas - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .block{background:#fff;border:1px solid #eee;border-radius:10px;padding:12px}
+    .block h3{margin:0 0 8px 0;font-size:1rem}
+    @media(max-width:900px){ .grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:600px){ .grid{grid-template-columns:1fr} }
+    textarea{width:100%;min-height:100px;padding:10px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1200px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-project-diagram tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Business Model Canvas</div>
+        <div class="tool-desc">Fill the 9 blocks and export your canvas as HTML for sharing or printing.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div class="block"><h3>Key Partners</h3><textarea id="kp" placeholder="List partners..."></textarea></div>
+          <div class="block"><h3>Key Activities</h3><textarea id="ka" placeholder="Main activities..."></textarea></div>
+          <div class="block"><h3>Key Resources</h3><textarea id="kr" placeholder="Resources..."></textarea></div>
+          <div class="block"><h3>Value Propositions</h3><textarea id="vp" placeholder="Value you deliver..."></textarea></div>
+          <div class="block"><h3>Customer Relationships</h3><textarea id="cr" placeholder="How you interact..."></textarea></div>
+          <div class="block"><h3>Channels</h3><textarea id="ch" placeholder="How you reach customers..."></textarea></div>
+          <div class="block"><h3>Customer Segments</h3><textarea id="cs" placeholder="Target segments..."></textarea></div>
+          <div class="block"><h3>Cost Structure</h3><textarea id="cost" placeholder="Fixed/variable costs..."></textarea></div>
+          <div class="block"><h3>Revenue Streams</h3><textarea id="rev" placeholder="How you earn..."></textarea></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <button id="save" class="tool-button">Save</button>
+          <button id="export" class="tool-button"><i class="fas fa-download"></i> Export HTML</button>
+          <button id="clear" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Clear</button>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_bmc_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{} }catch(e){ return {} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function read(){ return {kp:kp.value,ka:ka.value,kr:kr.value,vp:vp.value,cr:cr.value,ch:ch.value,cs:cs.value,cost:cost.value,rev:rev.value}; }
+    function fill(d){ for(const k of Object.keys(d)){ const el=document.getElementById(k); if(el) el.value=d[k]; } }
+
+    document.getElementById('save').addEventListener('click',()=>{ save(read()); alert('Saved locally.'); });
+    document.getElementById('clear').addEventListener('click',()=>{ if(!confirm('Clear canvas?')) return; localStorage.removeItem(KEY); fill({kp:'',ka:'',kr:'',vp:'',cr:'',ch:'',cs:'',cost:'',rev:''}); });
+    document.getElementById('export').addEventListener('click',()=>{
+      const d=read();
+      const sec=(title,txt)=>`<div style="border:1px solid #eee;border-radius:10px;padding:10px;"><h3 style=\"margin:0 0 6px 0;font-family:Arial\">${title}</h3><div style=\"white-space:pre-wrap;\">${txt.replace(/</g,'&lt;')}</div></div>`;
+      const html=`<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Business Model Canvas</title></head><body style="font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;">
+        <div style="max-width:1100px;margin:20px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${sec('Key Partners',d.kp)}${sec('Key Activities',d.ka)}${sec('Key Resources',d.kr)}${sec('Value Propositions',d.vp)}${sec('Customer Relationships',d.cr)}${sec('Channels',d.ch)}${sec('Customer Segments',d.cs)}${sec('Cost Structure',d.cost)}${sec('Revenue Streams',d.rev)}
+        </div>
+      </body></html>`;
+      const a=document.createElement('a'); const blob=new Blob([html],{type:'text/html'}); a.href=URL.createObjectURL(blob); a.download='business-model-canvas.html'; a.click();
+    });
+
+    fill(load());
+  </script>
+</body>
+</html>
+
+

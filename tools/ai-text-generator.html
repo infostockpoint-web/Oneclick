@@ -1,0 +1,603 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Text Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .ai-text-generator {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .ai-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .ai-header h1 {
+      font-size: 2.2rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .ai-header p {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto 20px;
+    }
+    
+    .generator-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    
+    .input-section, .output-section {
+      padding: 25px;
+    }
+    
+    .input-section {
+      border-bottom: 1px solid #eee;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .prompt-input {
+      width: 100%;
+      min-height: 120px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+      margin-bottom: 15px;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    select, input[type="number"] {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+    
+    .generate-btn {
+      background: #4a6cf7;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s ease;
+    }
+    
+    .generate-btn:hover {
+      background: #3a5ce4;
+    }
+    
+    .generate-btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .output-section {
+      min-height: 200px;
+      position: relative;
+    }
+    
+    .output-placeholder {
+      color: #95a5a6;
+      font-style: italic;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4a6cf7;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .generated-text {
+      line-height: 1.6;
+      white-space: pre-wrap;
+      display: none;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+    
+    .action-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+    
+    .copy-btn {
+      background: #e8f4fc;
+      color: #3498db;
+    }
+    
+    .copy-btn:hover {
+      background: #d6eaf8;
+    }
+    
+    .download-btn {
+      background: #e8f8f5;
+      color: #2ecc71;
+    }
+    
+    .download-btn:hover {
+      background: #d1f2eb;
+    }
+    
+    .error-message {
+      color: #e74c3c;
+      background: #fde8e8;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+    
+    .feature-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .feature-card i {
+      font-size: 1.5rem;
+      color: #4a6cf7;
+      margin-bottom: 15px;
+    }
+    
+    .feature-card h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+    }
+    
+    .feature-card p {
+      color: #7f8c8d;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+      .ai-header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .control-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+    
+    .coming-soon-banner {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      color: #6c757d;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border: 1px dashed #dee2e6;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  
+  <main class="ai-text-generator">
+    <div class="ai-header">
+      <h1><i class="fas fa-robot"></i> AI Text Generator</h1>
+      <p>Generate high-quality, human-like text for articles, stories, emails, and more with our advanced AI technology.</p>
+    </div>
+    
+    <div class="coming-soon-banner">
+      <i class="fas fa-info-circle"></i> This is a preview of our upcoming AI Text Generator. The full version with AI capabilities will be available soon.
+    </div>
+    
+    <div class="generator-container">
+      <div class="input-section">
+        <div class="section-title">
+          <i class="fas fa-keyboard"></i>
+          <span>Enter your prompt</span>
+        </div>
+        <textarea 
+          id="promptInput" 
+          class="prompt-input" 
+          placeholder="Example: Write a blog post about the benefits of artificial intelligence in healthcare..."
+        ></textarea>
+        
+        <div class="controls">
+          <div class="control-group">
+            <div>
+              <label for="tone" style="font-size: 0.9rem; color: #7f8c8d; margin-right: 5px;">Tone:</label>
+              <select id="tone">
+                <option value="professional">Professional</option>
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+                <option value="friendly">Friendly</option>
+                <option value="persuasive">Persuasive</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="length" style="font-size: 0.9rem; color: #7f8c8d; margin-right: 5px;">Length:</label>
+              <select id="length">
+                <option value="short">Short</option>
+                <option value="medium" selected>Medium</option>
+                <option value="long">Long</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="creativity" style="font-size: 0.9rem; color: #7f8c8d; margin-right: 5px;">Creativity:</label>
+              <select id="creativity">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+          
+          <button id="generateBtn" class="generate-btn">
+            <i class="fas fa-magic"></i>
+            <span>Generate Text</span>
+          </button>
+          <button id="settingsBtn" type="button" class="generate-btn" style="background:#f7f7f9; color:#2c3e50; border:1px solid #e5e7eb;">
+            <i class="fas fa-cog"></i>
+            <span>AI Settings</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="output-section">
+        <div class="section-title">
+          <i class="fas fa-file-alt"></i>
+          <span>Generated Text</span>
+        </div>
+        
+        <div id="outputPlaceholder" class="output-placeholder">
+          Your AI-generated text will appear here...
+        </div>
+        
+        <div id="loadingIndicator" class="loading">
+          <div class="loading-spinner"></div>
+          <p>Generating your content...</p>
+        </div>
+        
+        <div id="generatedText" class="generated-text"></div>
+        
+        <div id="errorMessage" class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>An error occurred while generating text. Please try again.</span>
+        </div>
+        
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+          <button id="copyBtn" class="action-btn copy-btn">
+            <i class="far fa-copy"></i>
+            <span>Copy Text</span>
+          </button>
+          <button id="downloadBtn" class="action-btn download-btn">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="features">
+      <div class="feature-card">
+        <i class="fas fa-bolt"></i>
+        <h3>Lightning Fast</h3>
+        <p>Generate high-quality content in seconds with our powerful AI technology.</p>
+      </div>
+      
+      <div class="feature-card">
+        <i class="fas fa-sliders-h"></i>
+        <h3>Customizable</h3>
+        <p>Adjust tone, length, and creativity to get the perfect output for your needs.</p>
+      </div>
+      
+      <div class="feature-card">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Privacy Focused</h3>
+        <p>Your data remains secure and is never stored or shared with third parties.</p>
+      </div>
+    </div>
+  </main>
+  
+  <div id="site-footer"></div>
+  
+  <!-- Settings Modal -->
+  <div id="settingsModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #fff; width: min(520px, 92vw); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-cog" style="color:#4a6cf7;"></i>
+          <strong>AI Settings</strong>
+        </div>
+        <button id="closeSettingsBtn" class="action-btn" style="background: transparent; color:#7f8c8d;">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+      <div style="padding: 18px 20px 6px;">
+        <div class="control-group" style="margin-bottom: 14px;">
+          <label for="openaiKey" style="font-weight:600;">OpenAI API Key</label>
+          <input id="openaiKey" type="password" placeholder="sk-..." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:0.95rem;" />
+          <small style="display:block; color:#7f8c8d; margin-top:6px;">Stored locally in your browser and used only from your device.</small>
+        </div>
+      </div>
+      <div style="padding: 12px 20px 18px; display:flex; gap:10px; justify-content:flex-end;">
+        <button id="clearSettingsBtn" class="action-btn" style="background:#fde8e8; color:#e74c3c;">
+          <i class="fas fa-trash"></i>
+          <span>Clear</span>
+        </button>
+        <button id="saveSettingsBtn" class="action-btn" style="background:#4a6cf7; color:#fff;">
+          <i class="fas fa-save"></i>
+          <span>Save</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const generateBtn = document.getElementById('generateBtn');
+      const promptInput = document.getElementById('promptInput');
+      const outputPlaceholder = document.getElementById('outputPlaceholder');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const generatedText = document.getElementById('generatedText');
+      const errorMessage = document.getElementById('errorMessage');
+      const actionButtons = document.getElementById('actionButtons');
+      const copyBtn = document.getElementById('copyBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const toneSelect = document.getElementById('tone');
+      const lengthSelect = document.getElementById('length');
+      const creativitySelect = document.getElementById('creativity');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const settingsModal = document.getElementById('settingsModal');
+      const openaiKeyInput = document.getElementById('openaiKey');
+      const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+      const clearSettingsBtn = document.getElementById('clearSettingsBtn');
+      const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+      
+      // Sample responses for demo purposes
+      const sampleResponses = [
+        "Artificial Intelligence (AI) is revolutionizing the healthcare industry in numerous ways. From improving diagnostic accuracy to personalizing treatment plans, AI is helping medical professionals provide better care to patients. Machine learning algorithms can analyze vast amounts of medical data to identify patterns and predict potential health issues before they become serious problems.",
+        "The benefits of artificial intelligence in healthcare are numerous. AI-powered diagnostic tools can analyze medical images with incredible accuracy, often detecting conditions that might be missed by the human eye. Additionally, AI can help reduce healthcare costs by automating routine tasks and improving operational efficiency in hospitals and clinics.",
+        "In the realm of patient care, AI is enabling more personalized treatment approaches. By analyzing a patient's medical history, genetic information, and lifestyle factors, AI systems can recommend tailored treatment plans that are more likely to be effective for each individual. This level of personalization was simply not possible with traditional healthcare approaches."
+      ];
+
+      // Settings helpers (reuse key from image generator for consistency)
+      const STORAGE_KEYS = { openai: 'aiimage_openai_key' };
+      function getOpenAIKey(){ try { return localStorage.getItem(STORAGE_KEYS.openai) || ''; } catch(_) { return ''; } }
+      function setOpenAIKey(v){ try { localStorage.setItem(STORAGE_KEYS.openai, v || ''); } catch(_) {} }
+      function hasApi(){ return !!getOpenAIKey(); }
+      
+      // Generate text function (uses OpenAI if available; falls back to demo)
+      async function generateText() {
+        const prompt = promptInput.value.trim();
+        
+        if (!prompt) {
+          showError("Please enter a prompt to generate text.");
+          return;
+        }
+        
+        // Show loading state
+        outputPlaceholder.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        generatedText.style.display = 'none';
+        errorMessage.style.display = 'none';
+        actionButtons.style.display = 'none';
+        generateBtn.disabled = true;
+        
+        try {
+          if (hasApi()) {
+            await generateWithOpenAI(prompt);
+          } else {
+            await demoGenerate();
+          }
+        } catch (error) {
+          console.error('Generation error:', error);
+          showError(typeof error === 'string' ? error : 'Failed to generate text. Please try again.');
+        } finally {
+          generateBtn.disabled = false;
+        }
+      }
+
+      async function generateWithOpenAI(prompt){
+        const key = getOpenAIKey();
+        if (!key) throw 'OpenAI API key not set. Click AI Settings to add your key.';
+        const tone = toneSelect.value;
+        const length = lengthSelect.value;
+        const creativity = creativitySelect.value; // low/medium/high
+        const temperature = creativity === 'low' ? 0.2 : (creativity === 'high' ? 0.9 : 0.6);
+
+        const sys = `You are a helpful writing assistant. Write with a ${tone} tone and ${length} length.`;
+        const body = {
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: prompt }
+          ],
+          temperature
+        };
+        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+          let msg = `OpenAI API error (${resp.status})`;
+          try { const j = await resp.json(); if (j && j.error && j.error.message) msg += `: ${j.error.message}`; } catch(_){}
+          throw msg;
+        }
+        const data = await resp.json();
+        const text = data?.choices?.[0]?.message?.content || '';
+        if (!text) throw 'Empty response from OpenAI.';
+        generatedText.textContent = text;
+        loadingIndicator.style.display = 'none';
+        generatedText.style.display = 'block';
+        actionButtons.style.display = 'flex';
+      }
+
+      function demoGenerate(){
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+            generatedText.textContent = randomResponse;
+            loadingIndicator.style.display = 'none';
+            generatedText.style.display = 'block';
+            actionButtons.style.display = 'flex';
+            resolve();
+          }, 800);
+        });
+      }
+      
+      // Show error message
+      function showError(message) {
+        errorMessage.querySelector('span').textContent = message;
+        errorMessage.style.display = 'flex';
+        loadingIndicator.style.display = 'none';
+        generateBtn.disabled = false;
+      }
+      
+      // Copy text to clipboard
+      function copyToClipboard() {
+        const textToCopy = generatedText.textContent;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          // Show copied feedback
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy text:', err);
+        });
+      }
+      
+      // Download text as file
+      function downloadText() {
+        const textToDownload = generatedText.textContent;
+        const blob = new Blob([textToDownload], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ai-generated-text.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      
+      // Settings modal wiring
+      function openSettings(){ settingsModal.style.display = 'flex'; openaiKeyInput.value = getOpenAIKey(); }
+      function closeSettings(){ settingsModal.style.display = 'none'; }
+      if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+      if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+      if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', function(){ setOpenAIKey(openaiKeyInput.value.trim()); closeSettings(); });
+      if (clearSettingsBtn) clearSettingsBtn.addEventListener('click', function(){ setOpenAIKey(''); openaiKeyInput.value=''; });
+      
+      // Event listeners
+      generateBtn.addEventListener('click', generateText);
+      copyBtn.addEventListener('click', copyToClipboard);
+      downloadBtn.addEventListener('click', downloadText);
+      
+      // Allow Ctrl+Enter to generate text
+      promptInput.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+          generateText();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+

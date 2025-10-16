@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>.htaccess Redirect Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto; padding:16px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <i class="fas fa-exchange-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">.htaccess Redirect Generator</div>
+        <div class="tool-desc">Generate common Apache redirects quickly.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <label style="font-weight:600;">Redirect Type</label>
+            <select id="code" class="tool-input" style="width:100%; margin-top:6px;">
+              <option value="301" selected>301 (Permanent)</option>
+              <option value="302">302 (Temporary)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Scenario</label>
+            <select id="scenario" class="tool-input" style="width:100%; margin-top:6px;">
+              <option value="single">Single URL → URL</option>
+              <option value="domain">Whole Domain → New Domain</option>
+              <option value="http-https">Force HTTPS</option>
+              <option value="www-nonwww">Force non‑www</option>
+              <option value="nonwww-www">Force www</option>
+              <option value="add-slash">Force trailing slash</option>
+              <option value="remove-slash">Remove trailing slash</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="inputs" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-single input-domain">
+            <label style="font-weight:600;">From URL or Domain</label>
+            <input id="from" class="tool-input" placeholder="e.g., /old-page or example.com" style="width:100%; margin-top:6px;" />
+          </div>
+          <div class="input-single input-domain">
+            <label style="font-weight:600;">To URL or Domain</label>
+            <input id="to" class="tool-input" placeholder="e.g., /new-page or example.org" style="width:100%; margin-top:6px;" />
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="generate" class="tool-button">Generate</button>
+          <button id="copy" class="tool-button"><i class="fas fa-copy"></i> Copy</button>
+          <button id="download" class="tool-button"><i class="fas fa-download"></i> Download .htaccess</button>
+        </div>
+
+        <div>
+          <label style="font-weight:600;">Generated .htaccess Rules</label>
+          <textarea id="output" readonly style="width:100%; height:260px; margin-top:6px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px; text-align:center;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const scenarioEl = document.getElementById('scenario');
+    const codeEl = document.getElementById('code');
+    const fromEl = document.getElementById('from');
+    const toEl = document.getElementById('to');
+    const outEl = document.getElementById('output');
+    const inputsWrap = document.getElementById('inputs');
+
+    function isDomain(v){return /^(?:[a-z]+:\/\/)?[a-z0-9.-]+(?:\:[0-9]+)?$/i.test(v);}
+
+    function updateInputs(){
+      const sc = scenarioEl.value;
+      const showFromTo = (sc === 'single' || sc === 'domain');
+      inputsWrap.style.display = showFromTo ? 'grid' : 'none';
+    }
+
+    scenarioEl.addEventListener('change', updateInputs);
+    updateInputs();
+
+    function gen(){
+      const code = codeEl.value;
+      const sc = scenarioEl.value;
+      let lines = [];
+      lines.push('RewriteEngine On');
+
+      if(sc === 'single'){
+        const from = fromEl.value.trim();
+        const to = toEl.value.trim();
+        if(!from || !to){ outEl.value = '# Provide both From and To'; return; }
+        if(from.startsWith('http')){
+          try{ const u = new URL(from); lines.push(`RewriteCond %{REQUEST_URI} ^${u.pathname.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')}$`); lines.push(`RewriteRule ^.*$ ${to} [R=${code},L]`);}catch{ outEl.value = '# Invalid From URL'; return; }
+        } else {
+          const path = from.startsWith('/') ? from.slice(1) : from;
+          lines.push(`Redirect ${code} /${path} ${to}`);
+        }
+      }
+
+      else if(sc === 'domain'){
+        const from = fromEl.value.trim().replace(/\/$/, '');
+        const to = toEl.value.trim().replace(/\/$/, '');
+        if(!from || !to){ outEl.value = '# Provide both domains'; return; }
+        const fromHost = from.replace(/^(https?:\/\/)/,'');
+        const toHost = to.startsWith('http') ? to : 'https://' + to;
+        lines.push(`RewriteCond %{HTTP_HOST} ^${fromHost.replace(/[.]/g,'\\.')}$ [NC]`);
+        lines.push('RewriteRule ^(.*)$ ' + toHost + '/$1 [R=' + code + ',L]');
+      }
+
+      else if(sc === 'http-https'){
+        lines.push('RewriteCond %{HTTPS} !=on');
+        lines.push('RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=' + code + ',L]');
+      }
+
+      else if(sc === 'www-nonwww'){
+        lines.push('RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]');
+        lines.push('RewriteRule ^(.*)$ https://%1/$1 [R=' + code + ',L]');
+      }
+
+      else if(sc === 'nonwww-www'){
+        lines.push('RewriteCond %{HTTP_HOST} !^www\..*$ [NC]');
+        lines.push('RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=' + code + ',L]');
+      }
+
+      else if(sc === 'add-slash'){
+        lines.push('RewriteCond %{REQUEST_FILENAME} !-f');
+        lines.push('RewriteCond %{REQUEST_URI} !\/$');
+        lines.push('RewriteRule ^(.*)$ %{REQUEST_URI}/ [R=' + code + ',L]');
+      }
+
+      else if(sc === 'remove-slash'){
+        lines.push('RewriteCond %{REQUEST_FILENAME} !-d');
+        lines.push('RewriteRule ^(.+?)\/+$ /$1 [R=' + code + ',L]');
+      }
+
+      outEl.value = lines.join('\n');
+    }
+
+    document.getElementById('generate').addEventListener('click', gen);
+    document.getElementById('copy').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(outEl.value || ''); }catch{}
+    });
+    document.getElementById('download').addEventListener('click', ()=>{
+      const blob = new Blob([outEl.value || ''], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '.htaccess';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

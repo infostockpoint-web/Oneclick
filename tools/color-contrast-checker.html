@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Contrast Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .sw{border:1px solid #eee;border-radius:10px;overflow:hidden;background:#fff}
+    .row{display:flex;gap:8px;align-items:center}
+    .sample{border-radius:8px;padding:12px}
+    .pass{color:#2ecc71}
+    .fail{color:#e74c3c}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-adjust tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Color Contrast Checker</div>
+        <div class="tool-desc">Check contrast ratio and WCAG pass levels for normal and large text.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Foreground</label>
+            <input id="fg" type="text" value="#1f1f1f" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Background</label>
+            <input id="bg" type="text" value="#ffffff" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Sample Text</label>
+            <input id="text" type="text" value="The quick brown fox jumps over the lazy dog" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <button id="check" class="tool-button">Check</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="sw" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Preview</div>
+          <div id="preview" class="sample">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        <div class="sw" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Results</div>
+          <div id="ratio" class="tool-desc">Ratio â€”</div>
+          <div id="aa" class="tool-desc">AA (normal) â€”</div>
+          <div id="aaa" class="tool-desc">AAA (normal) â€”</div>
+          <div id="aaL" class="tool-desc">AA (large 18.66px/14px bold) â€”</div>
+          <div id="aaaL" class="tool-desc">AAA (large) â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function hexToRgb(hex){ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join(''); const num=parseInt(hex,16); return {r:(num>>16)&255,g:(num>>8)&255,b:num&255}; }
+    function luminance({r,g,b}){ r/=255; g/=255; b/=255; const t=v=> (v<=0.03928? v/12.92: Math.pow((v+0.055)/1.055, 2.4)); const R=t(r), G=t(g), B=t(b); return 0.2126*R + 0.7152*G + 0.0722*B; }
+    function contrastRatio(fg,bg){ const L1=luminance(hexToRgb(fg)); const L2=luminance(hexToRgb(bg)); const lighter=Math.max(L1,L2), darker=Math.min(L1,L2); return (lighter+0.05)/(darker+0.05); }
+
+    function check(){
+      const fg=document.getElementById('fg').value.trim();
+      const bg=document.getElementById('bg').value.trim();
+      const txt=document.getElementById('text').value;
+      const p=document.getElementById('preview'); p.textContent=txt; p.style.color=fg; p.style.background=bg;
+      const r=contrastRatio(fg,bg); const ratio=r.toFixed(2)+':1'; document.getElementById('ratio').textContent='Ratio '+ratio;
+      const passAA = r>=4.5; const passAAA = r>=7; const passAAL = r>=3; const passAAAL = r>=4.5;
+      set('aa', 'AA (normal)', passAA); set('aaa','AAA (normal)', passAAA); set('aaL','AA (large)', passAAL); set('aaaL','AAA (large)', passAAAL);
+    }
+    function set(id,label,ok){ const el=document.getElementById(id); el.innerHTML = label + ': ' + (ok? '<span class="pass">PASS</span>':'<span class="fail">FAIL</span>'); }
+    document.getElementById('check').addEventListener('click', check);
+    check();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcard Maker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-lightbulb tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Flashcard Maker</div>
+        <div class="tool-desc">Create, study, and manage flashcards. All data is saved locally in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Front</label>
+            <input id="front" type="text" placeholder="Question / Term" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Back</label>
+            <input id="back" type="text" placeholder="Answer / Definition" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Deck</label>
+            <input id="deck" type="text" placeholder="e.g., Biology" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <button id="addCard" class="tool-button" style="height:42px;">Add Card</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="tool-name">Your Cards</div>
+            <input id="search" type="search" placeholder="Search..." style="padding:8px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div id="cards" style="display:grid; gap:10px; margin-top:10px;"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Study Mode</div>
+          <div id="study" style="display:grid; gap:10px; margin-top:8px;">
+            <div id="studyCard" class="tool-card" style="padding:20px; text-align:center; cursor:pointer; min-height:140px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">Add cards to start studying. Click card to flip.</div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="prev" class="tool-button">Prev</button>
+              <button id="next" class="tool-button">Next</button>
+              <button id="shuffle" class="tool-button"><i class="fas fa-random"></i> Shuffle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY = 'oneclick_flashcards_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(data){ localStorage.setItem(KEY, JSON.stringify(data)); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function render(){
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const list = document.getElementById('cards');
+      list.innerHTML='';
+      const cards = load().filter(c => !q || c.front.toLowerCase().includes(q) || c.back.toLowerCase().includes(q) || (c.deck||'').toLowerCase().includes(q));
+      if (!cards.length){ list.innerHTML = '<div class="tool-desc">No cards yet.</div>'; }
+      for (const c of cards){
+        const el = document.createElement('div');
+        el.className = 'tool-card'; el.style.padding='12px';
+        el.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px;">
+            <div>
+              <div style="font-weight:600;">${escapeHtml(c.front)}</div>
+              <div class="tool-desc" style="margin-top:4px;">${escapeHtml(c.back)}</div>
+              <small class="tool-desc">Deck: ${escapeHtml(c.deck||'â€”')}</small>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="tool-button" data-act="edit" data-id="${c.id}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-id="${c.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+      syncStudy(cards);
+    }
+
+    document.getElementById('addCard').addEventListener('click', () => {
+      const front = document.getElementById('front').value.trim();
+      const back = document.getElementById('back').value.trim();
+      const deck = document.getElementById('deck').value.trim();
+      if (!front || !back){ alert('Please enter both front and back.'); return; }
+      const data = load();
+      data.push({ id: crypto.randomUUID(), front, back, deck });
+      save(data);
+      document.getElementById('front').value='';
+      document.getElementById('back').value='';
+      render();
+    });
+
+    document.getElementById('cards').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]'); if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const act = btn.getAttribute('data-act');
+      const data = load();
+      const idx = data.findIndex(x=>x.id===id); if (idx===-1) return;
+      if (act==='del'){
+        if (confirm('Delete this card?')){ data.splice(idx,1); save(data); render(); }
+      } else if (act==='edit'){
+        const f = prompt('Edit front', data[idx].front); if (f===null) return;
+        const b = prompt('Edit back', data[idx].back); if (b===null) return;
+        data[idx].front = f.trim(); data[idx].back = b.trim(); save(data); render();
+      }
+    });
+
+    // Study mode
+    let studyCards = []; let i = 0; let showFront = true;
+    function syncStudy(cards){ studyCards = cards.slice(); i=0; showFront=true; drawStudy(); }
+    function drawStudy(){
+      const el = document.getElementById('studyCard');
+      if (!studyCards.length){ el.textContent = 'Add cards to start studying.'; return; }
+      const c = studyCards[i];
+      el.textContent = showFront ? c.front : c.back;
+    }
+    document.getElementById('studyCard').addEventListener('click', ()=>{ showFront=!showFront; drawStudy(); });
+    document.getElementById('next').addEventListener('click', ()=>{ if (!studyCards.length) return; i=(i+1)%studyCards.length; showFront=true; drawStudy(); });
+    document.getElementById('prev').addEventListener('click', ()=>{ if (!studyCards.length) return; i=(i-1+studyCards.length)%studyCards.length; showFront=true; drawStudy(); });
+    document.getElementById('shuffle').addEventListener('click', ()=>{ studyCards.sort(()=>Math.random()-0.5); i=0; showFront=true; drawStudy(); });
+
+    document.getElementById('search').addEventListener('input', render);
+
+    render();
+  </script>
+</body>
+</html>
+
+

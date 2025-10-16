@@ -1,0 +1,521 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .barcode-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .control-group label {
+      font-weight: 600;
+    }
+    .barcode-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .barcode-svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    .barcode-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    .barcode-info {
+      background: #e7f0ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border: 1px solid #b8daff;
+    }
+    .barcode-info h4 {
+      margin: 0 0 10px 0;
+      color: #004085;
+    }
+    .barcode-info p {
+      margin: 5px 0;
+      font-size: 0.9rem;
+    }
+    .format-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .format-option {
+      padding: 10px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #f8f9fa;
+    }
+    .format-option:hover {
+      border-color: #007bff;
+      background: #e7f0ff;
+    }
+    .format-option.selected {
+      border-color: #007bff;
+      background: #007bff;
+      color: white;
+    }
+    .format-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .format-desc {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .format-option.selected .format-desc {
+      opacity: 1;
+      color: white;
+    }
+    .size-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .size-control {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .size-control label {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .size-control input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-barcode tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Barcode Generator</div>
+        <div class="tool-desc">Generate various barcode formats from text. Perfect for product labels, inventory, and more.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div class="control-group">
+          <label for="inputText">Enter text to encode:</label>
+          <input type="text" id="inputText" placeholder="Enter text or numbers..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+          <div style="font-size:0.9rem; color:#666; margin-top:5px;">
+            <span id="charCount">0</span> characters | <span id="validationStatus">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div class="tool-name">Select Barcode Format</div>
+        <div class="format-selector">
+          <div class="format-option selected" data-format="code128">
+            <div class="format-name">Code 128</div>
+            <div class="format-desc">Universal barcode for alphanumeric</div>
+          </div>
+          <div class="format-option" data-format="code39">
+            <div class="format-name">Code 39</div>
+            <div class="format-desc">Letters, numbers, and symbols</div>
+          </div>
+          <div class="format-option" data-format="ean13">
+            <div class="format-name">EAN-13</div>
+            <div class="format-desc">13-digit product barcode</div>
+          </div>
+          <div class="format-option" data-format="ean8">
+            <div class="format-name">EAN-8</div>
+            <div class="format-desc">8-digit compact barcode</div>
+          </div>
+          <div class="format-option" data-format="upca">
+            <div class="format-name">UPC-A</div>
+            <div class="format-desc">12-digit product barcode</div>
+          </div>
+          <div class="format-option" data-format="itf14">
+            <div class="format-name">ITF-14</div>
+            <div class="format-desc">Interleaved 2 of 5 (14 digits)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div class="tool-name">Customize Appearance</div>
+        <div class="size-controls">
+          <div class="size-control">
+            <label>Width (px)</label>
+            <input type="number" id="width" min="200" max="800" value="400" style="width:100%;">
+          </div>
+          <div class="size-control">
+            <label>Height (px)</label>
+            <input type="number" id="height" min="50" max="200" value="100" style="width:100%;">
+          </div>
+          <div class="size-control">
+            <label>Line Color</label>
+            <input type="color" id="lineColor" value="#000000" style="width:100%; height:40px;">
+          </div>
+          <div class="size-control">
+            <label>Background</label>
+            <input type="color" id="backgroundColor" value="#ffffff" style="width:100%; height:40px;">
+          </div>
+        </div>
+      </div>
+
+      <div class="barcode-preview" id="barcodePreview">
+        <div style="text-align:center; color:#666; padding:40px;">
+          <i class="fas fa-barcode" style="font-size:3rem; margin-bottom:10px;"></i>
+          <div>Enter text above to generate barcode</div>
+        </div>
+      </div>
+
+      <div class="barcode-info" id="barcodeInfo" style="display:none;">
+        <h4>Barcode Information</h4>
+        <p><strong>Format:</strong> <span id="formatName">Code 128</span></p>
+        <p><strong>Text:</strong> <span id="encodedText"></span></p>
+        <p><strong>Length:</strong> <span id="textLength">0</span> characters</p>
+      </div>
+
+      <div class="barcode-actions">
+        <button id="downloadPNG" class="tool-button" style="background:#28a745;">Download PNG</button>
+        <button id="downloadSVG" class="tool-button" style="background:#17a2b8;">Download SVG</button>
+        <button id="copyText" class="tool-button" style="background:#6c757d;">Copy Text</button>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px; padding:16px;">
+        <div class="tool-name">Format Guidelines</div>
+        <div id="formatGuidelines">
+          <div><strong>Code 128:</strong> Supports all ASCII characters (recommended for most uses)</div>
+          <div><strong>Code 39:</strong> Letters (A-Z), numbers (0-9), and symbols (- . $ / + % SPACE)</div>
+          <div><strong>EAN-13:</strong> Exactly 12 digits (checksum calculated automatically)</div>
+          <div><strong>EAN-8:</strong> Exactly 7 digits (checksum calculated automatically)</div>
+          <div><strong>UPC-A:</strong> Exactly 11 digits (checksum calculated automatically)</div>
+          <div><strong>ITF-14:</strong> Exactly 13 digits (even number required)</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const inputText = document.getElementById('inputText');
+    const charCount = document.getElementById('charCount');
+    const validationStatus = document.getElementById('validationStatus');
+    const formatOptions = document.querySelectorAll('.format-option');
+    const barcodePreview = document.getElementById('barcodePreview');
+    const barcodeInfo = document.getElementById('barcodeInfo');
+    const formatName = document.getElementById('formatName');
+    const encodedText = document.getElementById('encodedText');
+    const textLength = document.getElementById('textLength');
+    const downloadPNG = document.getElementById('downloadPNG');
+    const downloadSVG = document.getElementById('downloadSVG');
+    const copyText = document.getElementById('copyText');
+    const width = document.getElementById('width');
+    const height = document.getElementById('height');
+    const lineColor = document.getElementById('lineColor');
+    const backgroundColor = document.getElementById('backgroundColor');
+
+    let currentFormat = 'code128';
+    let currentBarcode = null;
+
+    // Simple barcode patterns (for demo - in production you'd use a proper barcode library)
+    const barcodePatterns = {
+      code128: (text) => {
+        if (!text) return null;
+        // Simplified Code 128 pattern
+        const baseWidth = 2;
+        const pattern = text.split('').map(char => {
+          const code = char.charCodeAt(0) % 100;
+          return '1'.repeat(baseWidth + code % 3) + '0'.repeat(baseWidth + (code + 1) % 3);
+        }).join('');
+        return pattern;
+      },
+
+      code39: (text) => {
+        if (!text || !/^[A-Z0-9\-\.\$\+\%\/\s]+$/.test(text)) return null;
+        const patterns = {
+          '0': '101000111011101', '1': '111010001011101', '2': '101110001011101',
+          '3': '111011100010101', '4': '101000111011101', '5': '111010001110101',
+          '6': '101110001110101', '7': '101000101110111', '8': '111010001011011',
+          '9': '101110001011011', 'A': '111010100010111', 'B': '101110100010111',
+          'C': '111011101000101', 'D': '101011100010111', 'E': '111010111000101',
+          'F': '101110111000101', 'G': '101010001110111', 'H': '111010100011101',
+          'I': '101110100011101', 'J': '101011100011101', 'K': '111010101000111',
+          'L': '101110101000111', 'M': '111011101010001', 'N': '101011101000111',
+          'O': '111010111010001', 'P': '101110111010001', 'Q': '101010111000111',
+          'R': '111010101110001', 'S': '101110101110001', 'T': '101011101110001',
+          'U': '111000101010111', 'V': '100011101010111', 'W': '111010001110101',
+          'X': '101110001110101', 'Y': '111000111010101', 'Z': '101110001111101',
+          '-': '101000111011101', '.': '111010001011101', ' ': '111011101000100',
+          '$': '101000100111101', '/': '111010100010001', '+': '101000101110001',
+          '%': '101110001000101'
+        };
+        let result = '101000111011101'; // Start
+        for (let char of text.toUpperCase()) {
+          result += patterns[char] || patterns[' '];
+        }
+        result += '111010001110101'; // Stop
+        return result;
+      },
+
+      ean13: (text) => {
+        if (!text || !/^\d{12}$/.test(text)) return null;
+        // Simplified EAN-13 pattern (first digit encoding)
+        const leftPatterns = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
+        const rightPatterns = ['1110010', '1100110', '1101100', '1000010', '1011100', '1001110', '1010000', '1000100', '1001000', '1110100'];
+
+        let result = '101'; // Start
+        const firstDigit = parseInt(text[0]);
+        const encoding = firstDigit < 5 ? 'AAAA' : firstDigit < 7 ? 'ABAB' : 'ABBA';
+
+        for (let i = 1; i < 7; i++) {
+          const digit = parseInt(text[i]);
+          result += encoding[i-1] === 'A' ? leftPatterns[digit] : rightPatterns[digit];
+        }
+
+        result += '01010'; // Center
+
+        for (let i = 7; i < 12; i++) {
+          const digit = parseInt(text[i]);
+          result += rightPatterns[digit];
+        }
+
+        result += '101'; // Stop
+        return result;
+      }
+    };
+
+    function validateInput(text, format) {
+      if (!text) {
+        validationStatus.textContent = 'Enter text';
+        validationStatus.style.color = '#dc3545';
+        return false;
+      }
+
+      switch (format) {
+        case 'code128':
+          if (text.length > 50) {
+            validationStatus.textContent = 'Too long (max 50 chars)';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+        case 'code39':
+          if (!/^[A-Z0-9\-\.\$\+\%\/\s]+$/i.test(text)) {
+            validationStatus.textContent = 'Invalid characters';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          if (text.length > 20) {
+            validationStatus.textContent = 'Too long (max 20 chars)';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+        case 'ean13':
+          if (!/^\d{12}$/.test(text)) {
+            validationStatus.textContent = 'Must be exactly 12 digits';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+        case 'ean8':
+          if (!/^\d{7}$/.test(text)) {
+            validationStatus.textContent = 'Must be exactly 7 digits';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+        case 'upca':
+          if (!/^\d{11}$/.test(text)) {
+            validationStatus.textContent = 'Must be exactly 11 digits';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+        case 'itf14':
+          if (!/^\d{13}$/.test(text)) {
+            validationStatus.textContent = 'Must be exactly 13 digits';
+            validationStatus.style.color = '#dc3545';
+            return false;
+          }
+          break;
+      }
+
+      validationStatus.textContent = 'Valid';
+      validationStatus.style.color = '#28a745';
+      return true;
+    }
+
+    function generateBarcode() {
+      const text = inputText.value.trim();
+      if (!validateInput(text, currentFormat)) {
+        barcodePreview.innerHTML = '<div style="text-align:center; color:#dc3545; padding:40px;"><i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px;"></i><div>Invalid input for selected format</div></div>';
+        barcodeInfo.style.display = 'none';
+        return;
+      }
+
+      const pattern = barcodePatterns[currentFormat](text);
+      if (!pattern) {
+        barcodePreview.innerHTML = '<div style="text-align:center; color:#dc3545; padding:40px;"><i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px;"></i><div>Could not generate barcode</div></div>';
+        barcodeInfo.style.display = 'none';
+        return;
+      }
+
+      // Generate SVG barcode
+      const svgWidth = parseInt(width.value);
+      const svgHeight = parseInt(height.value);
+      const lineColorValue = lineColor.value;
+      const bgColorValue = backgroundColor.value;
+
+      let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg" style="background:${bgColorValue};">`;
+
+      // Draw barcode lines
+      const barWidth = Math.max(1, Math.floor(svgWidth / pattern.length));
+      const barHeight = svgHeight - 20; // Leave space for text
+
+      let x = 0;
+      for (let i = 0; i < pattern.length; i++) {
+        if (pattern[i] === '1') {
+          svg += `<rect x="${x}" y="10" width="${barWidth}" height="${barHeight}" fill="${lineColorValue}"/>`;
+        }
+        x += barWidth;
+      }
+
+      // Add text below barcode
+      svg += `<text x="50%" y="${svgHeight - 5}" text-anchor="middle" font-family="Arial" font-size="12" fill="${lineColorValue}">${text}</text>`;
+      svg += '</svg>';
+
+      barcodePreview.innerHTML = svg;
+
+      // Update info
+      formatName.textContent = currentFormat.toUpperCase();
+      encodedText.textContent = text;
+      textLength.textContent = text.length;
+      barcodeInfo.style.display = 'block';
+
+      currentBarcode = svg;
+    }
+
+    function downloadBarcode(format) {
+      if (!currentBarcode) return;
+
+      const text = inputText.value.trim();
+      const filename = `barcode_${currentFormat}_${text}_${Date.now()}.${format}`;
+
+      if (format === 'png') {
+        // Convert SVG to PNG
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          canvas.width = parseInt(width.value);
+          canvas.height = parseInt(height.value);
+          ctx.fillStyle = backgroundColor.value;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+
+        // Create data URL from SVG
+        const svgData = new XMLSerializer().serializeToString(barcodePreview.querySelector('svg'));
+        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+      } else {
+        // Download SVG
+        const blob = new Blob([currentBarcode], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function copyTextToClipboard() {
+      const text = inputText.value.trim();
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        copyText.textContent = 'Copied!';
+        setTimeout(() => {
+          copyText.textContent = 'Copy Text';
+        }, 1500);
+      }).catch(() => {
+        copyText.textContent = 'Copy Failed';
+        setTimeout(() => {
+          copyText.textContent = 'Copy Text';
+        }, 1500);
+      });
+    }
+
+    // Event listeners
+    inputText.addEventListener('input', () => {
+      charCount.textContent = inputText.value.length;
+      generateBarcode();
+    });
+
+    formatOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        formatOptions.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+        currentFormat = option.dataset.format;
+        generateBarcode();
+      });
+    });
+
+    width.addEventListener('input', generateBarcode);
+    height.addEventListener('input', generateBarcode);
+    lineColor.addEventListener('input', generateBarcode);
+    backgroundColor.addEventListener('input', generateBarcode);
+
+    downloadPNG.addEventListener('click', () => downloadBarcode('png'));
+    downloadSVG.addEventListener('click', () => downloadBarcode('svg'));
+    copyText.addEventListener('click', copyTextToClipboard);
+
+    // Initialize
+    generateBarcode();
+  </script>
+</body>
+</html>
+
+

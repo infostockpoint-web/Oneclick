@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMI Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container" style="padding:40px 0;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-weight tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">BMI Calculator</div>
+      <div class="tool-desc">Calculate your Body Mass Index and see your category.</div>
+    </div>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div class="tool-card" style="margin-top:20px; display:grid; gap:12px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+        <div>
+          <label for="height" class="tool-name" style="display:block; margin-bottom:6px;">Height (cm)</label>
+          <input id="height" type="number" min="50" max="250" value="170" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;" />
+        </div>
+        <div>
+          <label for="weight" class="tool-name" style="display:block; margin-bottom:6px;">Weight (kg)</label>
+          <input id="weight" type="number" min="10" max="300" value="65" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;" />
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="calc" class="tool-button">Calculate</button>
+        <button id="reset" class="tool-button" style="background:#888;">Reset</button>
+      </div>
+      <div class="tool-card" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <div>
+          <div class="tool-name">BMI</div>
+          <div id="bmi" style="font-size:1.8rem; font-weight:700;">-</div>
+        </div>
+        <div>
+          <div class="tool-name">Category</div>
+          <div id="category" style="font-size:1.2rem;">-</div>
+        </div>
+        <div>
+          <div class="tool-name">Healthy Range</div>
+          <div>18.5 - 24.9</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function computeBMI(hCm, wKg) {
+      const hM = hCm / 100;
+      if (hM <= 0) return 0;
+      return wKg / (hM * hM);
+    }
+    function getCategory(bmi) {
+      if (!isFinite(bmi) || bmi <= 0) return '-';
+      if (bmi < 18.5) return 'Underweight';
+      if (bmi < 25) return 'Normal weight';
+      if (bmi < 30) return 'Overweight';
+      return 'Obesity';
+    }
+    const height = document.getElementById('height');
+    const weight = document.getElementById('weight');
+    const bmiEl = document.getElementById('bmi');
+    const catEl = document.getElementById('category');
+    function update() {
+      const bmi = computeBMI(parseFloat(height.value), parseFloat(weight.value));
+      if (!isFinite(bmi) || bmi <= 0) { bmiEl.textContent = '-'; catEl.textContent = '-'; return; }
+      bmiEl.textContent = bmi.toFixed(1);
+      catEl.textContent = getCategory(bmi);
+    }
+    document.getElementById('calc').addEventListener('click', update);
+    document.getElementById('reset').addEventListener('click', () => { height.value = 170; weight.value = 65; update(); });
+    update();
+  </script>
+</body>
+</html>
+
+

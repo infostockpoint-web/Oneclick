@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Note App - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .note-editor {
+      width: 100%;
+      min-height: 400px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+    .note-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .note-info {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .btn-primary { background: #4a6cf7; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:20px;">
+        <i class="fas fa-sticky-note tool-icon-small" style="font-size:3rem; color:#4a6cf7;"></i>
+        <h1 class="tool-name" style="font-size:1.8rem; margin:10px 0 5px;">Free Note App</h1>
+        <div class="tool-desc">Take quick notes in your browser. Auto-saves to local storage and export options available.</div>
+      </div>
+
+      <div class="note-toolbar">
+        <input type="text" id="noteTitle" placeholder="Note title..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+        <button id="saveBtn" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+        <button id="loadBtn" class="btn btn-info"><i class="fas fa-folder-open"></i> Load</button>
+        <button id="exportBtn" class="btn btn-success"><i class="fas fa-download"></i> Export</button>
+        <button id="clearBtn" class="btn btn-secondary"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+
+      <textarea id="noteEditor" class="note-editor" placeholder="Start typing your notes here...
+
+Features:
+â€¢ Auto-saves every 5 seconds
+â€¢ Stores notes in browser local storage
+â€¢ Export as .txt file
+â€¢ Save multiple notes with titles
+â€¢ Word and character count"></textarea>
+
+      <div class="note-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <span id="wordCount">0 words</span> â€¢ 
+            <span id="charCount">0 characters</span> â€¢ 
+            <span id="saveStatus">Ready</span>
+          </div>
+          <div>
+            <select id="savedNotes" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="">Select saved note...</option>
+            </select>
+            <button id="deleteNoteBtn" class="btn btn-secondary" style="padding: 5px 10px; margin-left: 5px;"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:30px; text-align:center; background:#f5f5f5; padding:15px; border-radius:8px;">
+        <div style="color:#999; font-size:0.9rem;">Advertisement<br><small>Your ad could be here</small></div>
+      </div>
+
+      <div style="text-align:center; margin-top:20px;">
+        <a href="../index.html" class="tool-button" style="display:inline-flex; align-items:center; gap:8px;">
+          <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const noteEditor = document.getElementById('noteEditor');
+    const noteTitle = document.getElementById('noteTitle');
+    const saveBtn = document.getElementById('saveBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const wordCount = document.getElementById('wordCount');
+    const charCount = document.getElementById('charCount');
+    const saveStatus = document.getElementById('saveStatus');
+    const savedNotes = document.getElementById('savedNotes');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+
+    let autoSaveTimer;
+    let currentNoteKey = '';
+
+    // Update counts
+    function updateCounts() {
+      const text = noteEditor.value;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      
+      wordCount.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+      charCount.textContent = `${chars} character${chars !== 1 ? 's' : ''}`;
+    }
+
+    // Auto-save functionality
+    function autoSave() {
+      if (noteEditor.value.trim() || noteTitle.value.trim()) {
+        const key = currentNoteKey || `note_${Date.now()}`;
+        const noteData = {
+          title: noteTitle.value || 'Untitled Note',
+          content: noteEditor.value,
+          lastModified: new Date().toISOString()
+        };
+        
+        localStorage.setItem(key, JSON.stringify(noteData));
+        currentNoteKey = key;
+        saveStatus.textContent = 'Auto-saved';
+        loadSavedNotes();
+        
+        setTimeout(() => {
+          if (saveStatus.textContent === 'Auto-saved') {
+            saveStatus.textContent = 'Ready';
+          }
+        }, 2000);
+      }
+    }
+
+    // Manual save
+    function saveNote() {
+      if (!noteTitle.value.trim()) {
+        noteTitle.value = `Note ${new Date().toLocaleDateString()}`;
+      }
+      
+      const key = `note_${Date.now()}`;
+      const noteData = {
+        title: noteTitle.value,
+        content: noteEditor.value,
+        lastModified: new Date().toISOString()
+      };
+      
+      localStorage.setItem(key, JSON.stringify(noteData));
+      currentNoteKey = key;
+      saveStatus.textContent = 'Saved!';
+      loadSavedNotes();
+      
+      setTimeout(() => saveStatus.textContent = 'Ready', 2000);
+    }
+
+    // Load saved notes list
+    function loadSavedNotes() {
+      savedNotes.innerHTML = '<option value="">Select saved note...</option>';
+      
+      const notes = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('note_')) {
+          try {
+            const noteData = JSON.parse(localStorage.getItem(key));
+            notes.push({ key, ...noteData });
+          } catch (e) {
+            // Skip invalid notes
+          }
+        }
+      }
+      
+      // Sort by last modified
+      notes.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+      
+      notes.forEach(note => {
+        const option = document.createElement('option');
+        option.value = note.key;
+        option.textContent = `${note.title} (${new Date(note.lastModified).toLocaleDateString()})`;
+        savedNotes.appendChild(option);
+      });
+    }
+
+    // Load selected note
+    function loadNote() {
+      const key = savedNotes.value;
+      if (!key) return;
+      
+      try {
+        const noteData = JSON.parse(localStorage.getItem(key));
+        noteTitle.value = noteData.title;
+        noteEditor.value = noteData.content;
+        currentNoteKey = key;
+        updateCounts();
+        saveStatus.textContent = 'Loaded';
+        setTimeout(() => saveStatus.textContent = 'Ready', 2000);
+      } catch (e) {
+        alert('Error loading note');
+      }
+    }
+
+    // Export note
+    function exportNote() {
+      const content = noteEditor.value;
+      const title = noteTitle.value || 'note';
+      
+      if (!content.trim()) {
+        alert('Nothing to export');
+        return;
+      }
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      saveStatus.textContent = 'Exported!';
+      setTimeout(() => saveStatus.textContent = 'Ready', 2000);
+    }
+
+    // Clear note
+    function clearNote() {
+      if (noteEditor.value.trim() && !confirm('Clear current note?')) {
+        return;
+      }
+      
+      noteEditor.value = '';
+      noteTitle.value = '';
+      currentNoteKey = '';
+      updateCounts();
+      saveStatus.textContent = 'Cleared';
+      setTimeout(() => saveStatus.textContent = 'Ready', 2000);
+    }
+
+    // Delete selected note
+    function deleteNote() {
+      const key = savedNotes.value;
+      if (!key) return;
+      
+      if (confirm('Delete this note permanently?')) {
+        localStorage.removeItem(key);
+        if (currentNoteKey === key) {
+          clearNote();
+        }
+        loadSavedNotes();
+        saveStatus.textContent = 'Deleted';
+        setTimeout(() => saveStatus.textContent = 'Ready', 2000);
+      }
+    }
+
+    // Event listeners
+    noteEditor.addEventListener('input', () => {
+      updateCounts();
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(autoSave, 5000); // Auto-save after 5 seconds of inactivity
+    });
+
+    noteTitle.addEventListener('input', () => {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(autoSave, 5000);
+    });
+
+    saveBtn.addEventListener('click', saveNote);
+    loadBtn.addEventListener('click', loadNote);
+    exportBtn.addEventListener('click', exportNote);
+    clearBtn.addEventListener('click', clearNote);
+    deleteNoteBtn.addEventListener('click', deleteNote);
+    savedNotes.addEventListener('change', loadNote);
+
+    // Initialize
+    updateCounts();
+    loadSavedNotes();
+
+    // Load last note on startup
+    const lastNote = localStorage.getItem('lastNoteKey');
+    if (lastNote && localStorage.getItem(lastNote)) {
+      savedNotes.value = lastNote;
+      loadNote();
+    }
+
+    // Save last note key
+    window.addEventListener('beforeunload', () => {
+      if (currentNoteKey) {
+        localStorage.setItem('lastNoteKey', currentNoteKey);
+      }
+    });
+  </script>
+</body>
+</html>
+
+

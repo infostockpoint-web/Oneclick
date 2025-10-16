@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Tracker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f3f3f3;text-align:center}
+    th:first-child, td:first-child{text-align:left}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-calendar-check tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Habit Tracker</div>
+        <div class="tool-desc">Create habits, tick them daily, see streaks and completion rate. Saves locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Habit Name</label>
+            <input id="name" type="text" placeholder="e.g., Read 20 minutes" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Frequency</label>
+            <select id="freq" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly (Mon-Sun)</option>
+            </select>
+          </div>
+          <button id="add" class="tool-button">Add Habit</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;overflow:auto;">
+        <table id="table">
+          <thead>
+            <tr id="thead"></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_habits_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{habits:[], ticks:{}} } catch(e){ return {habits:[], ticks:{}} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    function startOfWeek(d){ const dt=new Date(d); const day=(dt.getDay()+6)%7; dt.setDate(dt.getDate()-day); dt.setHours(0,0,0,0); return dt; }
+    function fmtDate(d){ return d.toISOString().slice(0,10); }
+    function daysArray(){ const arr=[]; const today=new Date(); for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(d.getDate()-i); arr.push(fmtDate(d)); } return arr; }
+    function weekArray(){ const s=startOfWeek(new Date()); return [...Array(7)].map((_,i)=>{ const d=new Date(s); d.setDate(s.getDate()+i); return fmtDate(d); }); }
+
+    function headerDates(freq){ const dates = freq==='weekly'? weekArray(): daysArray(); const tr=document.getElementById('thead'); tr.innerHTML=''; tr.appendChild(th('Habit')); dates.forEach(d=> tr.appendChild(th(d.slice(5)))); tr.appendChild(th('Streak')); tr.appendChild(th('%')); return dates; }
+    function th(txt){ const el=document.createElement('th'); el.textContent=txt; return el; }
+
+    function render(){
+      const data=load(); const anyWeekly = data.habits.some(h=>h.freq==='weekly'); const freq = anyWeekly? 'weekly':'daily';
+      const dates=headerDates(freq); const tb=document.getElementById('tbody'); tb.innerHTML='';
+      for (const h of data.habits){
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td style="text-align:left;font-weight:700;">${h.name}</td>`;
+        let done=0; let best=0; let cur=0;
+        dates.forEach(d=>{
+          const key=h.id+'|'+d; const checked=!!data.ticks[key];
+          if (checked){ done++; cur++; best=Math.max(best,cur); } else { cur=0; }
+          const td=document.createElement('td');
+          td.innerHTML=`<input type="checkbox" data-id="${h.id}" data-date="${d}" ${checked?'checked':''}/>`; tr.appendChild(td);
+        });
+        const pct=Math.round((done/dates.length)*100);
+        const tdS=document.createElement('td'); tdS.textContent=best; const tdP=document.createElement('td'); tdP.textContent=pct+'%';
+        tr.appendChild(tdS); tr.appendChild(tdP); tb.appendChild(tr);
+      }
+    }
+
+    document.getElementById('add').addEventListener('click',()=>{
+      const name=document.getElementById('name').value.trim(); const freq=document.getElementById('freq').value; if(!name) return;
+      const d=load(); d.habits.push({id:crypto.randomUUID(), name, freq}); save(d); document.getElementById('name').value=''; render();
+    });
+
+    document.getElementById('tbody').addEventListener('change',(e)=>{
+      const chk=e.target.closest('input[type="checkbox"][data-id]'); if(!chk) return; const id=chk.getAttribute('data-id'); const date=chk.getAttribute('data-date');
+      const d=load(); const key=id+'|'+date; if (chk.checked) d.ticks[key]=true; else delete d.ticks[key]; save(d); render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Character Counter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-font tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Character Counter</div>
+      <div class="tool-desc">Count characters, words, lines, paragraphs, and analyze text statistics in real-time.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="inputText" style="display:block; font-weight:600; margin-bottom:6px;">Input Text</label>
+          <textarea id="inputText" rows="8" placeholder="Enter or paste your text here to count characters, words, and more..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:Arial;"></textarea>
+        </div>
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Quick Actions</label>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px;">
+            <button id="clearBtn" class="tool-button" style="background:#888; font-size:0.9rem; padding:8px;">Clear</button>
+            <button id="sampleBtn" class="tool-button" style="background:#007bff; font-size:0.9rem; padding:8px;">Add Sample</button>
+            <button id="copyStatsBtn" class="tool-button" style="background:#28a745; font-size:0.9rem; padding:8px;">Copy Stats</button>
+            <button id="exportBtn" class="tool-button" style="background:#fd7e14; font-size:0.9rem; padding:8px;">Export Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Basic Counts</div>
+        <div id="basicStats" style="margin-top:10px; font-size:0.9rem;">
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Characters (with spaces):</strong></span>
+            <span id="charWithSpaces">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Characters (no spaces):</strong></span>
+            <span id="charNoSpaces">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Words:</strong></span>
+            <span id="wordCount">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Lines:</strong></span>
+            <span id="lineCount">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Paragraphs:</strong></span>
+            <span id="paraCount">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Sentences:</strong></span>
+            <span id="sentenceCount">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Advanced Statistics</div>
+        <div id="advancedStats" style="margin-top:10px; font-size:0.9rem;">
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Average Word Length:</strong></span>
+            <span id="avgWordLength">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Average Sentence Length:</strong></span>
+            <span id="avgSentenceLength">0 words</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Reading Time:</strong></span>
+            <span id="readTime">0 min</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Speaking Time:</strong></span>
+            <span id="speakTime">0 min</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Unique Words:</strong></span>
+            <span id="uniqueWords">0</span>
+          </div>
+          <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+            <span><strong>Density:</strong></span>
+            <span id="density">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Character Type Breakdown</div>
+      <div id="charBreakdown" style="margin-top:10px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px;">
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#007bff;" id="lettersCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Letters</div>
+          </div>
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#28a745;" id="numbersCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Numbers</div>
+          </div>
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#fd7e14;" id="symbolsCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Symbols</div>
+          </div>
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#dc3545;" id="spacesCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Spaces</div>
+          </div>
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#6f42c1;" id="punctuationCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Punctuation</div>
+          </div>
+          <div style="background:#f9f9f9; padding:8px; border-radius:4px; text-align:center;">
+            <div style="font-size:1.2rem; font-weight:600; color:#e83e8c;" id="specialCount">0</div>
+            <div style="font-size:0.8rem; color:#666;">Special</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Word Frequency Analysis</div>
+      <div id="wordFreq" style="margin-top:10px;">
+        <div style="margin-bottom:10px;">
+          <label style="display:block; font-weight:600; margin-bottom:4px;">Most Common Words:</label>
+          <div id="wordFreqList" style="font-size:0.9rem; max-height:120px; overflow-y:auto; background:#f9f9f9; padding:8px; border-radius:4px;"></div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block; font-weight:600; margin-bottom:4px;">Longest Words:</label>
+          <div id="longestWords" style="font-size:0.9rem; max-height:120px; overflow-y:auto; background:#f9f9f9; padding:8px; border-radius:4px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const inputText = document.getElementById('inputText');
+  const clearBtn = document.getElementById('clearBtn');
+  const sampleBtn = document.getElementById('sampleBtn');
+  const copyStatsBtn = document.getElementById('copyStatsBtn');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // Basic count elements
+  const charWithSpaces = document.getElementById('charWithSpaces');
+  const charNoSpaces = document.getElementById('charNoSpaces');
+  const wordCount = document.getElementById('wordCount');
+  const lineCount = document.getElementById('lineCount');
+  const paraCount = document.getElementById('paraCount');
+  const sentenceCount = document.getElementById('sentenceCount');
+
+  // Advanced stats elements
+  const avgWordLength = document.getElementById('avgWordLength');
+  const avgSentenceLength = document.getElementById('avgSentenceLength');
+  const readTime = document.getElementById('readTime');
+  const speakTime = document.getElementById('speakTime');
+  const uniqueWords = document.getElementById('uniqueWords');
+  const density = document.getElementById('density');
+
+  // Character breakdown elements
+  const lettersCount = document.getElementById('lettersCount');
+  const numbersCount = document.getElementById('numbersCount');
+  const symbolsCount = document.getElementById('symbolsCount');
+  const spacesCount = document.getElementById('spacesCount');
+  const punctuationCount = document.getElementById('punctuationCount');
+  const specialCount = document.getElementById('specialCount');
+
+  // Analysis elements
+  const wordFreqList = document.getElementById('wordFreqList');
+  const longestWords = document.getElementById('longestWords');
+
+  const sampleTexts = [
+    "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the alphabet and is commonly used to test typewriters and computer keyboards.",
+    "In a hole in the ground there lived a hobbit. Not a nasty, dirty, wet hole, filled with the ends of worms and an oozy smell, nor yet a dry, bare, sandy hole with nothing in it to sit down on or to eat.",
+    "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity.",
+    "To be or not to be, that is the question: Whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles."
+  ];
+
+  function updateAllStats() {
+    const text = inputText.value;
+    if (!text.trim()) {
+      clearAllStats();
+      return;
+    }
+
+    // Basic counts
+    charWithSpaces.textContent = text.length;
+    charNoSpaces.textContent = text.replace(/\s/g, '').length;
+    const words = text.trim() ? text.trim().split(/\s+/).filter(word => word.length > 0) : [];
+    wordCount.textContent = words.length;
+    lineCount.textContent = text.split('\n').length;
+    paraCount.textContent = text.split(/\n\s*\n/).filter(para => para.trim().length > 0).length;
+    sentenceCount.textContent = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+
+    // Advanced stats
+    if (words.length > 0) {
+      const totalChars = text.replace(/\s/g, '').length;
+      avgWordLength.textContent = (totalChars / words.length).toFixed(1);
+      avgSentenceLength.textContent = (words.length / sentenceCount.textContent).toFixed(1) + ' words';
+
+      // Reading time (average 200 words per minute)
+      const readMin = Math.ceil(words.length / 200);
+      readTime.textContent = readMin + ' min';
+
+      // Speaking time (average 150 words per minute)
+      const speakMin = Math.ceil(words.length / 150);
+      speakTime.textContent = speakMin + ' min';
+
+      // Unique words
+      const unique = new Set(words.map(w => w.toLowerCase()));
+      uniqueWords.textContent = unique.size;
+
+      // Density (unique words / total words)
+      density.textContent = ((unique.size / words.length) * 100).toFixed(1) + '%';
+    } else {
+      avgWordLength.textContent = '0';
+      avgSentenceLength.textContent = '0 words';
+      readTime.textContent = '0 min';
+      speakTime.textContent = '0 min';
+      uniqueWords.textContent = '0';
+      density.textContent = '0%';
+    }
+
+    // Character breakdown
+    const letters = text.match(/[a-zA-Z]/g) || [];
+    const numbers = text.match(/[0-9]/g) || [];
+    const symbols = text.match(/[!@#$%^&*()_+-=[]{}|;:,.<>?]/g) || [];
+    const spaces = text.match(/\s/g) || [];
+    const punctuation = text.match(/[.!?;:,
+
+

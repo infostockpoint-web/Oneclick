@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flight Tracker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    .timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+    .dot{height:10px;width:10px;border-radius:50%;display:inline-block;margin-right:6px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-plane-departure tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Flight Tracker</div>
+        <div class="tool-desc">Enter flight number and date to track status. Note: Live airline data requires an external API; this tool provides a local tracker and sample demo.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Flight Number (e.g., AI302)</label>
+            <input id="fno" type="text" placeholder="AI302" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Date</label>
+            <input id="date" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="search" class="tool-button">Search</button>
+          <button id="demo" class="tool-button">Load Demo</button>
+        </div>
+      </div>
+
+      <div id="card" class="tool-card" style="padding:16px;display:none;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_flights_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{} }catch(e){ return {} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    function renderFlight(data){
+      const card=document.getElementById('card'); card.style.display='block';
+      const sclr = data.status==='On Time'? '#2ecc71' : data.status==='Delayed'? '#e67e22' : data.status==='Cancelled'? '#e74c3c' : '#3498db';
+      card.innerHTML = `
+        <div class="tool-name">${data.flight} â€¢ ${data.date}</div>
+        <div class="tool-desc" style="margin-bottom:8px;">${data.airline||''} â€¢ <span style="color:${sclr};font-weight:700;">${data.status}</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="tool-card" style="padding:12px;">
+            <div class="tool-name">Departure</div>
+            <div class="tool-desc">${data.from||'â€”'} â€¢ Gate ${data.depGate||'â€”'}</div>
+            <div class="tool-desc">Sched: ${data.depSched||'â€”'} â€¢ Est: ${data.depEst||'â€”'}</div>
+          </div>
+          <div class="tool-card" style="padding:12px;">
+            <div class="tool-name">Arrival</div>
+            <div class="tool-desc">${data.to||'â€”'} â€¢ Gate ${data.arrGate||'â€”'}</div>
+            <div class="tool-desc">Sched: ${data.arrSched||'â€”'} â€¢ Est: ${data.arrEst||'â€”'}</div>
+          </div>
+        </div>
+        <div class="tool-card" style="padding:12px;margin-top:10px;">
+          <div class="tool-name" style="margin-bottom:6px;">Timeline</div>
+          <div class="timeline">
+            <div><span class="dot" style="background:${sclr}"></span>Scheduled</div>
+            <div><span class="dot" style="background:${data.departed? sclr:'#ccc'}"></span>Departed</div>
+            <div><span class="dot" style="background:${data.inAir? sclr:'#ccc'}"></span>In Air</div>
+            <div><span class="dot" style="background:${data.landed? sclr:'#ccc'}"></span>Landed</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button id="edit" class="tool-button"><i class="fas fa-pen"></i> Edit</button>
+          <button id="saveLocal" class="tool-button"><i class="fas fa-save"></i> Save</button>
+        </div>`;
+      card.querySelector('#edit').onclick = ()=>{
+        const st=prompt('Status (On Time/Delayed/Cancelled/In Air/Landed)', data.status)||data.status;
+        const estDep=prompt('Est. Departure (HH:MM)', data.depEst||'');
+        const estArr=prompt('Est. Arrival (HH:MM)', data.arrEst||'');
+        data.status=st; data.depEst=estDep||null; data.arrEst=estArr||null;
+        data.departed = ['In Air','Landed'].includes(st) || (estDep && estDep!==data.depSched);
+        data.inAir = ['In Air','Landed'].includes(st);
+        data.landed = st==='Landed';
+        renderFlight(data);
+      };
+      card.querySelector('#saveLocal').onclick = ()=>{ const db=load(); db[data.flight+"|"+data.date]=data; save(db); alert('Saved locally.'); };
+    }
+
+    function search(){
+      const f=document.getElementById('fno').value.trim().toUpperCase();
+      const d=document.getElementById('date').value;
+      if(!f||!d){ alert('Enter flight number and date.'); return; }
+      const db=load(); const key=f+'|'+d; if (db[key]){ renderFlight(db[key]); return; }
+      // no API here; show a minimal card with unknowns
+      renderFlight({flight:f, date:d, status:'On Time'});
+    }
+
+    function demo(){
+      const today=new Date().toISOString().slice(0,10);
+      renderFlight({
+        flight:'AI302', date: today, airline:'Air India', status:'In Air', from:'DEL', to:'BOM',
+        depSched:'08:30', arrSched:'10:20', depEst:'08:40', arrEst:'10:35', departed:true, inAir:true, landed:false
+      });
+    }
+
+    document.getElementById('search').addEventListener('click', search);
+    document.getElementById('demo').addEventListener('click', demo);
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Hashtag Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-hashtag tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Hashtag Generator</div>
+      <div class="tool-desc">Enter keywords or a caption to generate relevant hashtags. Copy or export.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+        <textarea id="htInput" rows="5" placeholder="e.g. travel, beach, summer vibes... or paste your caption here" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:10px;"></textarea>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="htCount" style="display:block; font-weight:600; margin-bottom:6px;">Number of hashtags</label>
+            <input id="htCount" type="number" min="1" max="100" value="20" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="htEmoji" type="checkbox"> Include emojis</label>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="htCamel" type="checkbox"> Use CamelCase</label>
+          <button id="htGen" class="tool-button" style="height:42px;">Generate</button>
+          <button id="htCopy" class="tool-button" style="height:42px; background:#555;">Copy All</button>
+          <button id="htExport" class="tool-button" style="height:42px; background:#888;">Export CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:12px;">
+      <div class="tool-name" style="margin-bottom:8px;">Suggested Hashtags</div>
+      <div id="htList" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const EMOJIS = ['ðŸ”¥','âœ¨','ðŸŒŸ','ðŸ’¯','ðŸš€','ðŸŽ‰','ðŸ’™','ðŸ’š','ðŸ’›','ðŸ§¡','ðŸ’œ','â¤ï¸','ðŸŒŠ','ðŸ–ï¸','ðŸï¸','ðŸŒ…','ðŸ“¸'];
+  function unique(arr){ return Array.from(new Set(arr)); }
+  function wordsFrom(text){ return (text||'').toLowerCase().match(/[a-z0-9]+/g) || []; }
+  function scoreWord(w){ let s = w.length; if (/\d/.test(w)) s -= 1; return s; }
+  function pickEmojis(n){ const out=[]; for(let i=0;i<n;i++){ out.push(EMOJIS[Math.floor(Math.random()*EMOJIS.length)]);} return out; }
+  function generate(){
+    const raw = document.getElementById('htInput').value;
+    const want = Math.max(1, Math.min(100, Number(document.getElementById('htCount').value)||20));
+    const useEmoji = document.getElementById('htEmoji').checked;
+    const useCamel = document.getElementById('htCamel').checked;
+    const tokens = wordsFrom(raw);
+    const ranked = unique(tokens).sort((a,b)=> scoreWord(b)-scoreWord(a));
+    let tags = [];
+    ranked.forEach(w => {
+      const base = w.replace(/[^a-z0-9]/g,''); if (!base) return;
+      const first = useCamel ? (base.charAt(0).toUpperCase()+base.slice(1)) : base;
+      tags.push('#'+first);
+      // occasional combos for variety
+      if (ranked.length>1){
+        const partner = ranked[(Math.floor(Math.random()*ranked.length))];
+        if (partner && partner!==w){
+          const combo = useCamel ? (first + partner.charAt(0).toUpperCase()+partner.slice(1)) : (base+partner);
+          tags.push('#'+combo);
+        }
+      }
+    });
+    if (tags.length===0){ ['love','instagood','photooftheday','fashion','beautiful','happy','cute'].forEach(t=>tags.push('#'+t)); }
+    tags = unique(tags).slice(0,want);
+    if (useEmoji){ const em = pickEmojis(Math.min(tags.length, 6)); tags = tags.map((t,i)=> i<em.length ? (t+em[i]) : t); }
+    const list = document.getElementById('htList'); list.innerHTML='';
+    tags.forEach(t => { const span = document.createElement('span'); span.textContent = t; span.style.cssText = 'padding:8px 10px; background:#f6f8ff; border:1px solid #e3e9ff; border-radius:999px; font-weight:600;'; list.appendChild(span); });
+    return tags;
+  }
+  document.getElementById('htGen').addEventListener('click', generate);
+  document.getElementById('htCopy').addEventListener('click', async ()=>{ const tags = Array.from(document.querySelectorAll('#htList span')).map(s=>s.textContent); try { await navigator.clipboard.writeText(tags.join(' ')); } catch(e){} });
+  document.getElementById('htExport').addEventListener('click', ()=>{ const tags = Array.from(document.querySelectorAll('#htList span')).map(s=>s.textContent.replace(/[^#A-Za-z0-9]/g,'')); const lines = ['hashtag']; tags.forEach(t=>lines.push(t)); const blob = new Blob([lines.join('\n')], {type:'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'hashtags.csv'; a.click(); URL.revokeObjectURL(a.href); });
+  // initial
+  generate();
+</script>
+</body></html>
+
+

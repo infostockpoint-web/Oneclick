@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>File Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .tab{padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
+    .tab.active{background:#1f7ae0;color:#fff;border-color:#1f7ae0}
+    .panel{display:none}
+    .panel.active{display:block}
+    img.preview{max-width:100%;border-radius:12px;border:1px solid #eee}
+    textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-file-export tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">File Converter</div>
+        <div class="tool-desc">Browser-based conversions: Image (PNG/JPG/WebP), CSV â†” JSON, Text â†” Base64.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tabs">
+          <button class="tab active" data-tab="img">Image</button>
+          <button class="tab" data-tab="csvjson">CSV â†” JSON</button>
+          <button class="tab" data-tab="b64">Text â†” Base64</button>
+        </div>
+
+        <div id="img" class="panel active">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end;">
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Upload Image</label>
+              <input id="imgFile" type="file" accept="image/*"/>
+            </div>
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Output Format</label>
+              <select id="imgFmt" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/webp">WEBP</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Quality (JPG/WEBP)</label>
+              <input id="imgQ" type="range" min="0.1" max="1" step="0.1" value="0.9"/>
+            </div>
+            <button id="imgConvert" class="tool-button">Convert & Download</button>
+          </div>
+          <div id="imgPrevWrap" style="margin-top:12px;"></div>
+        </div>
+
+        <div id="csvjson" class="panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div class="tool-name">CSV</div>
+              <textarea id="csvIn" rows="10" placeholder="name,age\nAlice,30\nBob,25"></textarea>
+            </div>
+            <div>
+              <div class="tool-name">JSON</div>
+              <textarea id="jsonOut" rows="10" placeholder='[{"name":"Alice","age":30}]'></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button id="csvToJson" class="tool-button">CSV â†’ JSON</button>
+            <button id="jsonToCsv" class="tool-button">JSON â†’ CSV</button>
+            <button id="copyJson" class="tool-button"><i class="far fa-copy"></i> Copy JSON</button>
+            <button id="copyCsv" class="tool-button"><i class="far fa-copy"></i> Copy CSV</button>
+          </div>
+        </div>
+
+        <div id="b64" class="panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div class="tool-name">Text</div>
+              <textarea id="txt" rows="8" placeholder="Hello"></textarea>
+            </div>
+            <div>
+              <div class="tool-name">Base64</div>
+              <textarea id="b64txt" rows="8" placeholder="SGVsbG8="></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button id="toB64" class="tool-button">Text â†’ Base64</button>
+            <button id="fromB64" class="tool-button">Base64 â†’ Text</button>
+            <button id="copyB64" class="tool-button"><i class="far fa-copy"></i> Copy Base64</button>
+            <button id="copyTxt" class="tool-button"><i class="far fa-copy"></i> Copy Text</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // Tabs
+    document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      b.classList.add('active'); document.getElementById(b.getAttribute('data-tab')).classList.add('active');
+    }));
+
+    // Image convert
+    document.getElementById('imgFile').addEventListener('change', (e)=>{
+      const f=e.target.files[0]; const w=document.getElementById('imgPrevWrap'); w.innerHTML=''; if(!f) return;
+      const img=new Image(); img.onload=()=>{ img.className='preview'; w.appendChild(img); }; img.src=URL.createObjectURL(f);
+    });
+    document.getElementById('imgConvert').addEventListener('click', async ()=>{
+      const f=document.getElementById('imgFile').files[0]; if(!f){ alert('Upload an image.'); return; }
+      const fmt=document.getElementById('imgFmt').value; const q=Number(document.getElementById('imgQ').value)||0.9;
+      const img=new Image(); img.onload=()=>{
+        const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0);
+        c.toBlob((blob)=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='converted.'+(fmt==='image/png'?'png':fmt==='image/jpeg'?'jpg':'webp'); a.click(); }, fmt, q);
+      }; img.src=URL.createObjectURL(f);
+    });
+
+    // CSV <-> JSON
+    function csvToJson(csv){ const lines=csv.split(/\r?\n/).filter(Boolean); if(!lines.length) return [];
+      const headers=lines[0].split(',').map(h=>h.trim());
+      return lines.slice(1).map(line=>{ const parts=line.split(','); const obj={}; headers.forEach((h,i)=>obj[h]=parts[i]?.trim()||''); return obj; }); }
+    function jsonToCsv(arr){ if(!arr.length) return ''; const headers=Object.keys(arr[0]);
+      const lines=[headers.join(',')]; arr.forEach(o=>{ lines.push(headers.map(h=>String(o[h]??'').replaceAll('"','""')).map(v=>`"${v}"`).join(',')); }); return lines.join('\n'); }
+    document.getElementById('csvToJson').addEventListener('click',()=>{ const arr=csvToJson(document.getElementById('csvIn').value); document.getElementById('jsonOut').value=JSON.stringify(arr,null,2); });
+    document.getElementById('jsonToCsv').addEventListener('click',()=>{ try{ const arr=JSON.parse(document.getElementById('jsonOut').value||'[]'); document.getElementById('csvIn').value=jsonToCsv(arr);}catch(e){ alert('Invalid JSON'); } });
+    document.getElementById('copyJson').addEventListener('click',()=>{ navigator.clipboard.writeText(document.getElementById('jsonOut').value||''); });
+    document.getElementById('copyCsv').addEventListener('click',()=>{ navigator.clipboard.writeText(document.getElementById('csvIn').value||''); });
+
+    // Base64
+    document.getElementById('toB64').addEventListener('click',()=>{ const t=document.getElementById('txt').value||''; document.getElementById('b64txt').value=btoa(unescape(encodeURIComponent(t))); });
+    document.getElementById('fromB64').addEventListener('click',()=>{ const b=document.getElementById('b64txt').value||''; try{ document.getElementById('txt').value=decodeURIComponent(escape(atob(b))); }catch(e){ alert('Invalid Base64'); } });
+    document.getElementById('copyB64').addEventListener('click',()=>{ navigator.clipboard.writeText(document.getElementById('b64txt').value||''); });
+    document.getElementById('copyTxt').addEventListener('click',()=>{ navigator.clipboard.writeText(document.getElementById('txt').value||''); });
+  </script>
+</body>
+</html>
+
+

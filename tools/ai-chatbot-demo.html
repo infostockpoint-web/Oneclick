@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Chatbot Demo - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .chat{height:420px;overflow:auto;background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
+    .msg{margin:8px 0;display:flex;gap:8px}
+    .me{justify-content:flex-end}
+    .bubble{max-width:70%;padding:10px 12px;border-radius:12px}
+    .you .bubble{background:#f1f5ff}
+    .me .bubble{background:#e8f7e9}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-robot tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">AI Chatbot Demo</div>
+        <div class="tool-desc">Offline demo with simple intent rules. No internet or API used.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div id="chat" class="chat"></div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px;">
+          <input id="inp" type="text" placeholder="Type a message" style="padding:10px;border:1px solid #ddd;border-radius:8px">
+          <button id="send" class="tool-button">Send</button>
+        </div>
+        <div class="tool-desc" style="margin-top:8px">Hint: ask about time/date, greetings, calculations like 12*8, or a quick summary.</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_chat_demo_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function addMsg(role, text){ const d=load(); d.push({role, text, ts:Date.now()}); save(d); render(); }
+    function render(){ const d=load(); const c=document.getElementById('chat'); c.innerHTML=''; for(const m of d.slice(-200)){ const row=document.createElement('div'); row.className='msg '+(m.role==='user'?'me':'you'); const bubble=document.createElement('div'); bubble.className='bubble'; bubble.textContent=m.text; row.appendChild(bubble); c.appendChild(row);} c.scrollTop=c.scrollHeight; }
+
+    function botReply(text){
+      const t=text.trim(); const low=t.toLowerCase();
+      // greetings
+      if (/\b(hi|hello|hey)\b/.test(low)) return 'Hello! How can I help today?';
+      // time/date (using local time provided by environment at runtime)
+      try{ if (/\b(time|date)\b/.test(low)){ const now=new Date(); return 'Local: '+ now.toLocaleString(); } }catch(e){}
+      // math quick eval (safe subset)
+      if (/^[0-9+\-*/ ().]+$/.test(low)){ try{ const val=Function('return ('+low+')')(); if (isFinite(val)) return 'Result: '+val; }catch(e){} }
+      // summarize (very naive)
+      if (low.includes('summary')||low.includes('summarize')){ return 'Summary: identify key points, keep it concise, and present action items.'; }
+      // fallback
+      return "I'm a simple offline demo. Try asking for time or simple calculations.";
+    }
+
+    document.getElementById('send').addEventListener('click',()=>{ const inp=document.getElementById('inp'); const v=inp.value.trim(); if(!v) return; addMsg('user', v); const reply=botReply(v); addMsg('bot', reply); inp.value=''; inp.focus(); });
+    document.getElementById('inp').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ document.getElementById('send').click(); }});
+    if (load().length===0){ addMsg('bot','Hi! I am a local demo bot. Ask me the time or a quick calculation.'); }
+    render();
+  </script>
+</body>
+</html>
+
+

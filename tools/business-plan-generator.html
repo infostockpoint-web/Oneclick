@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Business Plan Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}</style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-briefcase tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Business Plan Generator</div>
+        <div class="tool-desc">Fill the sections and export a polished HTML business plan. Stored locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Company</label><input id="company" type="text" placeholder="Acme Inc." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Tagline</label><input id="tagline" type="text" placeholder="We make rockets" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Problem</label><textarea id="problem" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Solution</label><textarea id="solution" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Market</label><textarea id="market" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Business Model</label><textarea id="model" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Go-to-Market</label><textarea id="gtm" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Financials</label><textarea id="fin" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea></div>
+          <button id="build" class="tool-button">Build Plan</button>
+          <button id="download" class="tool-button"><i class="fas fa-download"></i> Download HTML</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Preview</div>
+        <iframe id="iframe" style="width:100%;height:500px;border:0;border-radius:10px;"></iframe>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+    function build(){
+      const data={
+        company:document.getElementById('company').value.trim(),
+        tagline:document.getElementById('tagline').value.trim(),
+        problem:document.getElementById('problem').value.trim(),
+        solution:document.getElementById('solution').value.trim(),
+        market:document.getElementById('market').value.trim(),
+        model:document.getElementById('model').value.trim(),
+        gtm:document.getElementById('gtm').value.trim(),
+        fin:document.getElementById('fin').value.trim()
+      };
+      const html = `<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>${escapeHtml(data.company)} - Business Plan</title></head>
+      <body style="font-family:Arial,Helvetica,sans-serif;color:#333;background:#f5f7fb;margin:0;">
+        <div style="max-width:800px;margin:20px auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #eee;">
+          <div style="background:#1f7ae0;color:#fff;padding:18px 20px;font-weight:700;">${escapeHtml(data.company)} â€” ${escapeHtml(data.tagline)}</div>
+          <div style="padding:20px;line-height:1.6">
+            <h2>Problem</h2><p>${escapeHtml(data.problem).replace(/\n/g,'<br>')}</p>
+            <h2>Solution</h2><p>${escapeHtml(data.solution).replace(/\n/g,'<br>')}</p>
+            <h2>Market</h2><p>${escapeHtml(data.market).replace(/\n/g,'<br>')}</p>
+            <h2>Business Model</h2><p>${escapeHtml(data.model).replace(/\n/g,'<br>')}</p>
+            <h2>Go-to-Market</h2><p>${escapeHtml(data.gtm).replace(/\n/g,'<br>')}</p>
+            <h2>Financials</h2><p>${escapeHtml(data.fin).replace(/\n/g,'<br>')}</p>
+          </div>
+        </div>
+      </body></html>`;
+      const doc=document.getElementById('iframe').contentWindow.document; doc.open(); doc.write(html); doc.close();
+      return html;
+    }
+    document.getElementById('build').addEventListener('click', build);
+    document.getElementById('download').addEventListener('click', ()=>{ const html=build(); const a=document.createElement('a'); const blob=new Blob([html],{type:'text/html'}); a.href=URL.createObjectURL(blob); a.download='business-plan.html'; a.click(); });
+    build();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hex to RGB Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:end}
+    .tile{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+    .swatch{height:64px;border-radius:8px;border:1px solid #e5e7eb}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-palette tool-icon-small" style="font-size:3rem;color:#4a6cf7"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Hex to RGB Converter</div>
+        <div class="tool-desc">Convert HEX color to RGB and HSL. Pick a color or type a HEX code.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div class="tile">
+            <label class="tool-name" for="hex">HEX</label>
+            <input id="hex" type="text" value="#4a6cf7" placeholder="#RRGGBB" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div class="tile">
+            <label class="tool-name" for="picker">Pick</label>
+            <input id="picker" type="color" value="#4a6cf7" style="width:100%;height:48px;border:none;border-radius:8px;cursor:pointer;">
+          </div>
+          <div class="tile">
+            <div class="tool-name">Sample</div>
+            <div id="sw" class="swatch" style="background:#4a6cf7"></div>
+          </div>
+          <div class="tile">
+            <div class="tool-name">RGB</div>
+            <div id="rgb" class="mono">74, 108, 247</div>
+          </div>
+          <div class="tile">
+            <div class="tool-name">HSL</div>
+            <div id="hsl" class="mono">228, 91%, 63%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const hexEl=document.getElementById('hex');
+    const picker=document.getElementById('picker');
+    const sw=document.getElementById('sw');
+    const rgbEl=document.getElementById('rgb');
+    const hslEl=document.getElementById('hsl');
+
+    function norm(h){ h=h.trim(); if(!h) return null; if(h[0]!== '#') h='#'+h; if(h.length===4){ h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3]; } return /^#([0-9a-fA-F]{6})$/.test(h)?h:null; }
+    function hexToRgb(h){const m=h.slice(1); const r=parseInt(m.substr(0,2),16), g=parseInt(m.substr(2,2),16), b=parseInt(m.substr(4,2),16); return {r,g,b};}
+    function rgbToHsl(r,g,b){ r/=255; g/=255; b/=255; const max=Math.max(r,g,b),min=Math.min(r,g,b); let h,s,l=(max+min)/2; if(max===min){h=s=0;} else { const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min); switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;} h/=6;} return {h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}; }
+    function updateFromHex(v){ const hx=norm(v); if(!hx) return; picker.value=hx; sw.style.background=hx; const {r,g,b}=hexToRgb(hx); rgbEl.textContent=`${r}, ${g}, ${b}`; const {h,s,l}=rgbToHsl(r,g,b); hslEl.textContent=`${h}, ${s}%, ${l}%`; hexEl.value=hx; }
+    hexEl.addEventListener('input', e=>updateFromHex(e.target.value));
+    picker.addEventListener('input', e=>updateFromHex(e.target.value));
+    updateFromHex('#4a6cf7');
+  </script>
+</body>
+</html>

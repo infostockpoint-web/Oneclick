@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Photo Downloader - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fab fa-instagram tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Instagram Photo Downloader</div>
+        <div class="tool-desc">Paste a public Instagram post URL. We will attempt to extract the photo preview via a CORS-friendly proxy and let you download it.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="postUrl" style="display:block; font-weight:600; margin-bottom:6px;">Instagram Post URL</label>
+            <input id="postUrl" type="url" placeholder="https://www.instagram.com/p/XXXXXXXXX/" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="fetchBtn" class="tool-button"><i class="fas fa-search"></i> Fetch</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <p style="margin-top:8px; color:#666; font-size:0.9rem;">Note: Private posts cannot be downloaded. If fetch fails due to site restrictions, try opening the post in your browser, copy the image address, and paste it directly below.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div id="previewWrap" style="margin-top:10px; text-align:center;">
+            <img id="img" alt="preview" style="max-width:100%; border-radius:8px; border:1px solid #eee; display:none;" />
+            <div id="status" style="color:#666; font-size:0.95rem;">No image loaded.</div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button id="downloadBtn" class="tool-button" style="background:#28a745;" disabled><i class="fas fa-download"></i> Download</button>
+            <a id="openBtn" class="tool-button" target="_blank" rel="noopener" style="pointer-events:none; background:#888;">Open</a>
+          </div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Direct Image URL (optional)</div>
+          <input id="directUrl" type="url" placeholder="https://.../photo.jpg" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          <button id="useDirect" class="tool-button" style="margin-top:8px;"><i class="fas fa-image"></i> Load Direct URL</button>
+          <div style="margin-top:8px; color:#666; font-size:0.9rem;">If the post fetch fails, open the image in a new tab in your browser, copy its direct address, then paste it here.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const postUrl = document.getElementById('postUrl');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const img = document.getElementById('img');
+    const statusEl = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const openBtn = document.getElementById('openBtn');
+    const directUrl = document.getElementById('directUrl');
+    const useDirect = document.getElementById('useDirect');
+
+    let currentUrl = '';
+
+    function setPreview(url){
+      if(!url){ img.style.display='none'; statusEl.textContent='No image loaded.'; downloadBtn.disabled=true; openBtn.style.pointerEvents='none'; openBtn.style.background='#888'; return; }
+      currentUrl = url; img.src = url; img.style.display='block';
+      statusEl.textContent = url;
+      downloadBtn.disabled = false; openBtn.href = url; openBtn.style.pointerEvents='auto'; openBtn.style.background='var(--primary-blue)';
+    }
+
+    async function fetchOgImage(u){
+      // Use r.jina.ai proxy to fetch HTML content as text (CORS-friendly)
+      const proxied = 'https://r.jina.ai/' + u.replace(/^https?:\/\//,'http://');
+      const r = await fetch(proxied);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const text = await r.text();
+      // Attempt to extract og:image URL via meta tag
+      const match = text.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)
+                 || text.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      if(match && match[1]) return match[1];
+      // Try a second pattern for JSON in the page
+      const jsonMatch = text.match(/"display_url"\s*:\s*"([^"]+)"/);
+      if(jsonMatch && jsonMatch[1]) return jsonMatch[1].replace(/\\\//g,'/');
+      throw new Error('Could not extract image. The post may be private or restricted.');
+    }
+
+    fetchBtn.addEventListener('click', async ()=>{
+      const u = postUrl.value.trim();
+      if(!u){ statusEl.textContent='Enter a public Instagram post URL.'; return; }
+      statusEl.textContent='Fetching...';
+      try{
+        const imgUrl = await fetchOgImage(u);
+        setPreview(imgUrl);
+      }catch(e){ statusEl.textContent = 'Error: ' + e.message; setPreview(''); }
+    });
+
+    useDirect.addEventListener('click', ()=>{
+      const u = directUrl.value.trim(); if(!u){ statusEl.textContent='Enter a direct image URL.'; return; }
+      setPreview(u);
+    });
+
+    clearBtn.addEventListener('click', ()=>{ postUrl.value=''; directUrl.value=''; setPreview(''); });
+
+    downloadBtn.addEventListener('click', ()=>{
+      if(!currentUrl) return;
+      const a = document.createElement('a'); a.href = currentUrl; a.download = 'instagram_photo.jpg'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+  </script>
+</body>
+</html>
+
+

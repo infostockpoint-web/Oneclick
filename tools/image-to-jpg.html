@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to JPG - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-image tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Image to JPG</div>
+        <div class="tool-desc">Convert any image to high-quality JPG. Control background for transparent images and quality level.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="fileInput" style="display:block; font-weight:600; margin-bottom:6px;">Select Image</label>
+            <input id="fileInput" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Quality <span id="qVal">90%</span></label>
+            <input id="quality" type="range" min="10" max="100" value="90" style="width:100%;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Background (for transparent)</label>
+            <input id="bgColor" type="color" value="#ffffff" style="width:100%; height:42px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="convertBtn" class="tool-button" disabled>Convert</button>
+            <button id="downloadBtn" class="tool-button" style="background:#28a745;" disabled>Download JPG</button>
+            <button id="copyBtn" class="tool-button" style="background:#6c5ce7;" disabled>Copy Data URL</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Drop Zone & Original Preview</div>
+          <div id="dropZone" style="margin-top:10px; border:2px dashed #cbd5ff; border-radius:10px; background:#f8faff; min-height:220px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+            <div style="text-align:center; color:#667;">
+              <i class="fas fa-upload" style="font-size:2rem; margin-bottom:8px;"></i>
+              <div>Click or drag-and-drop an image here</div>
+              <div style="font-size:0.9rem;">JPG, PNG, WebP, GIF, etc.</div>
+            </div>
+          </div>
+          <div id="origWrap" style="margin-top:10px; display:none; text-align:center;">
+            <img id="orig" alt="original" style="max-width:100%; max-height:260px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.08); background: repeating-conic-gradient(#eee 0% 25%, transparent 0% 50%) 50% / 16px 16px;">
+            <div id="origMeta" style="margin-top:8px; color:#555; font-size:0.92rem;"></div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Converted Preview</div>
+          <div id="convWrap" style="margin-top:10px; display:none; text-align:center;">
+            <img id="conv" alt="converted" style="max-width:100%; max-height:260px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+            <div id="convMeta" style="margin-top:8px; color:#555; font-size:0.92rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Data URL</div>
+        <textarea id="dataUrlOut" rows="8" placeholder="The JPEG data URL will appear here after conversion..." style="margin-top:10px; width:100%; resize:vertical;"></textarea>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const origWrap = document.getElementById('origWrap');
+    const orig = document.getElementById('orig');
+    const origMeta = document.getElementById('origMeta');
+    const convWrap = document.getElementById('convWrap');
+    const conv = document.getElementById('conv');
+    const convMeta = document.getElementById('convMeta');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const quality = document.getElementById('quality');
+    const qVal = document.getElementById('qVal');
+    const bgColor = document.getElementById('bgColor');
+    const dataUrlOut = document.getElementById('dataUrlOut');
+
+    let currentFile = null;
+    let currentDataUrl = '';
+    let jpegUrl = '';
+
+    function fmtSize(bytes){
+      if(bytes === 0) return '0 B';
+      const k=1024; const units=['B','KB','MB','GB'];
+      const i=Math.floor(Math.log(bytes)/Math.log(k));
+      return (bytes/Math.pow(k,i)).toFixed(2)+' '+units[i];
+    }
+
+    function fileToDataUrl(file){
+      return new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=> resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderOriginal(dataUrl, fileLike){
+      currentDataUrl = dataUrl;
+      origWrap.style.display = 'block';
+      orig.src = dataUrl;
+      const img = new Image();
+      img.onload = function(){
+        origMeta.innerHTML = '<strong>'+ (fileLike?.name || 'Image') + '</strong><br>' +
+          'Dimensions: ' + img.naturalWidth + ' Ã— ' + img.naturalHeight + ' px<br>' +
+          'Type: ' + (fileLike?.type || dataUrl.substring(5, dataUrl.indexOf(';'))) + '<br>' +
+          'File size: ' + (fileLike?.size ? fmtSize(fileLike.size) : 'â€”');
+      };
+      img.src = dataUrl;
+      convertBtn.disabled = false;
+    }
+
+    function hexToRgba(hex){
+      let h = hex.replace('#','');
+      if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+      const num = parseInt(h, 16);
+      return { r:(num>>16)&255, g:(num>>8)&255, b:num&255, a:1 };
+    }
+
+    function convertToJpeg(srcUrl){
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          // Fill background for transparent images
+          const c = hexToRgba(bgColor.value);
+          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${c.a})`;
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img, 0, 0);
+          const q = Math.max(0.1, Math.min(1, Number(quality.value)/100));
+          const url = canvas.toDataURL('image/jpeg', q);
+          resolve({ url, w: canvas.width, h: canvas.height });
+        };
+        img.onerror = reject;
+        img.src = srcUrl;
+      });
+    }
+
+    async function handleFile(file){
+      if(!file || !file.type.startsWith('image/')) return;
+      currentFile = file;
+      const url = await fileToDataUrl(file);
+      renderOriginal(url, file);
+      convWrap.style.display = 'none';
+      dataUrlOut.value = '';
+      jpegUrl = '';
+      downloadBtn.disabled = true;
+      copyBtn.disabled = true;
+    }
+
+    async function doConvert(){
+      if(!currentDataUrl) return;
+      const res = await convertToJpeg(currentDataUrl);
+      jpegUrl = res.url;
+      convWrap.style.display = 'block';
+      conv.src = jpegUrl;
+      const approxBytes = Math.ceil((jpegUrl.length - jpegUrl.indexOf(',') - 1) * 3/4);
+      convMeta.innerHTML = 'Dimensions: ' + res.w + ' Ã— ' + res.h + ' px<br>' +
+                           'Estimated size: ' + fmtSize(approxBytes) + '<br>' +
+                           'Quality: ' + quality.value + '%';
+      dataUrlOut.value = jpegUrl;
+      downloadBtn.disabled = false;
+      copyBtn.disabled = false;
+    }
+
+    // Events
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0];
+      handleFile(f);
+    });
+    dropZone.addEventListener('click', ()=> fileInput.click());
+    ;['dragenter','dragover'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.background = '#f0f4ff';
+      dropZone.style.borderColor = '#9bb2ff';
+    }));
+    ;['dragleave','drop'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.background = '#f8faff';
+      dropZone.style.borderColor = '#cbd5ff';
+    }));
+    dropZone.addEventListener('drop', (e)=>{
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      handleFile(f);
+    });
+
+    convertBtn.addEventListener('click', doConvert);
+    quality.addEventListener('input', ()=>{ qVal.textContent = quality.value + '%'; if(jpegUrl) doConvert(); });
+    bgColor.addEventListener('input', ()=>{ if(jpegUrl) doConvert(); });
+    copyBtn.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(dataUrlOut.value); copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy Data URL', 1200); }
+      catch{ copyBtn.textContent='Copy Failed'; setTimeout(()=>copyBtn.textContent='Copy Data URL', 1200); }
+    });
+    downloadBtn.addEventListener('click', ()=>{
+      if(!jpegUrl) return;
+      const a = document.createElement('a');
+      const baseName = (currentFile?.name || 'image').replace(/\.[^.]+$/, '');
+      a.href = jpegUrl; a.download = baseName + '.jpg'; a.click();
+    });
+    clearBtn.addEventListener('click', ()=>{
+      currentFile = null; currentDataUrl=''; jpegUrl='';
+      fileInput.value='';
+      origWrap.style.display='none'; orig.src=''; origMeta.textContent='';
+      convWrap.style.display='none'; conv.src=''; convMeta.textContent='';
+      dataUrlOut.value='';
+      convertBtn.disabled = true; downloadBtn.disabled = true; copyBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
+
+

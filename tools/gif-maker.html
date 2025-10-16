@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GIF Maker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .frame-item { display:flex; align-items:center; gap:10px; padding:8px; border:1px solid #eee; border-radius:8px; background:#fafbff; }
+    .frame-thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #eaeaea; }
+    .frame-actions button { padding:6px 10px; font-size:0.85rem; }
+    .frames-list { display:flex; flex-direction:column; gap:8px; max-height:320px; overflow:auto; }
+    .hint { color:#666; font-size:0.9rem; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-film tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">GIF Maker</div>
+        <div class="tool-desc">Create animated GIFs from multiple images directly in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Add Images</label>
+            <input id="fileInput" type="file" multiple accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <div id="dropZone" class="hint" style="margin-top:8px; border:2px dashed #cbd5ff; border-radius:10px; background:#f8faff; min-height:72px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+              <div style="text-align:center;">
+                <div><strong>Drag & drop</strong> images here or click to select</div>
+                <div style="font-size:0.85rem;">JPG, PNG, WebP, etc.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Frame Delay (ms)</label>
+            <input id="delay" type="number" min="10" max="5000" value="120" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Loop Count (0 = infinite)</label>
+            <input id="loop" type="number" min="0" max="1000" value="0" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Frames</div>
+          <div class="hint" style="margin-top:6px;">Order frames, adjust delay per frame, or remove.</div>
+          <div id="frames" class="frames-list" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Options</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-top:10px; align-items:end;">
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Size</label>
+              <select id="sizeMode" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="original">Use first image size</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Width (px)</label>
+              <input id="outW" type="number" min="16" max="2000" value="512" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Height (px)</label>
+              <input id="outH" type="number" min="16" max="2000" value="512" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Quality (1-30)</label>
+              <input id="quality" type="number" min="1" max="30" value="10" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Dither</label>
+              <select id="dither" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="none">None</option>
+                <option value="FloydSteinberg">FloydSteinberg</option>
+                <option value="FalseFloydSteinberg">FalseFloydSteinberg</option>
+                <option value="Stucki">Stucki</option>
+                <option value="Atkinson">Atkinson</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="generateBtn" class="tool-button" disabled>Generate GIF</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+          <div id="progress" class="hint" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Preview & Download</div>
+        <div id="previewWrap" style="margin-top:10px; display:none; text-align:center;">
+          <img id="preview" alt="gif preview" style="max-width:100%; border-radius:8px; border:1px solid #eee;" />
+          <div id="gifMeta" class="hint" style="margin-top:8px;"></div>
+          <div style="margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <a id="downloadBtn" class="tool-button" style="background:#28a745;" download="animation.gif">Download GIF</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const framesEl = document.getElementById('frames');
+    const delayInput = document.getElementById('delay');
+    const loopInput = document.getElementById('loop');
+    const sizeMode = document.getElementById('sizeMode');
+    const outW = document.getElementById('outW');
+    const outH = document.getElementById('outH');
+    const qualityInput = document.getElementById('quality');
+    const ditherSelect = document.getElementById('dither');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progress = document.getElementById('progress');
+    const previewWrap = document.getElementById('previewWrap');
+    const preview = document.getElementById('preview');
+    const gifMeta = document.getElementById('gifMeta');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let frames = []; // {file, url, img, delay}
+
+    function enableGenerate(){
+      generateBtn.disabled = frames.length === 0;
+    }
+
+    function addFiles(files){
+      const list = Array.from(files || []);
+      if(!list.length) return;
+      let pending = list.length;
+      list.forEach(file => {
+        if(!file.type.startsWith('image/')) { if(--pending===0) enableGenerate(); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          const url = reader.result;
+          const img = new Image();
+          img.onload = () => {
+            frames.push({ file, url, img, delay: Number(delayInput.value)||120 });
+            renderFrames();
+            if(--pending===0) enableGenerate();
+          };
+          img.src = url;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderFrames(){
+      framesEl.innerHTML = frames.map((f, idx) => (
+        '<div class="frame-item" data-idx="'+idx+'">'
+        + '<img class="frame-thumb" src="'+f.url+'" alt="frame">'
+        + '<div style="flex:1; min-width:160px;">'
+          + '<div style="font-weight:600;">'+ (f.file?.name || ('Frame '+(idx+1))) +'</div>'
+          + '<div class="hint">'+f.img.naturalWidth+'Ã—'+f.img.naturalHeight+' px</div>'
+        + '</div>'
+        + '<div>'
+          + '<label class="hint">Delay (ms)</label><br>'
+          + '<input class="per-delay" type="number" min="10" max="5000" value="'+f.delay+'" style="width:100px; padding:6px; border:1px solid #ddd; border-radius:6px;">'
+        + '</div>'
+        + '<div class="frame-actions" style="display:flex; gap:6px;">'
+          + '<button class="up tool-button" style="padding:6px 10px;">â†‘</button>'
+          + '<button class="down tool-button" style="padding:6px 10px;">â†“</button>'
+          + '<button class="remove tool-button" style="background:#e74c3c; padding:6px 10px;">Remove</button>'
+        + '</div>'
+      + '</div>'
+      )).join('');
+
+      // attach listeners
+      framesEl.querySelectorAll('.frame-item').forEach(item => {
+        const idx = Number(item.getAttribute('data-idx'));
+        item.querySelector('.up').addEventListener('click', () => { if(idx>0){ [frames[idx-1], frames[idx]] = [frames[idx], frames[idx-1]]; renderFrames(); } });
+        item.querySelector('.down').addEventListener('click', () => { if(idx<frames.length-1){ [frames[idx+1], frames[idx]] = [frames[idx], frames[idx+1]]; renderFrames(); } });
+        item.querySelector('.remove').addEventListener('click', () => { frames.splice(idx,1); renderFrames(); enableGenerate(); });
+        item.querySelector('.per-delay').addEventListener('input', (e) => { frames[idx].delay = Math.max(10, Math.min(5000, Number(e.target.value)||120)); });
+      });
+    }
+
+    function clearAll(){
+      frames = [];
+      renderFrames();
+      enableGenerate();
+      progress.textContent = '';
+      previewWrap.style.display = 'none';
+      downloadBtn.removeAttribute('href');
+    }
+
+    async function generateGIF(){
+      if(frames.length === 0) return;
+      progress.textContent = 'Preparingâ€¦';
+
+      // Determine output size
+      let width, height;
+      if(sizeMode.value === 'custom'){
+        width = Math.max(16, Math.min(2000, Number(outW.value)||512));
+        height = Math.max(16, Math.min(2000, Number(outH.value)||512));
+      } else {
+        width = frames[0].img.naturalWidth;
+        height = frames[0].img.naturalHeight;
+        outW.value = width; outH.value = height;
+      }
+
+      const gif = new GIF({
+        workers: 2,
+        quality: Math.max(1, Math.min(30, Number(qualityInput.value)||10)),
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
+        width, height,
+        dither: ditherSelect.value === 'none' ? false : ditherSelect.value,
+        repeat: Math.max(0, Math.min(1000, Number(loopInput.value)||0))
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = width; canvas.height = height;
+
+      frames.forEach((f, i) => {
+        ctx.clearRect(0,0,width,height);
+        // Fit image into canvas preserving aspect ratio
+        const iw = f.img.naturalWidth, ih = f.img.naturalHeight;
+        const scale = Math.min(width/iw, height/ih);
+        const w = Math.max(1, Math.floor(iw * scale));
+        const h = Math.max(1, Math.floor(ih * scale));
+        const x = Math.floor((width - w)/2);
+        const y = Math.floor((height - h)/2);
+        ctx.drawImage(f.img, x, y, w, h);
+        gif.addFrame(ctx, { copy: true, delay: Math.max(10, Math.min(5000, Number(f.delay)||120)) });
+      });
+
+      gif.on('progress', (p) => {
+        progress.textContent = 'Generatingâ€¦ ' + Math.round(p*100) + '%';
+      });
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        previewWrap.style.display = 'block';
+        preview.src = url;
+        downloadBtn.href = url;
+        gifMeta.textContent = 'Frames: ' + frames.length + ' | Size: ' + width + 'Ã—' + height + ' px';
+        progress.textContent = 'Done';
+      });
+
+      gif.render();
+    }
+
+    // Events
+    fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+    dropZone.addEventListener('click', () => fileInput.click());
+    ;['dragenter','dragover'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropZone.style.background='#f0f4ff'; dropZone.style.borderColor='#9bb2ff'; }));
+    ;['dragleave','drop'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropZone.style.background='#f8faff'; dropZone.style.borderColor='#cbd5ff'; }));
+    dropZone.addEventListener('drop', (e)=> addFiles(e.dataTransfer && e.dataTransfer.files));
+
+    generateBtn.addEventListener('click', generateGIF);
+    clearBtn.addEventListener('click', clearAll);
+
+    // Enable generate when frames exist
+    const observer = new MutationObserver(() => enableGenerate());
+    observer.observe(framesEl, { childList: true, subtree: false });
+  </script>
+</body>
+</html>
+
+

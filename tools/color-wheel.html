@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Wheel - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:end}
+    .tile{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+    .swatch{height:64px;border-radius:8px;border:1px solid #e5e7eb}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .wheel{width:100%;max-width:360px;aspect-ratio:1;border-radius:50%;background:
+      conic-gradient(
+        red, yellow, lime, aqua, blue, magenta, red
+      );
+      border:1px solid #e5e7eb;margin:0 auto
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-circle tool-icon-small" style="font-size:3rem;color:#4a6cf7"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Color Wheel</div>
+        <div class="tool-desc">Pick a color and view HEX/RGB/HSL values.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div class="tile">
+            <label class="tool-name" for="picker">Pick Color</label>
+            <input id="picker" type="color" value="#4a6cf7" style="width:100%;height:48px;border:none;border-radius:8px;cursor:pointer;">
+          </div>
+          <div class="tile">
+            <div class="tool-name">Selected</div>
+            <div id="sw" class="swatch" style="background:#4a6cf7"></div>
+          </div>
+          <div class="tile">
+            <div class="tool-name">HEX</div>
+            <div id="hex" class="mono">#4A6CF7</div>
+          </div>
+          <div class="tile">
+            <div class="tool-name">RGB</div>
+            <div id="rgb" class="mono">74, 108, 247</div>
+          </div>
+          <div class="tile">
+            <div class="tool-name">HSL</div>
+            <div id="hsl" class="mono">228, 91%, 63%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wheel" aria-hidden="true" style="margin-top:16px;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const picker=document.getElementById('picker');
+    const sw=document.getElementById('sw');
+    const hexEl=document.getElementById('hex');
+    const rgbEl=document.getElementById('rgb');
+    const hslEl=document.getElementById('hsl');
+
+    function hexToRgb(hex){
+      const m=hex.replace('#','');
+      const bigint=parseInt(m,16);
+      const r=(bigint>>16)&255, g=(bigint>>8)&255, b=bigint&255;
+      return {r,g,b};
+    }
+    function rgbToHsl(r,g,b){
+      r/=255; g/=255; b/=255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      let h,s,l=(max+min)/2;
+      if(max===min){h=s=0;}else{
+        const d=max-min;
+        s=l>0.5?d/(2-max-min):d/(max+min);
+        switch(max){
+          case r: h=(g-b)/d+(g<b?6:0); break;
+          case g: h=(b-r)/d+2; break;
+          case b: h=(r-g)/d+4; break;
+        }
+        h/=6;
+      }
+      return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+    }
+    function update(v){
+      sw.style.background=v;
+      hexEl.textContent=v.toUpperCase();
+      const {r,g,b}=hexToRgb(v); rgbEl.textContent=`${r}, ${g}, ${b}`;
+      const {h,s,l}=rgbToHsl(r,g,b); hslEl.textContent=`${h}, ${s}%, ${l}%`;
+    }
+    picker.addEventListener('input', e=>update(e.target.value));
+    update(picker.value);
+  </script>
+</body>
+</html>

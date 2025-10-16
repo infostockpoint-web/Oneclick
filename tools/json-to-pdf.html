@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>JSON to PDF - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">JSON to PDF Converter</div>
+      <div class="tool-desc">Convert JSON data to formatted PDF documents.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="jsonInput" style="display:block; font-weight:600; margin-bottom:6px;">JSON Data</label>
+          <textarea id="jsonInput" rows="8" placeholder='{"name":"John", "age":30, "city":"New York"}' style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:monospace;"></textarea>
+        </div>
+        <div>
+          <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">Page Size</label>
+          <select id="pageSize" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="a4">A4</option>
+            <option value="a3">A3</option>
+            <option value="letter">Letter</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="convertBtn" class="tool-button">Convert to PDF</button>
+          <button id="formatBtn" class="tool-button" style="background:#28a745;">Format JSON</button>
+          <button id="copyBtn" class="tool-button" style="background:#555;">Copy JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">JSON Preview</div>
+        <div id="preview" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:monospace; white-space:pre-wrap; overflow:auto;">Enter JSON data to see preview...</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none;">Download PDF</button>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="prettyPrint" checked> Pretty print JSON</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  const jsonInput = document.getElementById('jsonInput');
+  const preview = document.getElementById('preview');
+  const convertBtn = document.getElementById('convertBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const formatBtn = document.getElementById('formatBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const pageSize = document.getElementById('pageSize');
+  const prettyPrint = document.getElementById('prettyPrint');
+
+  let pdfBlob = null;
+
+  function formatJSON(json) {
+    try {
+      const parsed = JSON.parse(json);
+      if (prettyPrint.checked) {
+        return JSON.stringify(parsed, null, 2);
+      } else {
+        return JSON.stringify(parsed);
+      }
+    } catch (e) {
+      throw new Error('Invalid JSON format');
+    }
+  }
+
+  function updatePreview() {
+    const json = jsonInput.value.trim();
+    if (!json) {
+      preview.textContent = 'Enter JSON data to see preview...';
+      return;
+    }
+
+    try {
+      const formatted = formatJSON(json);
+      preview.textContent = formatted;
+    } catch (e) {
+      preview.textContent = 'Error: ' + e.message;
+      preview.style.color = '#dc3545';
+    }
+  }
+
+  function convertToPDF() {
+    const json = jsonInput.value.trim();
+    if (!json) {
+      alert('Please enter JSON data to convert.');
+      return;
+    }
+
+    try {
+      formatJSON(json); // Validate JSON first
+    } catch (e) {
+      alert('Invalid JSON format: ' + e.message);
+      return;
+    }
+
+    // Show loading
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+    convertBtn.disabled = true;
+
+    const size = pageSize.value;
+    const format = size === 'a3' ? 'a3' : size === 'letter' ? 'letter' : 'a4';
+    const pdf = new jspdf.jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: format
+    });
+
+    const formattedJSON = formatJSON(json);
+    const lines = pdf.splitTextToSize(formattedJSON, pdf.internal.pageSize.getWidth() - 20);
+    let yPosition = 20;
+    const lineHeight = 6;
+
+    // Add title
+    pdf.setFontSize(16);
+    pdf.text('JSON Data', 10, 15);
+    pdf.setFontSize(12);
+
+    for (let i = 0; i < lines.length; i++) {
+      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.text(lines[i], 10, yPosition);
+      yPosition += lineHeight;
+    }
+
+    pdfBlob = pdf.output('blob');
+    convertBtn.innerHTML = 'Convert to PDF';
+    convertBtn.disabled = false;
+    downloadBtn.style.display = 'block';
+  }
+
+  function downloadPDF() {
+    if (pdfBlob) {
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'json-to-pdf.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // Event listeners
+  convertBtn.addEventListener('click', convertToPDF);
+  downloadBtn.addEventListener('click', downloadPDF);
+
+  formatBtn.addEventListener('click', () => {
+    const json = jsonInput.value.trim();
+    if (json) {
+      try {
+        const formatted = formatJSON(json);
+        jsonInput.value = formatted;
+        updatePreview();
+      } catch (e) {
+        alert('Invalid JSON format: ' + e.message);
+      }
+    }
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (jsonInput.value.trim()) {
+      navigator.clipboard.writeText(jsonInput.value);
+    }
+  });
+
+  // Initialize preview
+  updatePreview();
+  jsonInput.addEventListener('input', updatePreview);
+</script>
+</body></html>
+
+

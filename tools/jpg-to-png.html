@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JPG to PNG - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:40px 0;">
+    <h1 class="section-title">JPG to PNG Converter</h1>
+    <p class="section-subtitle">Convert JPG images to PNG directly in your browser. No upload needed.</p>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div class="tool-card" style="margin-top:20px;">
+      <input id="file" type="file" accept="image/jpeg" style="margin-bottom:12px;" />
+      <canvas id="canvas" style="max-width:100%; display:none; border-radius:8px; border:1px solid #eee;"></canvas>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button id="download" class="tool-button" disabled>Download PNG</button>
+        <a id="previewLink" class="tool-button" style="background:#888; pointer-events:none;" target="_blank" rel="noopener">Preview</a>
+        <button id="clear" class="tool-button" style="background:#888;">Clear</button>
+      </div>
+      <div id="meta" style="margin-top:10px; color:#666; font-size:0.9rem;"></div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('file');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('download');
+    const previewLink = document.getElementById('previewLink');
+    const clearBtn = document.getElementById('clear');
+    const meta = document.getElementById('meta');
+
+    let pngDataUrl = '';
+
+    function fmtSize(bytes){
+      if(!bytes && bytes !== 0) return 'â€”';
+      const k=1024, u=['B','KB','MB','GB'];
+      const i=Math.floor(Math.log(bytes)/Math.log(k));
+      return (bytes/Math.pow(k,i)).toFixed(2)+' '+u[i];
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!/^image\/jpeg$/i.test(file.type)) {
+        alert('Please select a JPG/JPEG image.');
+        fileInput.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          canvas.style.display = 'block';
+          pngDataUrl = canvas.toDataURL('image/png');
+          downloadBtn.disabled = false;
+          previewLink.href = pngDataUrl;
+          previewLink.style.background = 'var(--primary-blue)';
+          previewLink.style.pointerEvents = 'auto';
+
+          // Meta
+          const approxSize = Math.ceil((pngDataUrl.length - pngDataUrl.indexOf(',') - 1) * 3/4);
+          meta.innerHTML = `Dimensions: ${img.width} Ã— ${img.height} px | Original: ${fmtSize(file.size)} | PNG (est.): ${fmtSize(approxSize)}`;
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!pngDataUrl) return;
+      const a = document.createElement('a');
+      a.href = pngDataUrl;
+      a.download = 'converted.png';
+      a.click();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      pngDataUrl = '';
+      fileInput.value = '';
+      canvas.style.display = 'none';
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      previewLink.removeAttribute('href');
+      previewLink.style.background = '#888';
+      previewLink.style.pointerEvents = 'none';
+      downloadBtn.disabled = true;
+      meta.textContent = '';
+    });
+  </script>
+</body>
+</html>
+
+

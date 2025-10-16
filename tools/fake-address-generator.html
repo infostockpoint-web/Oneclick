@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Address Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .addr { max-width: 1000px; margin: 0 auto; padding: 28px 18px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:12px; align-items:end; }
+    .list { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:12px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.08); overflow:hidden; }
+    .section { padding:18px 20px; border-bottom:1px solid #eee; }
+    .section:last-child { border-bottom:0; }
+    .row { padding:12px; border-radius:8px; background:#f9f9ff; border:1px solid #eef; }
+    .muted { color:#6c757d; font-size:.92rem; }
+    .btn { background:#4a6cf7; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; }
+    .btn:disabled { background:#bdc3c7; cursor:not-allowed; }
+    .copy { background:#20c997; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="addr">
+    <div style="text-align:center; margin-bottom: 16px;">
+      <i class="fas fa-address-card" style="font-size:3rem; color:#4a6cf7;"></i>
+      <h1 style="margin:8px 0 4px; color:#2c3e50;">Fake Address Generator</h1>
+      <p class="muted">Generate realistic-looking addresses for testing and demos. Data is randomly generated in your browser.</p>
+    </div>
+
+    <div class="card">
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Locale</label>
+            <select id="locale" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="us" selected>United States (US)</option>
+              <option value="uk">United Kingdom (UK)</option>
+              <option value="in">India (IN)</option>
+              <option value="de">Germany (DE)</option>
+              <option value="fr">France (FR)</option>
+              <option value="au">Australia (AU)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">How many</label>
+            <select id="count" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option>1</option>
+              <option>3</option>
+              <option selected>5</option>
+              <option>10</option>
+              <option>20</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Include</label>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+              <label><input type="checkbox" id="includePhone" checked> Phone</label>
+              <label><input type="checkbox" id="includeEmail" checked> Email</label>
+              <label><input type="checkbox" id="includeCompany"> Company</label>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="generate" class="btn"><i class="fas fa-magic"></i> Generate</button>
+            <button id="copyAll" class="btn copy"><i class="far fa-copy"></i> Copy All</button>
+            <button id="clear" class="btn" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div id="results" class="list"></div>
+        <div id="placeholder" class="muted" style="text-align:center;">Click Generate to create fake addresses...</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="btn" href="../index.html" style="background:#6c5ce7;">Back to Home</a>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const firstNames = {
+      us: ['James','Mary','John','Patricia','Robert','Jennifer','Michael','Linda','William','Elizabeth'],
+      uk: ['Oliver','Amelia','George','Isla','Harry','Ava','Jack','Mia','Jacob','Sophia'],
+      in: ['Aarav','Vivaan','Aditya','Vihaan','Arjun','Aanya','Diya','Ira','Myra','Anaya'],
+      de: ['Max','Mia','Ben','Emma','Paul','Hannah','Leon','Lea','Luis','Mila'],
+      fr: ['Louis','Emma','Gabriel','Lea','Arthur','Chloe','Jules','Manon','Hugo','Camille'],
+      au: ['Noah','Olivia','William','Charlotte','Leo','Isla','Lucas','Ava','Thomas','Mia']
+    };
+
+    const lastNames = {
+      us: ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Wilson','Anderson'],
+      uk: ['Smith','Jones','Taylor','Brown','Williams','Wilson','Johnson','Davies','Patel','Wright'],
+      in: ['Sharma','Verma','Patel','Reddy','Gupta','Khan','Iyer','Das','Mehta','Naidu'],
+      de: ['MÃ¼ller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Hoffmann','Koch'],
+      fr: ['Martin','Bernard','Thomas','Petit','Robert','Richard','Durand','Dubois','Moreau','Simon'],
+      au: ['Smith','Jones','Williams','Brown','Wilson','Taylor','Anderson','Thomas','White','Martin']
+    };
+
+    const streets = ['Main St','High St','Park Ave','Oak St','Maple Ave','Cedar St','Pine St','Church Rd','Lakeview Dr','Sunset Blvd'];
+    const cities = {
+      us: ['New York','Los Angeles','Chicago','Houston','Phoenix','Seattle','Denver','Boston','Miami','Dallas'],
+      uk: ['London','Manchester','Birmingham','Leeds','Glasgow','Liverpool','Bristol','Sheffield','Leicester','Edinburgh'],
+      in: ['Mumbai','Delhi','Bengaluru','Hyderabad','Ahmedabad','Chennai','Kolkata','Pune','Jaipur','Surat'],
+      de: ['Berlin','Hamburg','Munich','Cologne','Frankfurt','Stuttgart','DÃ¼sseldorf','Dresden','Leipzig','Hannover'],
+      fr: ['Paris','Marseille','Lyon','Toulouse','Nice','Nantes','Strasbourg','Montpellier','Bordeaux','Lille'],
+      au: ['Sydney','Melbourne','Brisbane','Perth','Adelaide','Canberra','Hobart','Darwin','Gold Coast','Newcastle']
+    };
+
+    const postalFormats = {
+      us: () => String(Math.floor(10000 + Math.random()*89999)),
+      uk: () => randomFrom(['SW1A 1AA','EC1A 1BB','W1A 0AX','M1 1AE','B33 8TH','CR2 6XH','DN55 1PT']),
+      in: () => String(Math.floor(100000 + Math.random()*899999)),
+      de: () => String(Math.floor(10000 + Math.random()*89999)),
+      fr: () => String(Math.floor(10000 + Math.random()*89999)),
+      au: () => String(Math.floor(1000 + Math.random()*8999))
+    };
+
+    function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    function makePhone(locale){
+      switch(locale){
+        case 'us': return `+1 (${randomInt(201,989)}) ${randomInt(200,999)}-${String(randomInt(0,9999)).padStart(4,'0')}`;
+        case 'uk': return `+44 ${randomInt(20,7999)} ${randomInt(100000,999999)}`;
+        case 'in': return `+91 ${randomInt(7000000000,9999999999)}`;
+        case 'de': return `+49 ${randomInt(30,899)} ${randomInt(1000000,9999999)}`;
+        case 'fr': return `+33 ${randomInt(1,9)} ${randomInt(10,99)} ${randomInt(10,99)} ${randomInt(10,99)} ${randomInt(10,99)}`;
+        case 'au': return `+61 ${randomInt(2,9)} ${randomInt(1000,9999)} ${randomInt(1000,9999)}`;
+      }
+      return '+00 000 000 0000';
+    }
+
+    function makeEmail(first, last, locale){
+      const domains = {
+        us:['example.com','mail.com','inbox.com','post.com'],
+        uk:['example.co.uk','mail.co.uk','inbox.co.uk'],
+        in:['example.in','mail.in','inbox.in'],
+        de:['example.de','mail.de'],
+        fr:['example.fr','mail.fr'],
+        au:['example.com.au','mail.com.au']
+      };
+      const domain = randomFrom(domains[locale]||domains.us);
+      return `${first.toLowerCase()}.${last.toLowerCase()}@${domain}`;
+    }
+
+    function makeCompany(){
+      const prefixes = ['Global','Prime','Next','Blue','Nova','Quantum','Pioneer','Apex','Vertex','Ever'];
+      const suffixes = ['Tech','Solutions','Logistics','Media','Consulting','Industries','Labs','Works','Studios','Systems'];
+      return `${randomFrom(prefixes)} ${randomFrom(suffixes)}`;
+    }
+
+    function makeAddress(locale){
+      const first = randomFrom(firstNames[locale]||firstNames.us);
+      const last = randomFrom(lastNames[locale]||lastNames.us);
+      const streetNum = randomInt(10, 9999);
+      const street = randomFrom(streets);
+      const city = randomFrom(cities[locale]||cities.us);
+      const postal = postalFormats[locale] ? postalFormats[locale]() : postalFormats.us();
+      const countryNames = { us:'United States', uk:'United Kingdom', in:'India', de:'Germany', fr:'France', au:'Australia' };
+      const country = countryNames[locale] || 'United States';
+
+      return {
+        name: `${first} ${last}`,
+        streetLine: `${streetNum} ${street}`,
+        city, postal, country,
+        phone: makePhone(locale),
+        email: makeEmail(first,last,locale),
+        company: makeCompany()
+      };
+    }
+
+    function renderAddresses(list){
+      const res = document.getElementById('results');
+      const placeholder = document.getElementById('placeholder');
+      res.innerHTML = '';
+      if (!list.length){ placeholder.style.display='block'; return; }
+      placeholder.style.display='none';
+
+      list.forEach((a, idx) => {
+        const el = document.createElement('div');
+        el.className = 'row';
+        el.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+            <div style="min-width:0;">
+              <div style="font-weight:700; color:#2c3e50;">${a.name}</div>
+              <div>${a.streetLine}</div>
+              <div>${a.city}, ${a.postal}</div>
+              <div>${a.country}</div>
+              <div class="muted" style="margin-top:6px;">${a.company ? ('ðŸ¢ '+a.company+' â€¢ ') : ''}â˜Ž ${a.phone} â€¢ âœ‰ ${a.email}</div>
+            </div>
+            <div style="flex:0 0 auto; display:flex; gap:8px;">
+              <button class="btn copy" data-idx="${idx}"><i class="far fa-copy"></i> Copy</button>
+            </div>
+          </div>
+        `;
+        res.appendChild(el);
+      });
+
+      // hook copy buttons
+      res.querySelectorAll('.btn.copy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-idx'));
+          const a = list[i];
+          const text = `${a.name}\n${a.streetLine}\n${a.city}, ${a.postal}\n${a.country}\n${a.company ? a.company+'\n' : ''}${a.phone}\n${a.email}`;
+          navigator.clipboard.writeText(text).then(() => {
+            const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check"></i> Copied!'; btn.style.background='#28a745'; setTimeout(()=>{ btn.innerHTML = old; btn.style.background="#20c997"; }, 1200);
+          });
+        });
+      });
+    }
+
+    function generate(){
+      const locale = document.getElementById('locale').value;
+      const count = parseInt(document.getElementById('count').value,10) || 5;
+      const includePhone = document.getElementById('includePhone').checked;
+      const includeEmail = document.getElementById('includeEmail').checked;
+      const includeCompany = document.getElementById('includeCompany').checked;
+
+      const list = [];
+      for (let i=0;i<count;i++){
+        const a = makeAddress(locale);
+        if (!includePhone) a.phone = '';
+        if (!includeEmail) a.email = '';
+        if (!includeCompany) a.company = '';
+        list.push(a);
+      }
+      renderAddresses(list);
+      window._lastAddresses = list;
+    }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    document.getElementById('copyAll').addEventListener('click', () => {
+      const list = window._lastAddresses || [];
+      if (!list.length) return;
+      const text = list.map(a => `${a.name}\n${a.streetLine}\n${a.city}, ${a.postal}\n${a.country}\n${a.company ? a.company+'\n' : ''}${a.phone}\n${a.email}`).join('\n\n');
+      navigator.clipboard.writeText(text);
+    });
+    document.getElementById('clear').addEventListener('click', () => {
+      document.getElementById('results').innerHTML='';
+      document.getElementById('placeholder').style.display='block';
+    });
+
+    // initial
+    renderAddresses([]);
+  </script>
+</body>
+</html>
+
+

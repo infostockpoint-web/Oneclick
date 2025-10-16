@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Recognition - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .ir { max-width: 1000px; margin: 0 auto; padding: 30px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .ai-header { text-align:center; margin-bottom: 20px; }
+    .ai-header h1 { display:flex; gap:10px; align-items:center; justify-content:center; color:#2c3e50; font-size:2rem; margin:0 0 8px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+    @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+    .card { background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.08); overflow:hidden; }
+    .section { padding:18px 20px; border-bottom:1px solid #eee; }
+    .section:last-child { border-bottom:0; }
+    .section-title { font-weight:600; color:#2c3e50; display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    .drop { border:2px dashed #dee2e6; border-radius:10px; padding:20px; text-align:center; color:#6c757d; cursor:pointer; }
+    .drop.drag { background:#f8f9fa; border-color:#4a6cf7; color:#4a6cf7; }
+    .preview { position:relative; background:#f8f9fa; border-radius:10px; overflow:hidden; }
+    .preview img { width:100%; display:block; }
+    .tag { position:absolute; top:10px; left:10px; background:rgba(0,0,0,.7); color:#fff; padding:6px 10px; border-radius:999px; font-size:.9rem; display:flex; gap:6px; align-items:center; }
+    .labels { display:flex; flex-wrap:wrap; gap:8px; }
+    .label { padding:6px 10px; border-radius:999px; background:#f0f4ff; color:#4a6cf7; border:1px solid #dee2e6; font-weight:600; }
+    .btn { background:#4a6cf7; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; }
+    .btn:disabled { background:#bdc3c7; }
+    .note { margin-top:12px; color:#6c757d; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="ir">
+    <div class="ai-header">
+      <h1><i class="fas fa-eye"></i> Image Recognition</h1>
+      <p>Upload an image to see demo labels. Full AI-powered recognition coming soon.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="section">
+          <div class="section-title"><i class="fas fa-upload"></i> Upload Image</div>
+          <div id="drop" class="drop">
+            <p><i class="fas fa-cloud-upload-alt"></i> Drag & drop an image here or click to select</p>
+            <input id="fileInput" type="file" accept="image/*" style="display:none;" />
+          </div>
+          <div class="note">Supported: JPG, PNG. Image is processed locally in this demo.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section">
+          <div class="section-title"><i class="fas fa-image"></i> Preview & Labels</div>
+          <div id="preview" class="preview" style="display:none;">
+            <img id="img" alt="Uploaded preview" />
+            <div id="tag" class="tag" style="display:none;"><i class="fas fa-tag"></i><span id="tagText"></span></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title"><i class="fas fa-lightbulb"></i> Detected Labels (demo)</div>
+          <div id="labels" class="labels"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const drop = document.getElementById('drop');
+      const fileInput = document.getElementById('fileInput');
+      const preview = document.getElementById('preview');
+      const img = document.getElementById('img');
+      const tag = document.getElementById('tag');
+      const tagText = document.getElementById('tagText');
+      const labelsBox = document.getElementById('labels');
+
+      const demoLabels = ['person','outdoor','nature','vehicle','animal','text','food','sky','building','water'];
+
+      function randomLabels(){
+        const shuffled = demoLabels.sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, 4);
+      }
+
+      function renderLabels(list){
+        labelsBox.innerHTML = '';
+        list.forEach(l => {
+          const el = document.createElement('span');
+          el.className = 'label';
+          el.textContent = l;
+          labelsBox.appendChild(el);
+        });
+      }
+
+      function handleFile(file){
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          img.src = reader.result;
+          preview.style.display = 'block';
+          const list = randomLabels();
+          renderLabels(list);
+          tagText.textContent = list[0];
+          tag.style.display = 'inline-flex';
+        };
+        reader.readAsDataURL(file);
+      }
+
+      drop.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('drag'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+      drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leap Year Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-calendar tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Leap Year Checker</div>
+        <div class="tool-desc">Check if a year is a leap year and find nearby leap years.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="lyYear" style="display:block; font-weight:600; margin-bottom:6px;">Year</label>
+            <input id="lyYear" type="number" step="1" placeholder="e.g. 2024" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <button id="lyCheck" class="tool-button" style="height:42px;">Check</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Result</div>
+          <div id="lyResult" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Previous Leap Year</div>
+          <div id="lyPrev" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Next Leap Year</div>
+          <div id="lyNext" style="font-size:1.2rem;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function isLeap(y){ return (y%4===0 && y%100!==0) || (y%400===0); }
+    function prevLeap(y){ let x=y-1; while(!isLeap(x)) x--; return x; }
+    function nextLeap(y){ let x=y+1; while(!isLeap(x)) x++; return x; }
+    document.getElementById('lyCheck').addEventListener('click', () => {
+      const y = Number(document.getElementById('lyYear').value);
+      const r = document.getElementById('lyResult');
+      const p = document.getElementById('lyPrev');
+      const n = document.getElementById('lyNext');
+      if (!Number.isInteger(y) || y<=0){ r.textContent='Please enter a valid positive year'; p.textContent='â€”'; n.textContent='â€”'; return; }
+      r.textContent = isLeap(y) ? `${y} is a leap year` : `${y} is not a leap year`;
+      p.textContent = prevLeap(y);
+      n.textContent = nextLeap(y);
+    });
+  </script>
+</body>
+</html>
+
+

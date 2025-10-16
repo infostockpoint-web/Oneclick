@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Energy Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-bolt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Energy Converter</div>
+      <div class="tool-desc">Convert between Joules, calories, Watt-hours, and BTU.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="eVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="eVal" type="number" step="any" placeholder="e.g. 1000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="eFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="eFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div>
+          <label for="eTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="eTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="eConvert" class="tool-button">Convert</button>
+          <button id="eSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="eCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="eResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="eTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const EUNITS = [
+    { k:'J',   name:'Joule',      to_j: 1 },
+    { k:'kJ',  name:'Kilojoule',  to_j: 1e3 },
+    { k:'MJ',  name:'Megajoule',  to_j: 1e6 },
+    { k:'cal', name:'calorie',    to_j: 4.184 },
+    { k:'kcal',name:'kilocalorie',to_j: 4184 },
+    { k:'Wh',  name:'Watt-hour',  to_j: 3600 },
+    { k:'kWh', name:'kilowatt-hour', to_j: 3.6e6 },
+    { k:'BTU', name:'British thermal unit', to_j: 1055.05585262 }
+  ];
+  function ePopulate(sel){ EUNITS.forEach(u=>{ const o=document.createElement('option'); o.value=u.k; o.textContent=`${u.name} (${u.k})`; sel.appendChild(o); }); }
+  function toJ(v,u){ const it=EUNITS.find(x=>x.k===u); return it? v*it.to_j : NaN; }
+  function fromJ(J,u){ const it=EUNITS.find(x=>x.k===u); return it? J/it.to_j : NaN; }
+  function fmtE(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:6}); }
+  function buildETable(J){ return EUNITS.map(u=>`${u.k.padEnd(3,' ')} : ${fmtE(fromJ(J,u.k))}`).join('\n'); }
+  document.addEventListener('DOMContentLoaded', ()=>{ const a=document.getElementById('eFrom'); const b=document.getElementById('eTo'); ePopulate(a); ePopulate(b); a.value='J'; b.value='kWh'; });
+  document.getElementById('eSwap').addEventListener('click', ()=>{ const a=document.getElementById('eFrom'); const b=document.getElementById('eTo'); const t=a.value; a.value=b.value; b.value=t; });
+  document.getElementById('eConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('eVal').value);
+    const from = document.getElementById('eFrom').value;
+    const to = document.getElementById('eTo').value;
+    const out = document.getElementById('eResult');
+    const tbl = document.getElementById('eTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const J = toJ(val, from);
+    const conv = fromJ(J, to);
+    out.textContent = `${fmtE(val)} ${from} = ${fmtE(conv)} ${to}`;
+    tbl.textContent = buildETable(J);
+  });
+  document.getElementById('eCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('eResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+

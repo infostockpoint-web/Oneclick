@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image to PNG - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:40px 0;">
+    <h1 class="section-title">Image to PNG Converter</h1>
+    <p class="section-subtitle">Convert JPG, WebP and other images to PNG directly in your browser.</p>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div class="tool-card" style="margin-top:20px;">
+      <input id="file" type="file" accept="image/*" style="margin-bottom:12px;" />
+      <canvas id="canvas" style="max-width:100%; display:none; border-radius:8px; border:1px solid #eee;"></canvas>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="download" class="tool-button" disabled>Download PNG</button>
+        <a id="previewLink" class="tool-button" style="background:#888; pointer-events:none;" target="_blank" rel="noopener">Preview</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('file');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('download');
+    const previewLink = document.getElementById('previewLink');
+
+    let pngDataUrl = '';
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          canvas.style.display = 'block';
+          pngDataUrl = canvas.toDataURL('image/png');
+          downloadBtn.disabled = false;
+          previewLink.href = pngDataUrl;
+          previewLink.style.background = 'var(--primary-blue)';
+          previewLink.style.pointerEvents = 'auto';
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!pngDataUrl) return;
+      const a = document.createElement('a');
+      a.href = pngDataUrl;
+      a.download = 'converted.png';
+      a.click();
+    });
+  </script>
+</body>
+</html>
+
+

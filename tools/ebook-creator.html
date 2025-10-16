@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-book Creator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end}
+    .chap{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-book-open tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">E-book Creator</div>
+        <div class="tool-desc">Compose chapters and export a single HTML e-book. Data is saved locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Title</label><input id="title" type="text" value="My eBook" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Author</label><input id="author" type="text" value="Anonymous" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <button id="saveMeta" class="tool-button">Save</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:start;">
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Chapter Title</label><input id="chTitle" type="text" placeholder="Chapter 1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Content (Markdown or plain text)</label><textarea id="chBody" rows="6" placeholder="Type your chapter..."></textarea></div>
+          <button id="addChapter" class="tool-button">Add Chapter</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Chapters</div>
+        <div id="chapters"></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Export</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="preview" class="tool-button"><i class="fas fa-eye"></i> Preview</button>
+          <button id="downloadHtml" class="tool-button"><i class="fas fa-download"></i> Download HTML</button>
+          <button id="print" class="tool-button"><i class="fas fa-print"></i> Print</button>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_ebook_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{title:'My eBook', author:'Anonymous', chapters:[]} }catch(e){ return {title:'My eBook', author:'Anonymous', chapters:[]} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    function render(){
+      const d=load(); document.getElementById('title').value=d.title; document.getElementById('author').value=d.author;
+      const wrap=document.getElementById('chapters'); wrap.innerHTML='';
+      d.chapters.forEach((ch,i)=>{
+        const row=document.createElement('div'); row.className='chap tool-card'; row.style.padding='12px';
+        row.innerHTML=`
+          <div>
+            <div style="font-weight:700;">${escapeHtml(ch.title||('Chapter '+(i+1)))}</div>
+            <div class="tool-desc" style="white-space:pre-wrap;">${escapeHtml(ch.body||'')}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="tool-button" data-act="up" data-i="${i}"><i class="fas fa-arrow-up"></i></button>
+            <button class="tool-button" data-act="down" data-i="${i}"><i class="fas fa-arrow-down"></i></button>
+            <button class="tool-button" data-act="edit" data-i="${i}"><i class="fas fa-pen"></i></button>
+            <button class="tool-button" data-act="del" data-i="${i}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+          </div>`;
+        wrap.appendChild(row);
+      });
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    document.getElementById('saveMeta').addEventListener('click',()=>{ const d=load(); d.title=document.getElementById('title').value.trim()||'My eBook'; d.author=document.getElementById('author').value.trim()||'Anonymous'; save(d); render(); });
+    document.getElementById('addChapter').addEventListener('click',()=>{ const t=document.getElementById('chTitle').value.trim(); const b=document.getElementById('chBody').value; if(!t&&!b){ alert('Enter a title or content.'); return;} const d=load(); d.chapters.push({title:t||('Chapter '+(d.chapters.length+1)), body:b}); save(d); document.getElementById('chTitle').value=''; document.getElementById('chBody').value=''; render(); });
+    document.getElementById('chapters').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-act]'); if(!btn) return; const i=+btn.getAttribute('data-i'); const act=btn.getAttribute('data-act'); const d=load();
+      if (act==='del'){ d.chapters.splice(i,1); save(d); render(); }
+      if (act==='up' && i>0){ const tmp=d.chapters[i-1]; d.chapters[i-1]=d.chapters[i]; d.chapters[i]=tmp; save(d); render(); }
+      if (act==='down' && i<d.chapters.length-1){ const tmp=d.chapters[i+1]; d.chapters[i+1]=d.chapters[i]; d.chapters[i]=tmp; save(d); render(); }
+      if (act==='edit'){ const ch=d.chapters[i]; const nt=prompt('Chapter title', ch.title); if (nt===null) return; const nb=prompt('Chapter content', ch.body); if (nb===null) return; d.chapters[i]={title:nt, body:nb}; save(d); render(); }
+    });
+
+    function makeHtml(){ const d=load(); const chapHtml=d.chapters.map((ch,idx)=>`<h2>${escapeHtml(ch.title||('Chapter '+(idx+1)))}</h2><div>${escapeHtml(ch.body||'').replace(/\n/g,'<br>')}</div>`).join('<hr>');
+      return `<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>${escapeHtml(d.title)}</title></head><body style="font-family:Georgia,serif;line-height:1.6;max-width:800px;margin:20px auto;padding:0 16px;color:#222;">
+        <h1 style='text-align:center;'>${escapeHtml(d.title)}</h1>
+        <div style='text-align:center;color:#666;margin-bottom:20px;'>${escapeHtml(d.author)}</div>
+        ${chapHtml||'<p>No chapters yet.</p>'}
+      </body></html>`; }
+    document.getElementById('preview').addEventListener('click',()=>{ const html=makeHtml(); const w=window.open('about:blank'); w.document.open(); w.document.write(html); w.document.close(); });
+    document.getElementById('downloadHtml').addEventListener('click',()=>{ const html=makeHtml(); const a=document.createElement('a'); const blob=new Blob([html],{type:'text/html'}); a.href=URL.createObjectURL(blob); a.download='ebook.html'; a.click(); });
+    document.getElementById('print').addEventListener('click',()=>{ const html=makeHtml(); const w=window.open('about:blank'); w.document.open(); w.document.write(html+"<script>window.onload=()=>window.print()<\/script>"); w.document.close(); });
+
+    render();
+  </script>
+</body>
+</html>
+
+

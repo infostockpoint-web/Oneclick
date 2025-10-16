@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caesar Cipher Encoder & Decoder - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-user-secret tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Caesar Cipher Encoder & Decoder</div>
+        <div class="tool-desc">Shift letters by N positions. Preserves case; non-letters unchanged.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div>
+            <label for="ccInput" style="display:block; font-weight:600; margin-bottom:6px;">Input Text</label>
+            <textarea id="ccInput" rows="5" placeholder="Enter text here" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; align-items:end;">
+            <div>
+              <label for="ccShift" style="display:block; font-weight:600; margin-bottom:6px;">Shift (âˆ’25 â€¦ 25)</label>
+              <input id="ccShift" type="number" step="1" min="-25" max="25" value="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            </div>
+            <div>
+              <label for="ccMode" style="display:block; font-weight:600; margin-bottom:6px;">Mode</label>
+              <select id="ccMode" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="encode" selected>Encode</option>
+                <option value="decode">Decode</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="ccRun" class="tool-button">Run</button>
+              <button id="ccClear" class="tool-button" style="background:#888;">Clear</button>
+              <button id="ccCopy" class="tool-button" style="background:#555;">Copy Output</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Output</label>
+            <textarea id="ccOutput" rows="5" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"> </textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function shiftChar(ch, n){
+      const A='A'.charCodeAt(0), Z='Z'.charCodeAt(0), a='a'.charCodeAt(0), z='z'.charCodeAt(0);
+      const code = ch.charCodeAt(0);
+      if (code>=A && code<=Z){
+        const base=A; const pos=code-base; const mod=((pos+n)%26+26)%26; return String.fromCharCode(base+mod);
+      }
+      if (code>=a && code<=z){
+        const base=a; const pos=code-base; const mod=((pos+n)%26+26)%26; return String.fromCharCode(base+mod);
+      }
+      return ch;
+    }
+    function runCipher(text, shift, mode){
+      const n = Number(shift) || 0; const k = mode==='decode' ? -n : n;
+      return Array.from(text||'').map(ch=>shiftChar(ch,k)).join('');
+    }
+    document.getElementById('ccRun').addEventListener('click', ()=>{
+      const inp = document.getElementById('ccInput').value;
+      const sh = Number(document.getElementById('ccShift').value);
+      const md = document.getElementById('ccMode').value;
+      document.getElementById('ccOutput').value = runCipher(inp, sh, md);
+    });
+    document.getElementById('ccClear').addEventListener('click', ()=>{
+      document.getElementById('ccInput').value='';
+      document.getElementById('ccOutput').value='';
+    });
+    document.getElementById('ccCopy').addEventListener('click', async ()=>{
+      try { await navigator.clipboard.writeText(document.getElementById('ccOutput').value); } catch(e){}
+    });
+  </script>
+</body>
+</html>
+
+

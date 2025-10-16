@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Language Learning Assistant - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-comments tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Language Learning Assistant</div>
+        <div class="tool-desc">Practice phrases, hear pronunciation, and quiz yourself. Works offline and stores progress locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Target Language Voice</label>
+            <select id="voice" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Add Phrase (Native â†’ Target)</label>
+            <input id="native" type="text" placeholder="Hello" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:6px;">
+            <input id="target" type="text" placeholder="Hola" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Tag (optional)</label>
+            <input id="tag" type="text" placeholder="greeting, travel" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <button id="add" class="tool-button" style="height:42px;">Add</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="tool-name">Phrases</div>
+            <input id="search" type="search" placeholder="Search..." style="padding:8px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div id="list" style="display:grid; gap:10px; margin-top:10px;"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Quiz</div>
+          <div id="quiz" style="display:grid; gap:10px; margin-top:8px;">
+            <div id="qPrompt" class="tool-card" style="padding:16px; text-align:center;">Add phrases to start. Quiz shows Native; type the Target translation.</div>
+            <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
+              <input id="answer" type="text" placeholder="Type translation" style="flex:1; max-width:360px; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <button id="check" class="tool-button">Check</button>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="speak" class="tool-button"><i class="fas fa-volume-up"></i> Speak</button>
+              <button id="next" class="tool-button">Next</button>
+            </div>
+            <div id="feedback" class="tool-desc" style="text-align:center;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_lang_assistant_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    // voices
+    let voices=[]; function loadVoices(){ voices = speechSynthesis.getVoices(); const sel=document.getElementById('voice'); sel.innerHTML=''; voices.forEach((v,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=`${v.name} (${v.lang})`; sel.appendChild(o); }); }
+    if ('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+    function render(){
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const list=document.getElementById('list'); list.innerHTML='';
+      const data=load().filter(p=>!q || p.n.toLowerCase().includes(q) || p.t.toLowerCase().includes(q) || (p.tag||'').toLowerCase().includes(q));
+      if (!data.length){ list.innerHTML='<div class="tool-desc">No phrases yet.</div>'; return; }
+      for (const p of data){
+        const el=document.createElement('div'); el.className='tool-card'; el.style.padding='12px';
+        el.innerHTML=`
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;">
+            <div>
+              <div style="font-weight:600;">${escapeHtml(p.n)}</div>
+              <div class="tool-desc">${escapeHtml(p.t)} ${p.tag?`â€¢ <small>${escapeHtml(p.tag)}</small>`:''}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="tool-button" data-act="speak" data-id="${p.id}"><i class="fas fa-volume-up"></i></button>
+              <button class="tool-button" data-act="del" data-id="${p.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+    }
+
+    document.getElementById('add').addEventListener('click',()=>{
+      const n=document.getElementById('native').value.trim();
+      const t=document.getElementById('target').value.trim();
+      const tag=document.getElementById('tag').value.trim();
+      if (!n || !t){ alert('Please enter both native and target phrases.'); return; }
+      const data=load(); data.push({id:crypto.randomUUID(), n, t, tag}); save(data);
+      document.getElementById('native').value=''; document.getElementById('target').value=''; render();
+    });
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id');
+      const act=btn.getAttribute('data-act'); const data=load(); const idx=data.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this phrase?')){ data.splice(idx,1); save(data); render(); } }
+      if (act==='speak'){ speakText(data[idx].t); }
+    });
+
+    function speakText(text){
+      if (!('speechSynthesis' in window)) { alert('Speech Synthesis not supported in this browser.'); return; }
+      const utter=new SpeechSynthesisUtterance(text);
+      const sel=document.getElementById('voice'); const v=voices[Number(sel.value)]||null; if (v) utter.voice=v;
+      speechSynthesis.cancel(); speechSynthesis.speak(utter);
+    }
+
+    // Quiz
+    let quizData=[]; let qi=0; let current=null;
+    function nextQuestion(){
+      const all=load(); if(!all.length){ document.getElementById('qPrompt').textContent='Add phrases to start.'; current=null; return; }
+      if (!quizData.length){ quizData=all.slice().sort(()=>Math.random()-0.5); qi=0; }
+      current=quizData[qi++ % quizData.length];
+      document.getElementById('qPrompt').innerHTML=`<div><strong>Translate:</strong> ${escapeHtml(current.n)}</div>`;
+      document.getElementById('answer').value=''; document.getElementById('feedback').textContent='';
+    }
+
+    document.getElementById('check').addEventListener('click',()=>{
+      if (!current) return; const ans=document.getElementById('answer').value.trim();
+      if (!ans){ document.getElementById('feedback').textContent='Type your answer.'; return; }
+      const correct=current.t.trim();
+      const ok = ans.toLowerCase()===correct.toLowerCase();
+      document.getElementById('feedback').textContent = ok ? 'Correct! âœ…' : `Not quite. Correct: ${correct}`;
+    });
+    document.getElementById('next').addEventListener('click', nextQuestion);
+    document.getElementById('speak').addEventListener('click',()=>{ if(current) speakText(current.t); });
+
+    document.getElementById('search').addEventListener('input', render);
+
+    render(); nextQuestion();
+  </script>
+</body>
+</html>
+
+

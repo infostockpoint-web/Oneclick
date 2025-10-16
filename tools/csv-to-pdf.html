@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV to PDF - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; align-items:end; }
+    .area { border:1px solid #e5e7eb; background:#f8fafc; padding:10px; border-radius:8px; min-height:220px; overflow:auto; }
+    table.preview { width:100%; border-collapse:collapse; font-size:.92rem; }
+    table.preview th, table.preview td { border:1px solid #e5e7eb; padding:6px 8px; text-align:left; }
+    .progress { height:10px; background:#eef2ff; border-radius:6px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:#4a6cf7; transition:width .2s ease; }
+    .hint { font-size:.9rem; color:#6b7280; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">CSV to PDF</div>
+        <div class="tool-desc">Convert CSV files into nicely formatted PDFs in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="csvInput" style="display:block; font-weight:600; margin-bottom:6px;">Select CSV File</label>
+            <input type="file" id="csvInput" accept=".csv,text/csv" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="delimiter" style="display:block; font-weight:600; margin-bottom:6px;">Delimiter (optional)</label>
+            <input type="text" id="delimiter" placeholder=", (auto if blank)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Header row</label>
+            <label class="hint"><input type="checkbox" id="hasHeader" checked> First row contains column headers</label>
+          </div>
+          <div>
+            <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">PDF Page</label>
+            <div style="display:flex; gap:8px;">
+              <select id="pageSize" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+              </select>
+              <select id="orientation" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="p">Portrait</option>
+                <option value="l">Landscape</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="fontSize" style="display:block; font-weight:600; margin-bottom:6px;">Font Size</label>
+            <input type="number" id="fontSize" value="10" min="6" max="18" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="previewBtn" class="tool-button"><i class="fas fa-eye"></i> Preview</button>
+            <button id="convertBtn" class="tool-button" style="background:#22c55e;"><i class="fas fa-file-export"></i> Convert to PDF</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;" class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div class="area" id="previewArea">Select a CSV file and click Preview.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Details</div>
+          <div id="details" style="margin-top:8px; color:#374151; font-size:.95rem;">—</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const csvInput = document.getElementById('csvInput');
+    const delimiterInput = document.getElementById('delimiter');
+    const hasHeader = document.getElementById('hasHeader');
+    const pageSize = document.getElementById('pageSize');
+    const orientation = document.getElementById('orientation');
+    const fontSize = document.getElementById('fontSize');
+    const previewBtn = document.getElementById('previewBtn');
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewArea = document.getElementById('previewArea');
+    const details = document.getElementById('details');
+    const progressBar = document.getElementById('progressBar');
+
+    let parsed = null;
+
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    function reset(){ parsed=null; previewArea.innerHTML='Select a CSV file and click Preview.'; details.textContent='—'; setProgress(0); }
+
+    clearBtn.addEventListener('click', ()=>{ csvInput.value=''; delimiterInput.value=''; hasHeader.checked=true; reset(); });
+    csvInput.addEventListener('change', ()=>{ reset(); if (csvInput.files[0]) details.textContent = `Selected: ${csvInput.files[0].name}`; });
+
+    function renderPreview(data){
+      const maxRows = 100; // limit preview
+      let html = '<div class="hint" style="margin-bottom:8px;">Previewing up to '+maxRows+' rows</div>';
+      html += '<div style="overflow:auto;">';
+      html += '<table class="preview"><thead><tr>';
+      const headers = data[0] || [];
+      headers.forEach(h => html += '<th>'+ String(h ?? '') +'</th>');
+      html += '</tr></thead><tbody>';
+      for (let i=1; i<Math.min(data.length, maxRows); i++){
+        html += '<tr>' + (data[i]||[]).map(v => '<td>'+ String(v ?? '') +'</td>').join('') + '</tr>';
+      }
+      html += '</tbody></table></div>';
+      previewArea.innerHTML = html;
+    }
+
+    function toRows(result){
+      // Result from PapaParse can be objects or arrays depending on header option
+      if (!result || !result.data) return [];
+      if (hasHeader.checked){
+        const rows = result.data;
+        if (!rows.length) return [];
+        const cols = Object.keys(rows[0] || {});
+        const body = rows.map(r => cols.map(c => r[c] ?? ''));
+        return [cols, ...body];
+      } else {
+        return result.data;
+      }
+    }
+
+    function parseCSV(file){
+      return new Promise((resolve, reject) => {
+        Papa.parse(file, {
+          header: hasHeader.checked,
+          delimiter: delimiterInput.value || '', // auto-detect if blank
+          skipEmptyLines: true,
+          complete: (res) => resolve(res),
+          error: (err) => reject(err)
+        });
+      });
+    }
+
+    previewBtn.addEventListener('click', async () => {
+      if (!csvInput.files[0]) { alert('Please select a CSV file.'); return; }
+      try {
+        previewBtn.disabled = true; previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Parsing...'; setProgress(20);
+        const res = await parseCSV(csvInput.files[0]);
+        parsed = toRows(res);
+        if (!parsed.length){ previewArea.innerHTML = 'No data found in CSV.'; details.textContent='—'; return; }
+        renderPreview(parsed);
+        details.textContent = `Rows: ${parsed.length-1} • Columns: ${(parsed[0]||[]).length}`;
+        setProgress(100);
+      } catch(e){
+        alert('Failed to parse CSV: ' + e.message);
+      } finally {
+        previewBtn.disabled = false; previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview';
+      }
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      if (!csvInput.files[0]) { alert('Please select a CSV file.'); return; }
+      try {
+        convertBtn.disabled = true; convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...'; setProgress(10);
+        if (!parsed){ const res = await parseCSV(csvInput.files[0]); parsed = toRows(res); }
+        if (!parsed || !parsed.length){ alert('No data to convert.'); return; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: orientation.value === 'l' ? 'landscape' : 'portrait', unit: 'pt', format: pageSize.value });
+        doc.setFontSize(parseInt(fontSize.value||'10',10));
+
+        const head = [parsed[0]];
+        const body = parsed.slice(1);
+        // AutoTable handles pagination automatically
+        doc.autoTable({ head, body, styles: { fontSize: parseInt(fontSize.value||'10',10) }, margin: { top: 40, right: 30, bottom: 30, left: 30 } });
+
+        const base = (csvInput.files[0]?.name || 'table').replace(/\.csv$/i,'');
+        doc.save(base + '.pdf');
+        setProgress(100);
+      } catch(e){
+        alert('Failed to convert to PDF: ' + e.message);
+      } finally {
+        convertBtn.disabled = false; convertBtn.innerHTML = '<i class=\"fas fa-file-export\"></i> Convert to PDF';
+      }
+    });
+  </script>
+</body>
+</html>
+
+

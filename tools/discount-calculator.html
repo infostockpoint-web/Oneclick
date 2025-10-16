@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discount Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-tags tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Discount Calculator</div>
+        <div class="tool-desc">Compute sale price, savings, and discount percentage.</div>
+      </div>
+
+      <div style="display:grid; gap:16px;">
+        <!-- Mode 1: Original + %off -> Final & Savings -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">Apply Discount %</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+              <label for="orig1" style="display:block; font-weight:600; margin-bottom:6px;">Original Price</label>
+              <input id="orig1" type="number" step="any" placeholder="e.g. 1299" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            </div>
+            <div>
+              <label for="pct1" style="display:block; font-weight:600; margin-bottom:6px;">Discount %</label>
+              <input id="pct1" type="number" step="any" placeholder="e.g. 20" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            </div>
+            <button id="calc1" class="tool-button" style="height:42px;">Calculate</button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:12px;">
+            <div>
+              <div class="tool-name">Final Price</div>
+              <output id="final1" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+            <div>
+              <div class="tool-name">You Save</div>
+              <output id="save1" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 2: Original + Final -> %off -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">Find Discount %</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+              <label for="orig2" style="display:block; font-weight:600; margin-bottom:6px;">Original Price</label>
+              <input id="orig2" type="number" step="any" placeholder="e.g. 1299" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            </div>
+            <div>
+              <label for="final2" style="display:block; font-weight:600; margin-bottom:6px;">Final Price</label>
+              <input id="final2" type="number" step="any" placeholder="e.g. 1039.2" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            </div>
+            <button id="calc2" class="tool-button" style="height:42px;">Calculate</button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:12px;">
+            <div>
+              <div class="tool-name">Discount %</div>
+              <output id="pct2" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+            <div>
+              <div class="tool-name">You Save</div>
+              <output id="save2" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+        <div style="text-align:center;">
+          <a class="tool-button" href="../index.html">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function round2(n){ return Math.round(n * 100) / 100; }
+    // Mode 1
+    document.getElementById('calc1').addEventListener('click', () => {
+      const orig = Number(document.getElementById('orig1').value);
+      const pct = Number(document.getElementById('pct1').value);
+      const finalOut = document.getElementById('final1');
+      const saveOut = document.getElementById('save1');
+      if (!isFinite(orig) || !isFinite(pct) || orig < 0){ finalOut.textContent='Invalid input'; saveOut.textContent='â€”'; return; }
+      const saved = round2(orig * (pct/100));
+      const final = round2(orig - saved);
+      finalOut.textContent = final.toString();
+      saveOut.textContent = saved.toString();
+    });
+
+    // Mode 2
+    document.getElementById('calc2').addEventListener('click', () => {
+      const orig = Number(document.getElementById('orig2').value);
+      const final = Number(document.getElementById('final2').value);
+      const pctOut = document.getElementById('pct2');
+      const saveOut = document.getElementById('save2');
+      if (!isFinite(orig) || !isFinite(final) || orig <= 0 || final < 0 || final > orig){ pctOut.textContent='Invalid input'; saveOut.textContent='â€”'; return; }
+      const saved = round2(orig - final);
+      const pct = round2((saved / orig) * 100);
+      pctOut.textContent = pct + '%';
+      saveOut.textContent = saved.toString();
+    });
+  </script>
+</body>
+</html>
+
+

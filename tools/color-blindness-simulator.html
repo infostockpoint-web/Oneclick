@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Blindness Simulator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:end}
+    .panel{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+    .preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+    canvas{width:100%;height:auto;border-radius:8px;border:1px solid #e5e7eb;background:#fff}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-eye tool-icon-small" style="font-size:3rem;color:#4a6cf7"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Color Blindness Simulator</div>
+        <div class="tool-desc">Upload an image and preview how it appears for various types of color vision deficiency.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div class="panel">
+            <label class="tool-name" for="imgInput">Select image</label>
+            <input id="imgInput" type="file" accept="image/*" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div class="panel">
+            <div class="tool-name">Original</div>
+            <canvas id="orig"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Simulations</div>
+        <div class="preview" style="margin-top:10px;">
+          <div>
+            <div class="tool-name">Protanopia</div>
+            <canvas id="protan"></canvas>
+          </div>
+          <div>
+            <div class="tool-name">Deuteranopia</div>
+            <canvas id="deutan"></canvas>
+          </div>
+          <div>
+            <div class="tool-name">Tritanopia</div>
+            <canvas id="tritan"></canvas>
+          </div>
+          <div>
+            <div class="tool-name">Achromatopsia</div>
+            <canvas id="achroma"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const imgInput=document.getElementById('imgInput');
+    const canvases={orig:document.getElementById('orig'), protan:document.getElementById('protan'), deutan:document.getElementById('deutan'), tritan:document.getElementById('tritan'), achroma:document.getElementById('achroma')};
+
+    function applyMatrix(srcCtx, dstCtx, w, h, m){
+      const src=srcCtx.getImageData(0,0,w,h); const d=src.data;
+      const out=dstCtx.createImageData(w,h); const o=out.data;
+      for(let i=0;i<d.length;i+=4){
+        const r=d[i], g=d[i+1], b=d[i+2];
+        o[i]  = Math.max(0, Math.min(255, r*m[0][0] + g*m[0][1] + b*m[0][2]));
+        o[i+1]= Math.max(0, Math.min(255, r*m[1][0] + g*m[1][1] + b*m[1][2]));
+        o[i+2]= Math.max(0, Math.min(255, r*m[2][0] + g*m[2][1] + b*m[2][2]));
+        o[i+3]= d[i+3];
+      }
+      dstCtx.putImageData(out,0,0);
+    }
+
+    const MATRICES={
+      // Approximate simulation matrices
+      protan:[ [0.567,0.433,0.000], [0.558,0.442,0.000], [0.000,0.242,0.758] ],
+      deutan:[ [0.625,0.375,0.000], [0.700,0.300,0.000], [0.000,0.300,0.700] ],
+      tritan:[ [0.950,0.050,0.000], [0.000,0.433,0.567], [0.000,0.475,0.525] ],
+      achroma:[ [0.299,0.587,0.114], [0.299,0.587,0.114], [0.299,0.587,0.114] ]
+    };
+
+    function drawAll(img){
+      const maxW=800; const scale=Math.min(1, maxW/img.width);
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      Object.values(canvases).forEach(c=>{c.width=w; c.height=h;});
+      const ctxO=canvases.orig.getContext('2d');
+      ctxO.drawImage(img,0,0,w,h);
+      const ctxP=canvases.protan.getContext('2d');
+      const ctxD=canvases.deutan.getContext('2d');
+      const ctxT=canvases.tritan.getContext('2d');
+      const ctxA=canvases.achroma.getContext('2d');
+      applyMatrix(ctxO, ctxP, w, h, MATRICES.protan);
+      applyMatrix(ctxO, ctxD, w, h, MATRICES.deutan);
+      applyMatrix(ctxO, ctxT, w, h, MATRICES.tritan);
+      applyMatrix(ctxO, ctxA, w, h, MATRICES.achroma);
+    }
+
+    imgInput.addEventListener('change',()=>{
+      const f=imgInput.files[0]; if(!f) return; const url=URL.createObjectURL(f);
+      const img=new Image(); img.onload=()=>{ drawAll(img); URL.revokeObjectURL(url); }; img.src=url;
+    });
+  </script>
+</body>
+</html>

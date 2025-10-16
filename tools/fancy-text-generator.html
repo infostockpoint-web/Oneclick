@@ -1,0 +1,274 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fancy Text Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .text-transforms {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .transform-item {
+      padding: 15px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .transform-item:hover {
+      background: #e7f0ff;
+      border-color: #007bff;
+    }
+    .transform-item.selected {
+      background: #007bff;
+      color: white;
+      border-color: #0056b3;
+    }
+    .transform-name {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .transform-preview {
+      font-size: 1.2rem;
+      word-break: break-all;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    .output-section {
+      margin-top: 20px;
+    }
+    .output-text {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      resize: vertical;
+    }
+    .output-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .copy-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-magic tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Fancy Text Generator</div>
+        <div class="tool-desc">Transform your text into stylish Unicode fonts perfect for social media and messaging.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <label style="display:block; font-weight:600; margin-bottom:10px;">Enter your text:</label>
+        <textarea id="inputText" placeholder="Type your text here..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; resize:vertical; min-height:80px;"></textarea>
+      </div>
+
+      <div class="text-transforms" id="transformsContainer">
+        <div class="transform-item selected" data-transform="normal">
+          <div class="transform-name">Normal</div>
+          <div class="transform-preview" data-text="Normal">Normal Text</div>
+        </div>
+        <div class="transform-item" data-transform="bold">
+          <div class="transform-name">Bold</div>
+          <div class="transform-preview" data-text="Bold">ðð¨ð¥ð ð“ðžð±ð­</div>
+        </div>
+        <div class="transform-item" data-transform="italic">
+          <div class="transform-name">Italic</div>
+          <div class="transform-preview" data-text="Italic">ð˜ð˜µð˜¢ð˜­ð˜ªð˜¤ ð˜›ð˜¦ð˜¹ð˜µ</div>
+        </div>
+        <div class="transform-item" data-transform="bold-italic">
+          <div class="transform-name">Bold Italic</div>
+          <div class="transform-preview" data-text="BoldItalic">ð‘©ð’ð’ð’… ð‘°ð’•ð’‚ð’ð’Šð’„</div>
+        </div>
+        <div class="transform-item" data-transform="script">
+          <div class="transform-name">Script</div>
+          <div class="transform-preview" data-text="Script">ð’®ð’¸ð“‡ð’¾ð“…ð“‰ ð’¯ð‘’ð“ð“‰</div>
+        </div>
+        <div class="transform-item" data-transform="fraktur">
+          <div class="transform-name">Fraktur</div>
+          <div class="transform-preview" data-text="Fraktur">ð”‰ð”¯ð”žð”¨ð”±ð”²ð”¯ ð”—ð”¢ð”µð”±</div>
+        </div>
+        <div class="transform-item" data-transform="monospace">
+          <div class="transform-name">Monospace</div>
+          <div class="transform-preview" data-text="Monospace">ð™¼ðš˜ðš—ðš˜ðšœðš™ðšŠðšŒðšŽ ðšƒðšŽðš¡ðš</div>
+        </div>
+        <div class="transform-item" data-transform="double-struck">
+          <div class="transform-name">Double Struck</div>
+          <div class="transform-preview" data-text="DoubleStruck">ð”»ð• ð•¦ð•“ð•ð•– ð•Šð•¥ð•£ð•¦ð•”ð•œ</div>
+        </div>
+        <div class="transform-item" data-transform="circled">
+          <div class="transform-name">Circled</div>
+          <div class="transform-preview" data-text="Circled">â“’â“˜â“¡â“’â“›â“”â““ â“‰â“”â“§â“£</div>
+        </div>
+        <div class="transform-item" data-transform="squared">
+          <div class="transform-name">Squared</div>
+          <div class="transform-preview" data-text="Squared">ðŸ„²ðŸ„¸ðŸ…ðŸ„²ðŸ„»ðŸ„´ðŸ„³ ðŸ…ƒðŸ„´ðŸ…‡ðŸ…ƒ</div>
+        </div>
+        <div class="transform-item" data-transform="fullwidth">
+          <div class="transform-name">Fullwidth</div>
+          <div class="transform-preview" data-text="Fullwidth">ï¼¦ï½•ï½Œï½Œï½—ï½‰ï½„ï½”ï½ˆ ï¼´ï½…ï½˜ï½”</div>
+        </div>
+        <div class="transform-item" data-transform="upside-down">
+          <div class="transform-name">Upside Down</div>
+          <div class="transform-preview" data-text="UpsideDown">Ê‡xÇâŠ¥ uÊop Çpá´‰sdâˆ©</div>
+        </div>
+      </div>
+
+      <div class="output-section">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Generated Text</div>
+          <textarea id="outputText" class="output-text" readonly placeholder="Your fancy text will appear here..."></textarea>
+          <div class="output-actions">
+            <button id="copyBtn" class="copy-btn">Copy Text</button>
+            <button id="clearBtn" class="copy-btn" style="background:#6c757d;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const transforms = document.querySelectorAll('.transform-item');
+
+    const textTransforms = {
+      normal: (text) => text,
+      bold: (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D400)
+      ),
+      italic: (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D434)
+      ),
+      'bold-italic': (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D468)
+      ),
+      script: (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D49C)
+      ),
+      fraktur: (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D504)
+      ),
+      monospace: (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D670)
+      ),
+      'double-struck': (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[A-Za-z]/g, (char) =>
+        String.fromCharCode(char.charCodeAt(0) + 0x1D538)
+      ),
+      circled: (text) => text.replace(/[A-Za-z0-9]/g, (char) => {
+        const code = char.charCodeAt(0);
+        return String.fromCharCode(code + (code >= 65 && code <= 90 ? 0x24B6 : code >= 97 && code <= 122 ? 0x24D0 : 0x2460));
+      }),
+      squared: (text) => text.replace(/[A-Za-z0-9]/g, (char) => {
+        const code = char.charCodeAt(0);
+        return String.fromCharCode(code + (code >= 65 && code <= 90 ? 0x1F130 : code >= 97 && code <= 122 ? 0x1F170 : 0x2460));
+      }),
+      fullwidth: (text) => text.replace(/[A-Za-z0-9]/g, (char) => {
+        const code = char.charCodeAt(0);
+        return String.fromCharCode(code + (code >= 65 && code <= 90 ? 0xFF21 - 65 : code >= 97 && code <= 122 ? 0xFF41 - 97 : 0xFF10));
+      }),
+      'upside-down': (text) => {
+        const upsideDown = {
+          'a': 'É', 'b': 'q', 'c': 'É”', 'd': 'p', 'e': 'Ç', 'f': 'ÉŸ', 'g': 'Æƒ', 'h': 'É¥', 'i': 'á´‰', 'j': 'É¾',
+          'k': 'Êž', 'l': 'l', 'm': 'É¯', 'n': 'u', 'o': 'o', 'p': 'd', 'q': 'b', 'r': 'É¹', 's': 's', 't': 'Ê‡',
+          'u': 'n', 'v': 'ÊŒ', 'w': 'Ê', 'x': 'x', 'y': 'ÊŽ', 'z': 'z', '0': '0', '1': 'Æ–', '2': 'á„…', '3': 'Æ',
+          '4': 'ã„£', '5': 'Ï›', '6': '9', '7': 'ã„¥', '8': '8', '9': '6', '.': 'Ë™', ',': "'", "'": ',', '"': 'â€ž',
+          '?': 'Â¿', '!': 'Â¡', '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<'
+        };
+        return text.split('').reverse().map(char => upsideDown[char.toLowerCase()] || char).join('');
+      }
+    };
+
+    function updateOutput() {
+      const text = inputText.value.trim();
+      const selectedTransform = document.querySelector('.transform-item.selected');
+      if (!text || !selectedTransform) {
+        outputText.value = '';
+        return;
+      }
+
+      const transformType = selectedTransform.dataset.transform;
+      const transformed = textTransforms[transformType](text);
+      outputText.value = transformed;
+    }
+
+    function copyToClipboard() {
+      const text = outputText.value;
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.style.background = '#218838';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Text';
+          copyBtn.style.background = '#28a745';
+        }, 1500);
+      }).catch(() => {
+        copyBtn.textContent = 'Copy Failed';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Text';
+          copyBtn.style.background = '#28a745';
+        }, 1500);
+      });
+    }
+
+    function clearAll() {
+      inputText.value = '';
+      outputText.value = '';
+      transforms.forEach(t => t.classList.remove('selected'));
+      document.querySelector('[data-transform="normal"]').classList.add('selected');
+    }
+
+    // Event listeners
+    inputText.addEventListener('input', updateOutput);
+
+    transforms.forEach(transform => {
+      transform.addEventListener('click', () => {
+        transforms.forEach(t => t.classList.remove('selected'));
+        transform.classList.add('selected');
+        updateOutput();
+      });
+    });
+
+    copyBtn.addEventListener('click', copyToClipboard);
+    clearBtn.addEventListener('click', clearAll);
+
+    // Initialize with normal text selected
+    updateOutput();
+  </script>
+</body>
+</html>
+
+

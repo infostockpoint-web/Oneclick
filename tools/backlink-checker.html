@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Backlink Checker - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:980px; margin:0 auto; padding:16px;">
+    <div style="text-align:center; margin-bottom:16px;">
+      <i class="fas fa-link tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Backlink Checker</div>
+      <div class="tool-desc">Check if pages link to your domain. Note: some sites block browser fetch (CORS). Use Paste HTML if needed.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label style="font-weight:600;">Target domain</label>
+          <input id="domain" class="tool-input" placeholder="example.com" style="width:100%; margin-top:6px;" />
+        </div>
+        <div>
+          <label style="font-weight:600;">Mode</label>
+          <select id="mode" class="tool-input" style="width:100%; margin-top:6px;">
+            <option value="fetch">Fetch URLs</option>
+            <option value="paste">Paste HTML</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="fetchPane">
+        <label style="font-weight:600;">Page URLs (one per line)</label>
+        <textarea id="urls" placeholder="https://site1.com/page\nhttps://site2.com/article" style="width:100%; height:180px; margin-top:6px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px;"></textarea>
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="check" class="tool-button">Check Backlinks</button>
+          <button id="clear" class="tool-button" style="background:#6c757d;">Clear</button>
+        </div>
+      </div>
+
+      <div id="pastePane" style="display:none;">
+        <label style="font-weight:600;">Paste page HTML</label>
+        <textarea id="html" placeholder="Paste the full HTML of a page here" style="width:100%; height:220px; margin-top:6px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px;"></textarea>
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="checkPaste" class="tool-button">Analyze HTML</button>
+        </div>
+      </div>
+
+      <div id="status" style="color:#6c757d;"></div>
+
+      <div>
+        <label style="font-weight:600;">Results</label>
+        <div id="results" style="width:100%; overflow:auto; border:1px solid #e5e7eb; border-radius:8px;">
+          <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <thead>
+              <tr style="background:#f8fafc;">
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">URL</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Backlink</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Count</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px; text-align:center;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const domainEl = document.getElementById('domain');
+  const modeEl = document.getElementById('mode');
+  const urlsEl = document.getElementById('urls');
+  const htmlEl = document.getElementById('html');
+  const tbody = document.getElementById('tbody');
+  const statusEl = document.getElementById('status');
+
+  modeEl.addEventListener('change', ()=>{
+    const v = modeEl.value;
+    document.getElementById('fetchPane').style.display = v === 'fetch' ? '' : 'none';
+    document.getElementById('pastePane').style.display = v === 'paste' ? '' : 'none';
+  });
+
+  function countBacklinks(html, domain){
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const anchors = Array.from(doc.querySelectorAll('a[href]'));
+      const norm = domain.replace(/^https?:\/\//,'').replace(/\/$/,'');
+      const rx = new RegExp(`(^|\\.)${norm.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')}$`, 'i');
+      let count = 0;
+      anchors.forEach(a=>{
+        try {
+          const u = new URL(a.getAttribute('href'), location.origin);
+          const host = u.hostname.replace(/^www\./i,'');
+          if (host === norm || rx.test(host)) count++;
+        } catch {}
+      });
+      return count;
+    } catch { return 0; }
+  }
+
+  async function fetchText(u){
+    try {
+      const res = await fetch(u, { credentials: 'omit' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const ct = res.headers.get('content-type')||'';
+      if(!ct.includes('text/html')) { return await res.text(); }
+      return await res.text();
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  function addRow(url, has, cnt, note){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="padding:10px; border-bottom:1px solid #e5e7eb; word-break:break-all;">${url}</td>
+    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${has ? 'Yes' : 'No'}</td>
+    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${cnt}</td>
+    <td style="padding:10px; border-bottom:1px solid #e5e7eb; color:#6c757d;">${note||''}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('clear').addEventListener('click', ()=>{ urlsEl.value = ''; tbody.innerHTML = ''; statusEl.textContent=''; });
+
+  document.getElementById('check').addEventListener('click', async ()=>{
+    const domain = domainEl.value.trim();
+    if(!domain){ alert('Enter target domain'); return; }
+    const lines = urlsEl.value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+    tbody.innerHTML = '';
+    if(lines.length===0){ statusEl.textContent = 'Enter at least one URL.'; return; }
+    statusEl.textContent = `Checking ${lines.length} URL(s)...`;
+    let done = 0;
+    for(const u of lines){
+      try {
+        const html = await fetchText(u);
+        const cnt = countBacklinks(html, domain);
+        addRow(u, cnt>0, cnt, '');
+      } catch (e) {
+        addRow(u, false, 0, 'Fetch blocked (CORS?) – use Paste HTML');
+      }
+      done++; statusEl.textContent = `Checked ${done}/${lines.length}`;
+    }
+    statusEl.textContent += ' • Completed';
+  });
+
+  document.getElementById('checkPaste').addEventListener('click', ()=>{
+    const domain = domainEl.value.trim();
+    if(!domain){ alert('Enter target domain'); return; }
+    const html = htmlEl.value;
+    tbody.innerHTML = '';
+    const cnt = countBacklinks(html, domain);
+    addRow('(pasted HTML)', cnt>0, cnt, 'Manual analysis');
+  });
+</script>
+</body></html>
+
+

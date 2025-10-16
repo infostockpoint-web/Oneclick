@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .two-col { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+    .box { background:#f8f9fa; border:1px solid #eee; border-radius:8px; padding:14px; }
+    .label { display:block; font-weight:600; margin-bottom:6px; }
+    .ctrl { width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid #eee; padding:8px; text-align:left; }
+    th { background:#f3f6ff; }
+    tfoot td { font-weight:600; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:12px;">
+        <i class="fas fa-file-invoice-dollar tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Invoice Generator</div>
+        <div class="tool-desc">Create professional invoices with line items, taxes and discounts. Export to PDF.</div>
+      </div>
+
+      <div class="two-col">
+        <div class="box">
+          <label class="label">From</label>
+          <textarea id="from" class="ctrl" rows="4" placeholder="Your Company\nAddress Line\nCity, ZIP\nEmail / Phone"></textarea>
+        </div>
+        <div class="box">
+          <label class="label">Bill To</label>
+          <textarea id="to" class="ctrl" rows="4" placeholder="Client Name\nAddress Line\nCity, ZIP\nEmail / Phone"></textarea>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:12px;">
+        <div class="box">
+          <label class="label">Invoice Info</label>
+          <div class="two-col">
+            <input id="invNo" class="ctrl" placeholder="Invoice #">
+            <input id="invDate" class="ctrl" type="date">
+          </div>
+          <div class="two-col" style="margin-top:8px;">
+            <select id="currency" class="ctrl">
+              <option value="$" selected>$ (USD)</option>
+              <option value="â‚¬">â‚¬ (EUR)</option>
+              <option value="â‚¹">â‚¹ (INR)</option>
+              <option value="Â£">Â£ (GBP)</option>
+            </select>
+            <input id="notes" class="ctrl" placeholder="Notes (optional)">
+          </div>
+        </div>
+        <div class="box">
+          <label class="label">Summary</label>
+          <div id="summary" style="line-height:1.9; color:#2c3e50;">
+            Subtotal: â€”<br>
+            Tax: â€”<br>
+            Discount: â€”<br>
+            Shipping: â€”<br>
+            <strong>Total: â€”</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div class="tool-name">Items</div>
+          <button id="addItem" class="tool-button"><i class="fas fa-plus"></i> Add Item</button>
+        </div>
+        <div style="overflow:auto; margin-top:8px;">
+          <table id="items">
+            <thead>
+              <tr>
+                <th style="min-width:200px;">Description</th>
+                <th style="min-width:100px;">Qty</th>
+                <th style="min-width:120px;">Unit Price</th>
+                <th style="min-width:120px;">Amount</th>
+                <th style="min-width:80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" style="border:0;">
+                  <div class="two-col" style="margin-top:8px;">
+                    <div>
+                      <label class="label">Tax (%)</label>
+                      <input id="taxPct" class="ctrl" type="number" min="0" max="100" value="0">
+                    </div>
+                    <div>
+                      <label class="label">Discount (flat)</label>
+                      <input id="discount" class="ctrl" type="number" min="0" value="0">
+                    </div>
+                    <div>
+                      <label class="label">Shipping (flat)</label>
+                      <input id="shipping" class="ctrl" type="number" min="0" value="0">
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:8px;">
+                      <button id="downloadPdf" class="tool-button" style="background:#28a745; white-space:nowrap;"><i class="fas fa-file-download"></i> Download PDF</button>
+                      <button id="resetAll" class="tool-button" style="background:#888; white-space:nowrap;"><i class="fas fa-trash"></i> Reset</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../js/include.js"></script>
+  <script>
+    const itemsTbody = document.querySelector('#items tbody');
+    const addItem = document.getElementById('addItem');
+    const summary = document.getElementById('summary');
+    const taxPct = document.getElementById('taxPct');
+    const discount = document.getElementById('discount');
+    const shipping = document.getElementById('shipping');
+    const currency = document.getElementById('currency');
+    const downloadPdf = document.getElementById('downloadPdf');
+    const resetAll = document.getElementById('resetAll');
+    const fromEl = document.getElementById('from');
+    const toEl = document.getElementById('to');
+    const invNo = document.getElementById('invNo');
+    const invDate = document.getElementById('invDate');
+    const notes = document.getElementById('notes');
+
+    function addRow(desc='', qty=1, price=0){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="ctrl desc" placeholder="Item description" value="${desc}"></td>
+        <td><input class="ctrl qty" type="number" min="0" value="${qty}"></td>
+        <td><input class="ctrl price" type="number" min="0" step="0.01" value="${price}"></td>
+        <td class="amount">0</td>
+        <td><button class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i></button></td>
+      `;
+      itemsTbody.appendChild(tr);
+      tr.querySelector('button').addEventListener('click', ()=>{ tr.remove(); calc(); });
+      ['input','change'].forEach(ev=>{
+        tr.querySelector('.qty').addEventListener(ev, calc);
+        tr.querySelector('.price').addEventListener(ev, calc);
+        tr.querySelector('.desc').addEventListener(ev, calc);
+      });
+      calc();
+    }
+
+    function fmt(n){ const c = currency.value||'$'; return c+ ' ' + (Number(n)||0).toFixed(2); }
+
+    function calc(){
+      let subtotal = 0;
+      itemsTbody.querySelectorAll('tr').forEach(tr => {
+        const qty = Number(tr.querySelector('.qty').value)||0;
+        const price = Number(tr.querySelector('.price').value)||0;
+        const amt = qty*price; subtotal += amt; tr.querySelector('.amount').textContent = fmt(amt);
+      });
+      const tax = subtotal * (Math.max(0, Number(taxPct.value)||0) / 100);
+      const disc = Math.max(0, Number(discount.value)||0);
+      const ship = Math.max(0, Number(shipping.value)||0);
+      const total = Math.max(0, subtotal + tax - disc + ship);
+      summary.innerHTML = `Subtotal: ${fmt(subtotal)}<br>Tax: ${fmt(tax)}<br>Discount: ${fmt(disc)}<br>Shipping: ${fmt(ship)}<br><strong>Total: ${fmt(total)}</strong>`;
+    }
+
+    addItem.addEventListener('click', ()=> addRow());
+    ;[taxPct, discount, shipping, currency].forEach(el=> el.addEventListener('input', calc));
+
+    // Seed one row
+    addRow('Service', 1, 0);
+
+    // PDF export
+    downloadPdf.addEventListener('click', ()=>{
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      const margin = 40; let y = margin;
+      const c = currency.value||'$';
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text('INVOICE', margin, y); y+=20;
+      doc.setFontSize(11); doc.setFont('helvetica','normal');
+      const left = (fromEl.value||'').split('\n');
+      const right = (toEl.value||'').split('\n');
+      left.forEach((line,i)=> doc.text(line, margin, y + i*14));
+      right.forEach((line,i)=> doc.text(line, 300, y + i*14));
+      y += Math.max(left.length, right.length)*14 + 20;
+      doc.text(`Invoice #: ${invNo.value||''}`, margin, y); y+=14;
+      doc.text(`Date: ${invDate.value||''}`, margin, y); y+=20;
+
+      // Table header
+      doc.setFont('helvetica','bold');
+      doc.text('Description', margin, y);
+      doc.text('Qty', 300, y);
+      doc.text('Unit', 360, y);
+      doc.text('Amount', 440, y);
+      y+=12; doc.setLineWidth(0.5); doc.line(margin, y, 550, y); y+=10; doc.setFont('helvetica','normal');
+
+      let subtotal = 0;
+      itemsTbody.querySelectorAll('tr').forEach(tr=>{
+        const d = tr.querySelector('.desc').value||'';
+        const q = Number(tr.querySelector('.qty').value)||0;
+        const p = Number(tr.querySelector('.price').value)||0;
+        const a = q*p; subtotal += a;
+        doc.text(String(d), margin, y, { maxWidth: 250 });
+        doc.text(String(q), 300, y);
+        doc.text(c + ' ' + p.toFixed(2), 360, y);
+        doc.text(c + ' ' + a.toFixed(2), 440, y);
+        y+=16;
+      });
+
+      const tax = subtotal * (Math.max(0, Number(taxPct.value)||0)/100);
+      const disc = Math.max(0, Number(discount.value)||0);
+      const ship = Math.max(0, Number(shipping.value)||0);
+      const total = Math.max(0, subtotal + tax - disc + ship);
+
+      y+=6; doc.line(320, y, 550, y); y+=14;
+      function r(label, val){ doc.text(label, 330, y); doc.text(c + ' ' + val.toFixed(2), 480, y, { align:'right' }); y+=16; }
+      doc.setFont('helvetica','bold'); r('Subtotal', subtotal);
+      doc.setFont('helvetica','normal'); r('Tax', tax); r('Discount', disc); r('Shipping', ship);
+      doc.setFont('helvetica','bold'); r('TOTAL', total);
+
+      if((notes.value||'').trim()){ y+=10; doc.setFont('helvetica','normal'); doc.text('Notes:', margin, y); y+=14; doc.text(notes.value, margin, y, { maxWidth: 500 }); }
+
+      doc.save('invoice.pdf');
+    });
+
+    resetAll.addEventListener('click', ()=>{
+      fromEl.value = toEl.value = invNo.value = invDate.value = notes.value = '';
+      taxPct.value = discount.value = shipping.value = 0; currency.value = '$';
+      itemsTbody.innerHTML = ''; addRow('Service',1,0); calc();
+    });
+  </script>
+</body>
+</html>
+
+

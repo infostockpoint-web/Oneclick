@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel to PDF - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; align-items:end; }
+    .area { border:1px solid #e5e7eb; background:#f8fafc; padding:10px; border-radius:8px; min-height:220px; overflow:auto; }
+    table.preview { width:100%; border-collapse:collapse; font-size:.92rem; }
+    table.preview th, table.preview td { border:1px solid #e5e7eb; padding:6px 8px; text-align:left; }
+    .hint { font-size:.9rem; color:#6b7280; }
+    .progress { height:10px; background:#eef2ff; border-radius:6px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:#4a6cf7; transition:width .2s ease; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Excel to PDF</div>
+        <div class="tool-desc">Convert Excel spreadsheets into PDF tables directly in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="excelInput" style="display:block; font-weight:600; margin-bottom:6px;">Select Excel File</label>
+            <input type="file" id="excelInput" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="sheetSelect" style="display:block; font-weight:600; margin-bottom:6px;">Worksheet</label>
+            <select id="sheetSelect" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="">(load a file)</option>
+            </select>
+            <div class="hint">Pick a sheet to preview/convert</div>
+          </div>
+          <div>
+            <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">PDF Page</label>
+            <div style="display:flex; gap:8px;">
+              <select id="pageSize" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+              </select>
+              <select id="orientation" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="p">Portrait</option>
+                <option value="l">Landscape</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="fontSize" style="display:block; font-weight:600; margin-bottom:6px;">Font Size</label>
+            <input type="number" id="fontSize" value="10" min="6" max="18" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="previewBtn" class="tool-button"><i class="fas fa-eye"></i> Preview</button>
+            <button id="convertBtn" class="tool-button" style="background:#22c55e;"><i class="fas fa-file-export"></i> Convert to PDF</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;" class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div class="area" id="previewArea">Select an Excel file to load worksheets.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Details</div>
+          <div id="details" style="margin-top:8px; color:#374151; font-size:.95rem;">—</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const excelInput = document.getElementById('excelInput');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const previewBtn = document.getElementById('previewBtn');
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const pageSize = document.getElementById('pageSize');
+    const orientation = document.getElementById('orientation');
+    const fontSize = document.getElementById('fontSize');
+    const previewArea = document.getElementById('previewArea');
+    const details = document.getElementById('details');
+    const progressBar = document.getElementById('progressBar');
+
+    let workbook = null;
+    let sheetNames = [];
+
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    function reset(){ workbook=null; sheetNames=[]; sheetSelect.innerHTML='<option value="">(load a file)</option>'; previewArea.innerHTML='Select an Excel file to load worksheets.'; details.textContent='—'; setProgress(0); }
+
+    clearBtn.addEventListener('click', ()=>{ excelInput.value=''; reset(); });
+    excelInput.addEventListener('change', async ()=>{
+      reset();
+      if (!excelInput.files[0]) return;
+      details.textContent = `Selected: ${excelInput.files[0].name}`;
+      try {
+        setProgress(10);
+        const buf = await excelInput.files[0].arrayBuffer();
+        setProgress(40);
+        workbook = XLSX.read(buf, { type:'array' });
+        sheetNames = workbook.SheetNames || [];
+        if (!sheetNames.length) { previewArea.innerHTML = 'No worksheets found.'; return; }
+        sheetSelect.innerHTML = sheetNames.map(n => `<option value="${n}">${n}</option>`).join('');
+        setProgress(100);
+      } catch(e){
+        alert('Failed to read Excel file: ' + e.message);
+      }
+    });
+
+    function sheetTo2D(name){
+      const ws = workbook?.Sheets?.[name];
+      if (!ws) return [];
+      // to_json to get array of objects, then map to 2D with headers
+      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:true });
+      if (!rows.length){
+        // fallback to CSV-like 2D
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+        const out = [];
+        for (let R = range.s.r; R <= range.e.r; ++R){
+          const row = [];
+          for (let C = range.s.c; C <= range.e.c; ++C){
+            const cell = ws[XLSX.utils.encode_cell({r:R,c:C})];
+            row.push(cell ? String(cell.v) : '');
+          }
+          out.push(row);
+        }
+        return out;
+      }
+      const headers = Object.keys(rows[0]);
+      return [headers, ...rows.map(r => headers.map(h => r[h]))];
+    }
+
+    function renderPreview2D(data){
+      if (!data.length){ previewArea.innerHTML = 'Sheet is empty.'; return; }
+      const maxRows = 100;
+      let html = '<div class="hint" style="margin-bottom:8px;">Previewing up to '+maxRows+' rows</div>';
+      html += '<div style="overflow:auto;">';
+      html += '<table class="preview"><thead><tr>' + (data[0]||[]).map(h => '<th>'+ String(h ?? '') +'</th>').join('') + '</tr></thead><tbody>';
+      for (let i=1; i<Math.min(data.length, maxRows); i++){
+        html += '<tr>' + (data[i]||[]).map(v => '<td>'+ String(v ?? '') +'</td>').join('') + '</tr>';
+      }
+      html += '</tbody></table></div>';
+      previewArea.innerHTML = html;
+    }
+
+    previewBtn.addEventListener('click', () => {
+      if (!workbook){ alert('Please select and load an Excel file first.'); return; }
+      const sheet = sheetSelect.value || sheetNames[0];
+      const data = sheetTo2D(sheet);
+      renderPreview2D(data);
+      details.textContent = `Sheet: ${sheet} • Rows: ${Math.max(0, data.length-1)} • Columns: ${(data[0]||[]).length}`;
+    });
+
+    convertBtn.addEventListener('click', () => {
+      if (!workbook){ alert('Please select and load an Excel file first.'); return; }
+      const sheet = sheetSelect.value || sheetNames[0];
+      const data = sheetTo2D(sheet);
+      if (!data.length){ alert('Selected sheet is empty.'); return; }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: orientation.value === 'l' ? 'landscape' : 'portrait', unit: 'pt', format: pageSize.value });
+      doc.setFontSize(parseInt(fontSize.value||'10',10));
+      const head = [data[0]];
+      const body = data.slice(1);
+      doc.autoTable({ head, body, styles: { fontSize: parseInt(fontSize.value||'10',10) }, margin: { top: 40, right: 30, bottom: 30, left: 30 } });
+      const base = (excelInput.files[0]?.name || 'sheet').replace(/\.(xlsx|xls|csv)$/i,'');
+      doc.save(base + '-' + sheet + '.pdf');
+    });
+  </script>
+</body>
+</html>
+
+

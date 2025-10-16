@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Palette Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+    .sw{border:1px solid #eee;border-radius:10px;overflow:hidden;background:#fff}
+    .sw-top{height:90px}
+    .sw-bot{display:flex;justify-content:space-between;align-items:center;padding:8px}
+    .lock{background:#f2f2f2;border:none;border-radius:8px;padding:6px 10px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-palette tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Color Palette Generator</div>
+        <div class="tool-desc">Generate harmonious palettes. Lock colors, copy hex codes, and tweak hue. Fully client-side.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="randomize" class="tool-button"><i class="fas fa-random"></i> Randomize</button>
+          <label>Hue <input id="hue" type="range" min="0" max="360" value="0"/></label>
+          <button id="copyAll" class="tool-button"><i class="far fa-copy"></i> Copy All</button>
+        </div>
+      </div>
+
+      <div id="pal" class="pal"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let palette=[...Array(5)].map(()=>randHex());
+    const locks = new Set();
+
+    function randHex(){ return '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0'); }
+    function hslToHex(h,s,l){
+      s/=100; l/=100; const k=n=> (n+ h/30)%12; const a=s*Math.min(l,1-l);
+      const f=n=> l - a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+      const toHex=x=> Math.round(255*x).toString(16).padStart(2,'0');
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+    }
+
+    function applyHueShift(hex, deg){
+      // convert to HSL roughly via canvas trick
+      const c=document.createElement('canvas'); const ctx=c.getContext('2d'); c.width=c.height=1;
+      ctx.fillStyle=hex; ctx.fillRect(0,0,1,1); const [r,g,b]=ctx.getImageData(0,0,1,1).data;
+      const {h,s,l}=rgbToHsl(r,g,b); const nh=(h+deg)%360; return hslToHex(nh,s,l);
+    }
+    function rgbToHsl(r,g,b){ r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2;
+      if(max===min){ h=s=0; } else { const d=max-min; s=l>0.5? d/(2-max-min): d/(max+min);
+        switch(max){ case r: h=(g-b)/d + (g<b?6:0); break; case g: h=(b-r)/d+2; break; case b: h=(r-g)/d+4; break; } h*=60; }
+      return {h,s:s*100,l:l*100}; }
+
+    function render(){
+      const hue=Number(document.getElementById('hue').value)||0;
+      const el=document.getElementById('pal'); el.innerHTML='';
+      palette.forEach((hex,idx)=>{
+        const outHex = hue? applyHueShift(hex, hue): hex;
+        const card=document.createElement('div'); card.className='sw';
+        card.innerHTML=`
+          <div class="sw-top" style="background:${outHex}"></div>
+          <div class="sw-bot">
+            <code>${outHex.toUpperCase()}</code>
+            <div style="display:flex; gap:6px;">
+              <button class="lock" data-act="copy" data-i="${idx}"><i class="far fa-copy"></i></button>
+              <button class="lock" data-act="lock" data-i="${idx}">${locks.has(idx)?'<i class=\"fas fa-lock\"></i>':'<i class=\"fas fa-lock-open\"></i>'}</button>
+            </div>
+          </div>`;
+        el.appendChild(card);
+      });
+    }
+
+    document.getElementById('randomize').addEventListener('click',()=>{
+      palette = palette.map((c,i)=> locks.has(i)? c: randHex()); render();
+    });
+    document.getElementById('hue').addEventListener('input', render);
+    document.getElementById('pal').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-act]'); if(!btn) return; const i=Number(btn.getAttribute('data-i'));
+      const act=btn.getAttribute('data-act');
+      if (act==='lock'){ if (locks.has(i)) locks.delete(i); else locks.add(i); render(); }
+      if (act==='copy'){ const hue=Number(document.getElementById('hue').value)||0; const hex=hue?applyHueShift(palette[i],hue):palette[i]; navigator.clipboard.writeText(hex).then(()=>alert('Copied '+hex)); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

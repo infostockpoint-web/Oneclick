@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IP Address Lookup - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-network-wired tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">IP Address Lookup</div>
+        <div class="tool-desc">View your public IP and geolocation (approximate). You can also look up any IP.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="ipInput" style="display:block; font-weight:600; margin-bottom:6px;">IP Address (optional)</label>
+            <input id="ipInput" type="text" placeholder="Leave blank for your IP" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="myIpBtn" class="tool-button"><i class="fas fa-user"></i> My IP</button>
+            <button id="lookupBtn" class="tool-button" style="background:#28a745;"><i class="fas fa-search"></i> Lookup</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Result</div>
+          <div id="result" style="margin-top:10px; font-size:0.95rem; color:#2c3e50;">
+            Click "My IP" to detect your public IP, or enter an IP and click Lookup.
+          </div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Map (approximate)</div>
+          <div id="mapWrap" style="margin-top:10px; text-align:center;">
+            <img id="mapImg" alt="map preview" style="max-width:100%; border-radius:8px; border:1px solid #eee; display:none;" />
+            <div id="mapNote" style="color:#666; font-size:0.9rem;">Shown only when coordinates are available.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const ipInput = document.getElementById('ipInput');
+    const myIpBtn = document.getElementById('myIpBtn');
+    const lookupBtn = document.getElementById('lookupBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const result = document.getElementById('result');
+    const mapImg = document.getElementById('mapImg');
+    const mapNote = document.getElementById('mapNote');
+
+    function render(obj){
+      if(!obj){ result.innerHTML = '<span style="color:#e74c3c;">No data.</span>'; return; }
+      const lines = [];
+      function push(label, val){ if(val!==undefined && val!==null && val!==''){ lines.push(`<div><strong>${label}:</strong> ${val}</div>`); } }
+      push('IP', obj.ip || obj.query || obj.ipAddress || 'â€”');
+      push('City', obj.city || obj.cityName || obj.location?.city || '');
+      push('Region', obj.region || obj.regionName || obj.location?.region || '');
+      push('Country', obj.country || obj.country_name || obj.countryCode || obj.location?.country || '');
+      push('Latitude', obj.lat || obj.latitude || obj.location?.lat || '');
+      push('Longitude', obj.lon || obj.longitude || obj.location?.lng || '');
+      push('Timezone', obj.timezone || obj.location?.timezone || '');
+      push('Org/ISP', obj.org || obj.orgName || obj.as || obj.connection?.isp || '');
+      result.innerHTML = lines.join('') || 'No details available.';
+
+      // Map preview with static map (OpenStreetMap via staticmap.openstreetmap.de)
+      const lat = obj.lat || obj.latitude || obj.location?.lat;
+      const lon = obj.lon || obj.longitude || obj.location?.lng;
+      if(lat && lon){
+        const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${encodeURIComponent(lat)},${encodeURIComponent(lon)}&zoom=5&size=600x300&markers=${encodeURIComponent(lat)},${encodeURIComponent(lon)},lightblue1`;
+        mapImg.src = url; mapImg.style.display = 'block'; mapNote.style.display = 'block';
+      } else {
+        mapImg.style.display = 'none'; mapNote.style.display = 'block';
+      }
+    }
+
+    async function getMyIp(){
+      // Try ipify, fallback to ifconfig.me
+      try{
+        const r = await fetch('https://api.ipify.org?format=json');
+        const j = await r.json();
+        return j.ip;
+      }catch(_){
+        try{
+          const r2 = await fetch('https://ifconfig.me/ip');
+          const t = await r2.text();
+          return t.trim();
+        }catch(__){ return null; }
+      }
+    }
+
+    async function lookup(ip){
+      // Try multiple providers without API keys; CORS friendly
+      const providers = [
+        (ip)=>`https://ipapi.co/${ip || ''}/json/`,
+        (ip)=>`https://ipwho.is/${ip || ''}`,
+        (ip)=>`https://ipinfo.io/${ip || ''}/json?token=`, // token empty, still returns limited
+      ];
+      for(const p of providers){
+        try{
+          const r = await fetch(p(ip||''));
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          const j = await r.json();
+          // Normalize to common fields
+          const n = normalize(j);
+          if(n) return n;
+        }catch(_){ /* try next */ }
+      }
+      return null;
+    }
+
+    function normalize(j){
+      if(!j) return null;
+      // ipapi.co
+      if(j.ip && (j.country_name || j.city)){
+        return { ip:j.ip, city:j.city, region:j.region, country:j.country_name, lat:j.latitude, lon:j.longitude, timezone:j.timezone, org:j.org };
+      }
+      // ipwho.is
+      if(j.success !== false && (j.ip || j.connection)){
+        return { ip:j.ip, city:j.city, region:j.region, country:j.country, lat:j.latitude, lon:j.longitude, timezone:j.timezone?.id || j.timezone, org:j.connection?.org || j.connection?.isp };
+      }
+      // ipinfo.io
+      if(j.ip && j.loc){
+        const parts = j.loc.split(',');
+        return { ip:j.ip, city:j.city, region:j.region, country:j.country, lat:parts[0], lon:parts[1], timezone:j.timezone, org:j.org };
+      }
+      return null;
+    }
+
+    myIpBtn.addEventListener('click', async ()=>{
+      result.innerHTML = 'Detecting your public IP...';
+      const ip = await getMyIp();
+      if(!ip){ result.innerHTML = '<span style="color:#e74c3c;">Could not detect IP (network/CORS). Try Lookup with a known IP.</span>'; return; }
+      ipInput.value = ip;
+      result.innerHTML = 'Looking up details...';
+      const data = await lookup(ip);
+      render(data);
+    });
+
+    lookupBtn.addEventListener('click', async ()=>{
+      const ip = ipInput.value.trim();
+      result.innerHTML = ip ? 'Looking up details...' : 'Detecting your public IP...';
+      const target = ip || await getMyIp();
+      if(!target){ result.innerHTML = '<span style="color:#e74c3c;">Could not detect IP (network/CORS). Enter an IP and try again.</span>'; return; }
+      const data = await lookup(target);
+      render(data);
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      ipInput.value='';
+      result.innerHTML = 'Click "My IP" to detect your public IP, or enter an IP and click Lookup.';
+      mapImg.style.display='none'; mapNote.style.display='block';
+    });
+
+    // Auto-load on page open
+    myIpBtn.click();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>eSign PDF - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    input[type=file], select{padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    #sigPad{border:1px dashed #bbb;border-radius:8px;background:#fff}
+    #pageCanvas{border:1px solid #eee;border-radius:8px;background:#fff;max-width:100%}
+  </style>
+  <!-- PDF.js for page preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+  <!-- pdf-lib for editing -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">eSign PDF</div>
+        <div class="tool-desc">Draw your signature, preview a page, click to place, and download a signed PDF. All in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div class="row">
+            <input id="pdfFile" type="file" accept="application/pdf"/>
+            <label>Page
+              <select id="pageNo"></select>
+            </label>
+            <label>Signature Size
+              <select id="sigSize">
+                <option value="200">Large</option>
+                <option value="150" selected>Medium</option>
+                <option value="100">Small</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row" style="align-items:flex-start">
+            <div>
+              <div class="tool-desc">Draw signature below (mouse or touch):</div>
+              <canvas id="sigPad" width="500" height="160"></canvas>
+              <div class="row" style="margin-top:6px;justify-content:flex-end">
+                <button id="clearSig" class="tool-button">Clear</button>
+                <button id="useSig" class="tool-button">Use Signature</button>
+              </div>
+            </div>
+            <div style="flex:1;min-width:320px">
+              <div class="tool-desc">Preview (click where to place signature):</div>
+              <canvas id="pageCanvas"></canvas>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:space-between">
+            <div id="hint" class="tool-desc">1) Load PDF â†’ 2) Draw & Use Signature â†’ 3) Click on the page to place â†’ 4) Download</div>
+            <div>
+              <button id="download" class="tool-button">Download Signed PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // --- Signature pad drawing ---
+    const sigPad = document.getElementById('sigPad');
+    const sigCtx = sigPad.getContext('2d');
+    sigCtx.fillStyle = '#fff'; sigCtx.fillRect(0,0,sigPad.width,sigPad.height);
+    sigCtx.lineWidth = 2; sigCtx.lineCap='round'; sigCtx.strokeStyle='#000';
+    let drawing=false; let last=null; let sigDataUrl=null;
+    function pos(e){ const r=sigPad.getBoundingClientRect(); const t=(e.touches?e.touches[0]:e); return {x:t.clientX-r.left,y:t.clientY-r.top}; }
+    function start(e){ drawing=true; last=pos(e); }
+    function move(e){ if(!drawing) return; const p=pos(e); sigCtx.beginPath(); sigCtx.moveTo(last.x,last.y); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); last=p; }
+    function end(){ drawing=false; }
+    sigPad.addEventListener('mousedown',start); sigPad.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+    sigPad.addEventListener('touchstart',start,{passive:true}); sigPad.addEventListener('touchmove',move,{passive:true}); sigPad.addEventListener('touchend',end);
+    document.getElementById('clearSig').addEventListener('click',()=>{ sigCtx.clearRect(0,0,sigPad.width,sigPad.height); sigCtx.fillStyle='#fff'; sigCtx.fillRect(0,0,sigPad.width,sigPad.height); sigDataUrl=null; });
+    document.getElementById('useSig').addEventListener('click',()=>{ sigDataUrl = sigPad.toDataURL('image/png'); document.getElementById('hint').textContent='Signature captured. Click on the page preview to place it.'; });
+
+    // --- PDF load & preview ---
+    const pageCanvas=document.getElementById('pageCanvas');
+    const pctx=pageCanvas.getContext('2d');
+    const pageSel=document.getElementById('pageNo');
+    let pdfDoc=null; let pdfBytes=null; let scale=1; let currentPage=1;
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js';
+
+    async function loadPdf(file){
+      pdfBytes = new Uint8Array(await file.arrayBuffer());
+      pdfDoc = await pdfjsLib.getDocument({data: pdfBytes}).promise;
+      pageSel.innerHTML='';
+      for(let i=1;i<=pdfDoc.numPages;i++){ const opt=document.createElement('option'); opt.value=i; opt.textContent='Page '+i; pageSel.appendChild(opt); }
+      currentPage=1; pageSel.value='1';
+      await renderPage();
+    }
+
+    async function renderPage(){
+      if(!pdfDoc) return;
+      const page = await pdfDoc.getPage(parseInt(pageSel.value,10));
+      const viewport = page.getViewport({ scale: 1.5 });
+      scale = 1.5;
+      pageCanvas.width = Math.ceil(viewport.width);
+      pageCanvas.height = Math.ceil(viewport.height);
+      await page.render({ canvasContext: pctx, viewport }).promise;
+      currentPage = parseInt(pageSel.value,10);
+    }
+    pageSel.addEventListener('change', renderPage);
+
+    document.getElementById('pdfFile').addEventListener('change', (e)=>{
+      const f=e.target.files[0]; if(f) loadPdf(f);
+    });
+
+    // --- Place signature on click ---
+    let placements = []; // {page, x, y, width}
+    pageCanvas.addEventListener('click', (e)=>{
+      if(!sigDataUrl){ alert('Click Use Signature first.'); return; }
+      const rect = pageCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const size = parseInt(document.getElementById('sigSize').value,10);
+      placements.push({ page: currentPage, x, y, width: size });
+      // draw a visual marker
+      pctx.save(); pctx.strokeStyle='#00aaff'; pctx.lineWidth=2; pctx.strokeRect(x-2,y-2,size,size*0.35); pctx.restore();
+      document.getElementById('hint').textContent = `Signature placed on page ${currentPage}. You can place more or click Download.`;
+    });
+
+    // --- Build final PDF ---
+    async function downloadSigned(){
+      if(!pdfBytes){ alert('Load a PDF first.'); return; }
+      if(!placements.length){ alert('Place at least one signature.'); return; }
+      const pdfDocOut = await PDFLib.PDFDocument.load(pdfBytes);
+      const pngBytes = await (await fetch(sigDataUrl)).arrayBuffer();
+      const png = await pdfDocOut.embedPng(pngBytes);
+      const pages = pdfDocOut.getPages();
+      for(const p of placements){
+        const page = pages[p.page-1];
+        // Convert canvas coordinates (top-left) to PDF coordinate system (bottom-left)
+        const { width: pw, height: ph } = page.getSize();
+        const canvasW = pageCanvas.width; const canvasH = pageCanvas.height;
+        const scaleX = pw / canvasW; const scaleY = ph / canvasH;
+        const drawWidth = p.width * scaleX;
+        const drawHeight = (p.width*0.35) * scaleY;
+        const pdfX = p.x * scaleX;
+        const pdfY = ph - (p.y * scaleY) - drawHeight; // invert Y
+        page.drawImage(png, { x: pdfX, y: pdfY, width: drawWidth, height: drawHeight });
+      }
+      const out = await pdfDocOut.save();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([out],{type:'application/pdf'}));
+      a.download='signed.pdf';
+      a.click();
+    }
+    document.getElementById('download').addEventListener('click', downloadSigned);
+  </script>
+</body></html>
+
+

@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HTTP Headers Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:end}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f3f3f3;text-align:left;vertical-align:top}
+    code{background:#f6f6f6;padding:2px 6px;border-radius:6px}
+    textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-server tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">HTTP Headers Checker</div>
+        <div class="tool-desc">Fetch response headers for a URL. Note: CORS might restrict access to headers on some sites.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div style="grid-column:1/-1">
+            <label style="display:block;font-weight:600;margin-bottom:6px;">URL</label>
+            <input id="url" type="url" placeholder="https://example.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Method</label>
+            <select id="method" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px">
+              <option value="HEAD">HEAD</option>
+              <option value="GET">GET</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Follow Redirects</label>
+            <select id="redirect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px">
+              <option value="follow">follow</option>
+              <option value="manual">manual</option>
+            </select>
+          </div>
+          <button id="check" class="tool-button">Check Headers</button>
+          <button id="export" class="tool-button"><i class="fas fa-file-export"></i> Export JSON</button>
+        </div>
+        <div class="tool-desc" style="margin-top:8px">Tip: If you get an "opaque" response due to CORS, ask the server to include <code>Access-Control-Allow-Origin</code> or use a CORS-enabled endpoint. As a fallback, paste raw headers below.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;overflow:auto;">
+        <div class="tool-name" style="margin-bottom:6px;">Response Headers</div>
+        <table>
+          <thead><tr><th style="width:280px">Header</th><th>Value</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Manual Input (Paste Raw Headers)</div>
+        <textarea id="raw" rows="6" placeholder="Content-Type: text/html; charset=UTF-8\nCache-Control: max-age=3600\n..."></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="parseRaw" class="tool-button">Parse</button>
+          <button id="clearRaw" class="tool-button" style="background:#e74c3c;">Clear</button>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let lastHeaders = {};
+    function setHeadersView(map){
+      const tb=document.getElementById('tbody'); tb.innerHTML='';
+      const entries = Object.entries(map);
+      if (!entries.length){ tb.innerHTML = '<tr><td colspan="2" class="tool-desc">No headers.</td></tr>'; return; }
+      for (const [k,v] of entries){
+        const tr=document.createElement('tr'); tr.innerHTML = `<td><code>${escapeHtml(k)}</code></td><td>${escapeHtml(v)}</td>`; tb.appendChild(tr);
+      }
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    async function check(){
+      const url = document.getElementById('url').value.trim();
+      const method = document.getElementById('method').value;
+      const redirect = document.getElementById('redirect').value;
+      if (!url){ alert('Enter a URL.'); return; }
+      try{
+        const res = await fetch(url, { method, redirect, cache:'no-cache' });
+        if (res.type === 'opaque'){
+          alert('Opaque response due to CORS. Headers are not accessible. Try a different site, enable CORS on the server, or paste raw headers below.');
+          lastHeaders = {}; setHeadersView(lastHeaders); return;
+        }
+        const headers = {};
+        res.headers.forEach((v,k)=>{ headers[k]=v; });
+        // Add status line informative entries
+        headers[':status'] = res.status + ' ' + res.statusText;
+        headers[':redirected'] = String(res.redirected);
+        lastHeaders = headers; setHeadersView(headers);
+      }catch(e){ alert('Request failed: ' + e.message); }
+    }
+
+    function exportJson(){
+      const blob=new Blob([JSON.stringify(lastHeaders,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='headers.json'; a.click();
+    }
+
+    function parseRaw(){
+      const t=document.getElementById('raw').value; const map={};
+      t.split(/\r?\n/).forEach(line=>{ const i=line.indexOf(':'); if(i>0){ const k=line.slice(0,i).trim(); const v=line.slice(i+1).trim(); if(k) map[k]=v; }});
+      lastHeaders=map; setHeadersView(map);
+    }
+
+    document.getElementById('check').addEventListener('click', check);
+    document.getElementById('export').addEventListener('click', exportJson);
+    document.getElementById('parseRaw').addEventListener('click', parseRaw);
+    document.getElementById('clearRaw').addEventListener('click', ()=>{ document.getElementById('raw').value=''; });
+  </script>
+</body></html>
+
+

@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internet Speed Test - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-tachometer-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Internet Speed Test</div>
+        <div class="tool-desc">Run a simple browser-based test to estimate your latency and download speed. Results are approximate.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Test Duration (seconds)</label>
+            <select id="duration" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="startBtn" class="tool-button"><i class="fas fa-play"></i> Start</button>
+            <button id="stopBtn" class="tool-button" style="background:#e74c3c;" disabled><i class="fas fa-stop"></i> Stop</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px; text-align:center;">
+          <div class="tool-name">Latency (Ping)</div>
+          <div id="latencyVal" style="font-size:2rem; margin-top:6px;">â€”</div>
+          <div id="latencyNote" style="color:#666; font-size:0.9rem;">ms</div>
+        </div>
+        <div class="tool-card" style="padding:16px; text-align:center;">
+          <div class="tool-name">Download</div>
+          <div id="speedVal" style="font-size:2rem; margin-top:6px;">â€”</div>
+          <div id="speedNote" style="color:#666; font-size:0.9rem;">Mbps</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Progress</div>
+          <div style="margin-top:10px; color:#2c3e50; font-size:0.95rem;">
+            <div id="progressText">Idle</div>
+            <div style="background:#f1f4ff; border:1px solid #e0e8ff; height:10px; border-radius:6px; margin-top:8px; overflow:hidden;">
+              <div id="bar" style="height:100%; width:0%; background:#4a6cf7;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Details</div>
+        <div id="details" style="margin-top:10px; color:#34495e; font-size:0.95rem;">No test yet.</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const durationSel = document.getElementById('duration');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const latencyVal = document.getElementById('latencyVal');
+    const speedVal = document.getElementById('speedVal');
+    const progressText = document.getElementById('progressText');
+    const details = document.getElementById('details');
+    const bar = document.getElementById('bar');
+
+    let controller = null;
+    let startedAt = 0;
+    let totalBytes = 0;
+    let testTimer = null;
+
+    const SOURCES = [
+      // Public test files; range support improves measurement
+      'https://speed.hetzner.de/1MB.bin',
+      'https://speed.hetzner.de/10MB.bin',
+      'https://speed.hetzner.de/100MB.bin'
+    ];
+
+    function fmtMbps(bytes, seconds){ if (seconds <= 0) return 0; return ((bytes * 8) / seconds) / (1024*1024); }
+    function fmt(bytes){ const u=['B','KB','MB','GB']; let i=0, n=bytes; while(n>=1024 && i<u.length-1){ n/=1024; i++; } return n.toFixed(2)+' '+u[i]; }
+
+    async function ping(){
+      try{
+        const t0 = performance.now();
+        await fetch('https://api.ipify.org?format=json', { cache:'no-store' });
+        const t1 = performance.now();
+        const ms = Math.round(t1 - t0);
+        latencyVal.textContent = ms + ' ms';
+        return ms;
+      }catch(_){ latencyVal.textContent = 'â€”'; return null; }
+    }
+
+    async function downloadStream(url, remainingMs){
+      controller = new AbortController();
+      const signal = controller.signal;
+      const headers = { 'Cache-Control': 'no-store' };
+      // Try to request a slice to avoid huge downloads
+      headers['Range'] = 'bytes=0-5242879'; // up to 5 MB
+      const res = await fetch(url + '?t=' + Date.now(), { signal, headers });
+      const reader = res.body?.getReader();
+      if(!reader){ return; }
+      let done=false; let readBytes = 0;
+      const endAt = performance.now() + remainingMs;
+      while(!done){
+        if(performance.now() > endAt){ controller.abort(); break; }
+        const { value, done: d } = await reader.read();
+        done = d;
+        if(value){ totalBytes += value.byteLength; readBytes += value.byteLength; }
+        const elapsed = (performance.now() - startedAt)/1000;
+        const mbps = fmtMbps(totalBytes, Math.max(0.001, elapsed));
+        speedVal.textContent = mbps.toFixed(2) + ' Mbps';
+      }
+    }
+
+    async function runTest(){
+      // Reset
+      totalBytes = 0; speedVal.textContent = 'â€”'; details.textContent = 'Running...';
+      const seconds = parseInt(durationSel.value)||10; startedAt = performance.now();
+      progressText.textContent = 'Testing...';
+      stopBtn.disabled = false; startBtn.disabled = true; bar.style.width = '0%';
+
+      // Ping
+      const ms = await ping();
+
+      // Download loop across sources in sequence until duration ends
+      const endAt = startedAt + seconds*1000;
+      let si = 0;
+      while(performance.now() < endAt){
+        const url = SOURCES[si % SOURCES.length]; si++;
+        const remaining = endAt - performance.now();
+        try{ await downloadStream(url, remaining); }catch(_){ /* ignore */ }
+        // Update bar
+        const pct = Math.max(0, Math.min(100, ((performance.now() - startedAt) / (seconds*1000)) * 100));
+        bar.style.width = pct.toFixed(1) + '%';
+      }
+
+      // Finalize
+      const totalSec = (performance.now() - startedAt)/1000;
+      const mbps = fmtMbps(totalBytes, totalSec);
+      speedVal.textContent = mbps.toFixed(2) + ' Mbps';
+      progressText.textContent = 'Done';
+      details.innerHTML = `Time: ${totalSec.toFixed(1)} s<br>Downloaded: ${fmt(totalBytes)}<br>Average: ${mbps.toFixed(2)} Mbps${ms?`<br>Latency: ${ms} ms`:''}`;
+      stopBtn.disabled = true; startBtn.disabled = false; controller = null; testTimer = null; bar.style.width = '100%';
+    }
+
+    startBtn.addEventListener('click', ()=>{ runTest(); });
+    stopBtn.addEventListener('click', ()=>{ if(controller) controller.abort(); stopBtn.disabled = true; startBtn.disabled = false; progressText.textContent='Stopped'; });
+    clearBtn.addEventListener('click', ()=>{ totalBytes=0; latencyVal.textContent='â€”'; speedVal.textContent='â€”'; details.textContent='No test yet.'; progressText.textContent='Idle'; bar.style.width='0%'; });
+  </script>
+</body>
+</html>
+
+

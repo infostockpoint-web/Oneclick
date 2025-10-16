@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Currency Exchange Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    .note{font-size:.9rem;color:#666}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-money-bill-wave tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Currency Exchange Calculator</div>
+        <div class="tool-desc">Convert between currencies with optional live rates. Works offline with manual rate input.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">From</label>
+            <select id="from" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">To</label>
+            <select id="to" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Amount</label>
+            <input id="amt" type="number" min="0" step="0.01" value="100" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Rate (1 From = ? To)</label>
+            <input id="rate" type="number" min="0" step="0.0001" placeholder="Auto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+            <div class="note">Leave blank to fetch live rate. If fetching fails, enter a rate manually.</div>
+          </div>
+          <button id="convert" class="tool-button">Convert</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Converted Amount</div>
+          <div id="out" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Used Rate</div>
+          <div id="usedRate" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const CODES=['USD','EUR','INR','GBP','JPY','AUD','CAD','CHF','CNY','NZD','SGD','ZAR'];
+    function fillCodes(){ const f=document.getElementById('from'), t=document.getElementById('to'); f.innerHTML=''; t.innerHTML=''; CODES.forEach(c=>{ const o=document.createElement('option'); o.value=o.textContent=c; f.appendChild(o.cloneNode(true)); t.appendChild(o); }); f.value='USD'; t.value='INR'; }
+    async function fetchRate(base, to){
+      try{
+        const res=await fetch(`https://api.exchangerate.host/latest?base=${encodeURIComponent(base)}&symbols=${encodeURIComponent(to)}`);
+        const data=await res.json();
+        const r=data?.rates?.[to];
+        if (r) return r; throw new Error('No rate');
+      }catch(e){ return null; }
+    }
+    async function convert(){
+      const base=document.getElementById('from').value; const to=document.getElementById('to').value; const amt=+document.getElementById('amt').value||0; const manual=+document.getElementById('rate').value;
+      let rate=manual||null; if (!rate){ rate=await fetchRate(base,to); }
+      if (!rate){ alert('Could not fetch rate. Please enter a rate manually.'); return; }
+      const out=amt*rate; document.getElementById('out').textContent = `${to} ${out.toLocaleString(undefined,{maximumFractionDigits:2})}`; document.getElementById('usedRate').textContent = `1 ${base} = ${rate.toFixed(4)} ${to}`;
+    }
+    document.getElementById('convert').addEventListener('click', convert);
+    fillCodes();
+  </script>
+</body>
+</html>
+
+

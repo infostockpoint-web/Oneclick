@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citation Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-quote-right tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Citation Generator</div>
+        <div class="tool-desc">Generate citations in APA, MLA, or Chicago styles. Client-side only.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Source Type</label>
+            <select id="type" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="book">Book</option>
+              <option value="website">Website</option>
+              <option value="article">Journal Article</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Style</label>
+            <select id="style" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="apa">APA</option>
+              <option value="mla">MLA</option>
+              <option value="chicago">Chicago</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Author</label>
+            <input id="author" type="text" placeholder="Last, First" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Title</label>
+            <input id="title" type="text" placeholder="Title of work" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Container (Site/Journal/Publisher)</label>
+            <input id="container" type="text" placeholder="Website, Journal, or Publisher" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Year</label>
+            <input id="year" type="text" placeholder="2024" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">City (Book)</label>
+            <input id="city" type="text" placeholder="New York" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">URL (Website)</label>
+            <input id="url" type="text" placeholder="https://example.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Accessed (Website)</label>
+            <input id="access" type="date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+          <button id="gen" class="tool-button"><i class="fas fa-magic"></i> Generate</button>
+          <button id="copy" class="tool-button"><i class="far fa-copy"></i> Copy</button>
+          <button id="clear" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Clear</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Citation</div>
+        <textarea id="out" rows="5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function capitalizeName(author){
+      if (!author) return '';
+      const parts = author.split(',').map(s=>s.trim());
+      if (parts.length === 2){
+        // Last, First -> Last, F.
+        const first = parts[1].split(' ').map(n=>n[0]?.toUpperCase()+'.').join(' ');
+        const last = parts[0][0]?.toUpperCase()+parts[0].slice(1);
+        return `${last}, ${first}`;
+      }
+      return author;
+    }
+
+    function fmtAPA(t){
+      const a = capitalizeName(t.author);
+      if (t.type==='book') return `${a} (${t.year}). ${t.title}. ${t.container}${t.city?`, ${t.city}`:''}.`;
+      if (t.type==='website') return `${a} (${t.year}). ${t.title}. ${t.container}. ${t.url} ${t.access?`(Accessed ${t.access})`:''}`;
+      if (t.type==='article') return `${a} (${t.year}). ${t.title}. ${t.container}.`;
+      return '';
+    }
+    function fmtMLA(t){
+      const a = t.author; // MLA keeps as given
+      if (t.type==='book') return `${a}. ${t.title}. ${t.container}, ${t.year}.`;
+      if (t.type==='website') return `${a}. "${t.title}." ${t.container}, ${t.year}, ${t.url}. ${t.access?`Accessed ${t.access}.`:''}`;
+      if (t.type==='article') return `${a}. "${t.title}." ${t.container}, ${t.year}.`;
+      return '';
+    }
+    function fmtChicago(t){
+      const a = t.author;
+      if (t.type==='book') return `${a}. ${t.title}. ${t.city? t.city+': ' : ''}${t.container}, ${t.year}.`;
+      if (t.type==='website') return `${a}. "${t.title}." ${t.container}. ${t.year}. ${t.url}. ${t.access?`Accessed ${t.access}.`:''}`;
+      if (t.type==='article') return `${a}. "${t.title}." ${t.container} (${t.year}).`;
+      return '';
+    }
+
+    function read(){
+      return {
+        type: document.getElementById('type').value,
+        style: document.getElementById('style').value,
+        author: document.getElementById('author').value.trim(),
+        title: document.getElementById('title').value.trim(),
+        container: document.getElementById('container').value.trim(),
+        year: document.getElementById('year').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        url: document.getElementById('url').value.trim(),
+        access: document.getElementById('access').value
+      };
+    }
+
+    function generate(){
+      const t = read();
+      if (!t.title || !t.container){ alert('Please fill at least Title and Container.'); return; }
+      let out = '';
+      if (t.style==='apa') out = fmtAPA(t);
+      else if (t.style==='mla') out = fmtMLA(t);
+      else out = fmtChicago(t);
+      document.getElementById('out').value = out;
+    }
+
+    document.getElementById('gen').addEventListener('click', generate);
+    document.getElementById('copy').addEventListener('click', ()=>{
+      navigator.clipboard.writeText(document.getElementById('out').value||'').then(()=>alert('Citation copied.'));
+    });
+    document.getElementById('clear').addEventListener('click', ()=>{
+      ['author','title','container','year','city','url','access'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('out').value='';
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,839 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <!-- Add sample images for demo -->
+  <script>
+    // Sample images for demo
+    const sampleImages = [
+      'https://source.unsplash.com/random/512x512/?ai,art',
+      'https://source.unsplash.com/random/512x512/?technology,future',
+      'https://source.unsplash.com/random/512x512/?landscape',
+      'https://source.unsplash.com/random/512x512/?abstract',
+      'https://source.unsplash.com/random/512x512/?digital,art'
+    ];
+  </script>
+  <style>
+    .ai-image-generator {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .ai-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .ai-header h1 {
+      font-size: 2.2rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .ai-header p {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto 20px;
+    }
+    
+    .generator-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    
+    .input-section, .output-section {
+      padding: 25px;
+    }
+    
+    .input-section {
+      border-bottom: 1px solid #eee;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .prompt-input {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+      margin-bottom: 15px;
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .control-group {
+      margin-bottom: 10px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    
+    select, input[type="range"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+    
+    .style-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .style-option {
+      border: 2px solid #eee;
+      border-radius: 5px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .style-option:hover {
+      border-color: #4a6cf7;
+    }
+    
+    .style-option.active {
+      border-color: #4a6cf7;
+      background: #f0f4ff;
+    }
+    
+    .style-option i {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+      color: #4a6cf7;
+    }
+    
+    .generate-btn {
+      background: #4a6cf7;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.3s ease;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .generate-btn:hover {
+      background: #3a5ce4;
+    }
+    
+    .generate-btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .output-section {
+      min-height: 400px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .output-placeholder {
+      color: #95a5a6;
+      font-style: italic;
+      text-align: center;
+      padding: 40px 20px;
+      border: 2px dashed #e0e0e0;
+      border-radius: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4a6cf7;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .generated-image-container {
+      display: none;
+      width: 100%;
+      max-width: 512px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .generated-image {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .action-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+    
+    .download-btn {
+      background: #4a6cf7;
+      color: white;
+    }
+    
+    .download-btn:hover {
+      background: #3a5ce4;
+    }
+    
+    .generate-again-btn {
+      background: #e8f4fc;
+      color: #3498db;
+    }
+    
+    .generate-again-btn:hover {
+      background: #d6eaf8;
+    }
+    
+    .error-message {
+      color: #e74c3c;
+      background: #fde8e8;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-top: 15px;
+      display: none;
+      text-align: center;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+    
+    .feature-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .feature-card i {
+      font-size: 1.5rem;
+      color: #4a6cf7;
+      margin-bottom: 15px;
+    }
+    
+    .feature-card h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+    }
+    
+    .feature-card p {
+      color: #7f8c8d;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    .coming-soon-banner {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      color: #6c757d;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border: 1px dashed #dee2e6;
+    }
+    
+    @media (max-width: 768px) {
+      .ai-header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  
+  <main class="ai-image-generator">
+    <div class="ai-header">
+      <h1><i class="fas fa-robot"></i> AI Image Generator</h1>
+      <p>Create stunning, unique images from text descriptions using advanced AI technology.</p>
+    </div>
+    
+    <div class="coming-soon-banner">
+      <i class="fas fa-info-circle"></i> This is a preview of our upcoming AI Image Generator. The full version with AI capabilities will be available soon.
+    </div>
+    
+    <div class="generator-container">
+      <div class="input-section">
+        <div class="section-title">
+          <i class="fas fa-keyboard"></i>
+          <span>Describe the image you want to generate</span>
+        </div>
+        <textarea 
+          id="promptInput" 
+          class="prompt-input" 
+          placeholder="Example: A serene mountain lake at sunset with snow-capped peaks in the background, digital art style"
+        ></textarea>
+        
+        <div class="controls">
+          <div class="control-group">
+            <label for="imageStyle">Style</label>
+            <select id="imageStyle">
+              <option value="realistic">Realistic</option>
+              <option value="digital-art">Digital Art</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="anime">Anime</option>
+              <option value="watercolor">Watercolor</option>
+              <option value="oil-painting">Oil Painting</option>
+              <option value="pixel-art">Pixel Art</option>
+              <option value="3d-render">3D Render</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="imageSize">Size</label>
+            <select id="imageSize">
+              <option value="512x512">Small (512Ã—512)</option>
+              <option value="768x768" selected>Medium (768Ã—768)</option>
+              <option value="1024x1024">Large (1024Ã—1024)</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="creativity">Creativity <span id="creativityValue">5</span>/10</label>
+            <input type="range" id="creativity" min="1" max="10" value="5" step="1">
+          </div>
+        </div>
+        
+        <div class="style-options-container" style="margin: 15px 0;">
+          <div class="section-title">
+            <i class="fas fa-palette"></i>
+            <span>Art Style</span>
+          </div>
+          <div class="style-options">
+            <div class="style-option active" data-style="digital-art">
+              <i class="fas fa-paint-brush"></i>
+              <div>Digital Art</div>
+            </div>
+            <div class="style-option" data-style="photo">
+              <i class="fas fa-camera"></i>
+              <div>Photo</div>
+            </div>
+            <div class="style-option" data-style="anime">
+              <i class="fas fa-moon"></i>
+              <div>Anime</div>
+            </div>
+            <div class="style-option" data-style="watercolor">
+              <i class="fas fa-water"></i>
+              <div>Watercolor</div>
+            </div>
+            <div class="style-option" data-style="pixel">
+              <i class="fas fa-th-large"></i>
+              <div>Pixel Art</div>
+            </div>
+          </div>
+        </div>
+        
+        <button id="generateBtn" class="generate-btn">
+          <i class="fas fa-magic"></i>
+          <span>Generate Image</span>
+        </button>
+        
+        <div style="display:flex; justify-content:center; margin-top:10px; gap:12px; flex-wrap: wrap;">
+          <button id="settingsBtn" type="button" class="action-btn" style="background:#f7f7f9; color:#2c3e50;">
+            <i class="fas fa-cog"></i>
+            <span>AI Settings</span>
+          </button>
+          <small style="color:#7f8c8d; align-self:center;">If no API key is set, a demo image will be shown.</small>
+        </div>
+      </div>
+      
+      <div class="output-section">
+        <div id="outputPlaceholder" class="output-placeholder">
+          <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 15px; color: #e0e0e0;"></i>
+          <p>Your AI-generated image will appear here</p>
+          <p style="font-size: 0.9rem; margin-top: 10px;">Describe the image you want to create and click "Generate Image"</p>
+        </div>
+        
+        <div id="loadingIndicator" class="loading">
+          <div class="loading-spinner"></div>
+          <p>Generating your image...</p>
+          <p style="font-size: 0.9rem; color: #95a5a6;">This may take a few moments</p>
+        </div>
+        
+        <div id="generatedImageContainer" class="generated-image-container">
+          <img id="generatedImage" class="generated-image" src="" alt="AI Generated Image">
+        </div>
+        
+        <div id="errorMessage" class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>An error occurred while generating the image. Please try again.</span>
+        </div>
+        
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+          <button id="downloadBtn" class="action-btn download-btn">
+            <i class="fas fa-download"></i>
+            <span>Download Image</span>
+          </button>
+          <button id="generateAgainBtn" class="action-btn generate-again-btn">
+            <i class="fas fa-redo"></i>
+            <span>Generate Again</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="features">
+      <div class="feature-card">
+        <i class="fas fa-magic"></i>
+        <h3>Endless Creativity</h3>
+        <p>Generate unique images from any text description, no matter how imaginative or specific.</p>
+      </div>
+      
+      <div class="feature-card">
+        <i class="fas fa-sliders-h"></i>
+        <h3>Customizable</h3>
+        <p>Adjust style, size, and creativity level to get the perfect image for your needs.</p>
+      </div>
+      
+      <div class="feature-card">
+        <i class="fas fa-bolt"></i>
+        <h3>Lightning Fast</h3>
+        <p>Get high-quality AI-generated images in just seconds with our powerful technology.</p>
+      </div>
+    </div>
+    
+    <div class="coming-soon-banner" style="margin-top: 30px;">
+      <h3>Coming Soon Features</h3>
+      <p>We're working on adding more advanced features like image-to-image generation, inpainting, and style transfer. Stay tuned for updates!</p>
+    </div>
+  </main>
+  
+  <div id="site-footer"></div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #fff; width: min(520px, 92vw); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-cog" style="color:#4a6cf7;"></i>
+          <strong>AI Settings</strong>
+        </div>
+        <button id="closeSettingsBtn" class="action-btn" style="background: transparent; color:#7f8c8d;">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+      <div style="padding: 18px 20px 6px;">
+        <div class="control-group" style="margin-bottom: 14px;">
+          <label for="openaiKey" style="font-weight:600;">OpenAI API Key</label>
+          <input id="openaiKey" type="password" placeholder="sk-..." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:0.95rem;" />
+          <small style="display:block; color:#7f8c8d; margin-top:6px;">Stored locally in your browser. Used to call OpenAI's Images API securely from your device.</small>
+        </div>
+      </div>
+      <div style="padding: 12px 20px 18px; display:flex; gap:10px; justify-content:flex-end;">
+        <button id="clearSettingsBtn" class="action-btn" style="background:#fde8e8; color:#e74c3c;">
+          <i class="fas fa-trash"></i>
+          <span>Clear</span>
+        </button>
+        <button id="saveSettingsBtn" class="action-btn" style="background:#4a6cf7; color:#fff;">
+          <i class="fas fa-save"></i>
+          <span>Save</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const generateBtn = document.getElementById('generateBtn');
+      const promptInput = document.getElementById('promptInput');
+      const outputPlaceholder = document.getElementById('outputPlaceholder');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const generatedImageContainer = document.getElementById('generatedImageContainer');
+      const generatedImage = document.getElementById('generatedImage');
+      const errorMessage = document.getElementById('errorMessage');
+      const actionButtons = document.getElementById('actionButtons');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const generateAgainBtn = document.getElementById('generateAgainBtn');
+      const creativitySlider = document.getElementById('creativity');
+      const creativityValue = document.getElementById('creativityValue');
+      const styleOptions = document.querySelectorAll('.style-option');
+      const imageSizeSelect = document.getElementById('imageSize');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const settingsModal = document.getElementById('settingsModal');
+      const openaiKeyInput = document.getElementById('openaiKey');
+      const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+      const clearSettingsBtn = document.getElementById('clearSettingsBtn');
+      const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+      
+      // Demo providers (fallbacks in case one fails)
+      const sampleImages = [
+        // Unsplash source (may rate-limit or block sometimes)
+        'https://source.unsplash.com/random/768x768/?art',
+        'https://source.unsplash.com/random/768x768/?landscape',
+        'https://source.unsplash.com/random/768x768/?abstract',
+        // Picsum (stable placeholder)
+        'https://picsum.photos/seed/oneclick-1/768/768',
+        'https://picsum.photos/seed/oneclick-2/768/768',
+        'https://picsum.photos/seed/oneclick-3/768/768',
+        // Placehold (always succeeds)
+        'https://placehold.co/768x768/png?text=AI+Demo+Image'
+      ];
+      
+      // Style-specific image sources for demo mode
+      const styleImages = {
+        'digital-art': ['https://source.unsplash.com/random/768x768/?digital-art', 'https://source.unsplash.com/random/768x768/?illustration'],
+        'photo': ['https://source.unsplash.com/random/768x768/?photography', 'https://source.unsplash.com/random/768x768/?nature'],
+        'anime': ['https://source.unsplash.com/random/768x768/?anime', 'https://source.unsplash.com/random/768x768/?cartoon'],
+        'watercolor': ['https://source.unsplash.com/random/768x768/?watercolor', 'https://source.unsplash.com/random/768x768/?painting'],
+        'pixel': ['https://source.unsplash.com/random/768x768/?pixel-art', 'https://source.unsplash.com/random/768x768/?retro']
+      };
+      
+      // Style to prompt mapping (detailed but concise to avoid timeouts)
+      const stylePrompts = {
+        'digital-art': 'digital art style, vibrant colors, detailed',
+        'photo': 'photorealistic, high detail, professional photography',
+        'anime': 'anime style, cel-shaded, Studio Ghibli inspired',
+        'watercolor': 'watercolor painting, soft edges, artistic',
+        'pixel': 'pixel art, retro game style, low resolution'
+      };
+      
+      // Current style selection
+      let currentStyle = 'digital-art';
+
+      // Settings helpers
+      const STORAGE_KEYS = { openai: 'aiimage_openai_key' };
+      function getOpenAIKey(){ try { return localStorage.getItem(STORAGE_KEYS.openai) || ''; } catch(_) { return ''; } }
+      function setOpenAIKey(v){ try { localStorage.setItem(STORAGE_KEYS.openai, v || ''); } catch(_) {} }
+      function hasApi(){ return !!getOpenAIKey(); }
+      
+      // Update creativity value display
+      creativitySlider.addEventListener('input', function() {
+        creativityValue.textContent = this.value;
+      });
+      
+      // Style selection
+      styleOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          // Remove active class from all options
+          styleOptions.forEach(opt => opt.classList.remove('active'));
+          // Add active class to clicked option
+          this.classList.add('active');
+          // Update current style
+          currentStyle = this.getAttribute('data-style');
+        });
+      });
+      
+      // Generate image function: AI (OpenAI) if key present, else demo
+      async function generateImage() {
+        const prompt = promptInput.value.trim();
+        
+        if (!prompt) {
+          showError("Please enter a description to generate an image.");
+          return;
+        }
+        
+        // Show loading state
+        outputPlaceholder.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        generatedImageContainer.style.display = 'none';
+        errorMessage.style.display = 'none';
+        actionButtons.style.display = 'none';
+        generateBtn.disabled = true;
+        
+        // Clear any previous image
+        generatedImage.src = '';
+        generatedImage.alt = '';
+        
+        try {
+          if (hasApi()) {
+            await generateWithOpenAI(prompt);
+          } else {
+            await generateDemoImage();
+          }
+        } catch (err) {
+          console.error('Generation failed:', err);
+          showError(typeof err === 'string' ? err : 'Image generation failed.');
+        } finally {
+          generateBtn.disabled = false;
+        }
+      }
+
+      // OpenAI generation with retry logic
+      async function generateWithOpenAI(prompt, retries = 2){
+        const key = getOpenAIKey();
+        if (!key) throw 'OpenAI API key not set. Click AI Settings to add your key.';
+        const size = (imageSizeSelect && imageSizeSelect.value) ? imageSizeSelect.value : '768x768';
+        const stylePrompt = stylePrompts[currentStyle] || '';
+        const creativity = parseInt(creativitySlider.value || '5', 10);
+        const creativityHint = `, creativity ${creativity}/10`;
+        const fullPrompt = `${prompt}, ${stylePrompt}${creativityHint}`.substring(0, 400); // Limit to 400 chars to avoid timeouts
+
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const resp = await fetch('https://api.openai.com/v1/images/generations', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`
+              },
+              body: JSON.stringify({
+                model: 'gpt-image-1',
+                prompt: fullPrompt,
+                size: size
+              })
+            });
+
+            if (!resp.ok) {
+              let msg = `OpenAI API error (${resp.status})`;
+              try { const j = await resp.json(); if (j && j.error && j.error.message) msg += `: ${j.error.message}`; } catch(_){}
+              if (resp.status === 429 || resp.status >= 500) {
+                if (attempt < retries) continue; // Retry on rate limit or server error
+              }
+              throw msg;
+            }
+            const data = await resp.json();
+            if (!data || !data.data || !data.data[0] || !data.data[0].b64_json) throw 'Invalid response from OpenAI Images API.';
+            const b64 = data.data[0].b64_json;
+            const dataUrl = `data:image/png;base64,${b64}`;
+            // Display
+            generatedImage.src = dataUrl;
+            generatedImage.alt = prompt;
+            loadingIndicator.style.display = 'none';
+            generatedImageContainer.style.display = 'block';
+            actionButtons.style.display = 'flex';
+            downloadBtn.disabled = false;
+            return;
+          } catch (err) {
+            if (attempt < retries && (err.message.includes('timeout') || err.message.includes('deadline'))) {
+              continue; // Retry on timeout
+            }
+            throw err;
+          }
+        }
+        throw 'Generation failed after retries. Try a shorter prompt or check your API key.';
+      }
+
+      // Demo image generation with robust fallbacks
+      function generateDemoImage(){
+        return new Promise((resolve, reject) => {
+          const tried = new Set();
+          const maxAttempts = Math.min(sampleImages.length, 6);
+          const styleSpecific = styleImages[currentStyle] || [];
+          const allSources = [...styleSpecific, ...sampleImages]; // Prioritize style-specific images
+
+          const tryNext = (attempt=0) => {
+            if (attempt >= maxAttempts) {
+              // Final offline-safe fallback: inline SVG placeholder
+              const svg = encodeURIComponent(
+                `<svg xmlns='http://www.w3.org/2000/svg' width='768' height='768'>
+                  <rect width='100%' height='100%' fill='#f0f4ff'/>
+                  <text x='50%' y='45%' dominant-baseline='middle' text-anchor='middle' fill='#4a6cf7' font-size='28' font-family='Segoe UI, Tahoma, sans-serif'>AI Demo Image</text>
+                  <text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='#7f8c8d' font-size='16' font-family='Segoe UI, Tahoma, sans-serif'>No network image available</text>
+                </svg>`
+              );
+              generatedImage.src = `data:image/svg+xml;charset=utf-8,${svg}`;
+              generatedImage.alt = 'AI Demo Image (offline placeholder)';
+              loadingIndicator.style.display = 'none';
+              generatedImageContainer.style.display = 'block';
+              actionButtons.style.display = 'flex';
+              downloadBtn.disabled = false;
+              resolve();
+              return;
+            }
+            // Pick next unused URL
+            let idx;
+            do { idx = Math.floor(Math.random() * allSources.length); } while (tried.has(idx) && tried.size < allSources.length);
+            tried.add(idx);
+            const baseUrl = allSources[idx];
+            const bust = (baseUrl.includes('?') ? '&' : '?') + Date.now();
+            const imageUrl = baseUrl + bust;
+
+            const img = new Image();
+            // Do NOT set crossOrigin here to maximize compatibility for loading; download handles CORS elsewhere
+            img.onload = function(){
+              try {
+                generatedImage.src = img.src;
+                generatedImage.alt = promptInput.value.trim();
+                loadingIndicator.style.display = 'none';
+                generatedImageContainer.style.display = 'block';
+                actionButtons.style.display = 'flex';
+                downloadBtn.disabled = false;
+                resolve();
+              } catch (e) {
+                reject('Failed to display the generated image.');
+              }
+            };
+            img.onerror = function(){
+              // Try next provider
+              tryNext(attempt + 1);
+            };
+            img.src = imageUrl;
+          };
+
+          tryNext(0);
+        });
+      }
+      
+      // Show error message
+      function showError(message) {
+        errorMessage.querySelector('span').textContent = message;
+        errorMessage.style.display = 'flex';
+        loadingIndicator.style.display = 'none';
+        generateBtn.disabled = false;
+      }
+      
+      // Download image
+      function downloadImage() {
+        try {
+          const generatedImage = document.getElementById('generatedImage');
+          
+          // Check if there's an image to download
+          if (!generatedImage || !generatedImage.complete || !generatedImage.src) {
+            showError('No image available to download. Please generate an image first.');
+            return;
+          }
+          
+          // Disable download button during processing
+          downloadBtn.disabled = true;
+          
+          // If it's a data URL (OpenAI), download directly
+          if (generatedImage.src.startsWith('data:image/')) {
+            const link = document.createElement('a');
+            link.href = generatedImage.src;
+            link.download = `ai-image-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 100);
+            downloadBtn.disabled = false;
+            return;
+          }
+
+          // Otherwise, try canvas (may be blocked by CORS in demo mode)
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = generatedImage.naturalWidth || generatedImage.width;
+          canvas.height = generatedImage.naturalHeight || generatedImage.height;
+          try {
+            ctx.drawImage(generatedImage, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `ai-image-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 100);
+          } catch (e) {
+            console.error('Canvas download blocked (likely CORS). Falling back to opening image in new tab.', e);
+            window.open(generatedImage.src, '_blank');
+          } finally {
+            downloadBtn.disabled = false;
+          }
+        
+        } catch (error) {
+          console.error('Download error:', error);
+          showError('An error occurred while trying to download the image.');
+        }
+      }
+
+      // Settings modal wiring
+      function openSettings(){ settingsModal.style.display = 'flex'; openaiKeyInput.value = getOpenAIKey(); }
+      function closeSettings(){ settingsModal.style.display = 'none'; }
+      if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+      if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+      if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', function(){ setOpenAIKey(openaiKeyInput.value.trim()); closeSettings(); });
+      if (clearSettingsBtn) clearSettingsBtn.addEventListener('click', function(){ setOpenAIKey(''); openaiKeyInput.value=''; });
+      
+      // Event listeners
+      generateBtn.addEventListener('click', generateImage);
+      downloadBtn.addEventListener('click', downloadImage);
+      generateAgainBtn.addEventListener('click', generateImage);
+      
+      // Allow Ctrl+Enter to generate image
+      promptInput.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+          generateImage();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+

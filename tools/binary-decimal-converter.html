@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary to Decimal Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-sort-numeric-up tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Binary â†” Decimal Converter</div>
+        <div class="tool-desc">Convert between binary (base 2) and decimal (base 10).</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px;">
+        <!-- Binary to Decimal -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">Binary â†’ Decimal</div>
+          <div style="display:grid; gap:10px;">
+            <input id="binInput" type="text" placeholder="e.g. 101101" style="padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="binConvert" class="tool-button">Convert</button>
+              <button id="binClear" class="tool-button" style="background:#888;">Clear</button>
+              <button id="binCopy" class="tool-button" style="background:#555;">Copy</button>
+            </div>
+            <div id="binError" style="color:#b00020; display:none;">Please enter a valid binary number (0/1 only).</div>
+            <output id="binResult" style="padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+          </div>
+        </div>
+
+        <!-- Decimal to Binary -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">Decimal â†’ Binary</div>
+          <div style="display:grid; gap:10px;">
+            <input id="decInput" type="number" step="1" placeholder="e.g. 45" style="padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="decConvert" class="tool-button">Convert</button>
+              <button id="decClear" class="tool-button" style="background:#888;">Clear</button>
+              <button id="decCopy" class="tool-button" style="background:#555;">Copy</button>
+            </div>
+            <div id="decError" style="color:#b00020; display:none;">Please enter a valid non-negative integer.</div>
+            <output id="decResult" style="padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const binInput = document.getElementById('binInput');
+    const binResult = document.getElementById('binResult');
+    const binError = document.getElementById('binError');
+    document.getElementById('binConvert').addEventListener('click', () => {
+      const v = (binInput.value || '').trim();
+      if (!/^([01]+)$/.test(v)) { binError.style.display='block'; binResult.textContent='â€”'; return; }
+      binError.style.display='none';
+      const dec = parseInt(v, 2);
+      binResult.textContent = dec.toString();
+    });
+    document.getElementById('binClear').addEventListener('click', () => { binInput.value=''; binResult.textContent='â€”'; binError.style.display='none'; });
+    document.getElementById('binCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(binResult.textContent); } catch(e){} });
+
+    const decInput = document.getElementById('decInput');
+    const decResult = document.getElementById('decResult');
+    const decError = document.getElementById('decError');
+    document.getElementById('decConvert').addEventListener('click', () => {
+      const n = Number(decInput.value);
+      if (!Number.isInteger(n) || n < 0) { decError.style.display='block'; decResult.textContent='â€”'; return; }
+      decError.style.display='none';
+      decResult.textContent = n.toString(2);
+    });
+    document.getElementById('decClear').addEventListener('click', () => { decInput.value=''; decResult.textContent='â€”'; decError.style.display='none'; });
+    document.getElementById('decCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(decResult.textContent); } catch(e){} });
+  </script>
+</body>
+</html>
+
+

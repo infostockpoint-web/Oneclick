@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Data Storage Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-hdd tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Data Storage Converter</div>
+      <div class="tool-desc">Convert between decimal (KB=1000) and binary (KiB=1024) units.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="dsVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="dsVal" type="number" step="any" placeholder="e.g. 2048" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="dsFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="dsFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div>
+          <label for="dsTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="dsTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div>
+          <label for="dsSys" style="display:block; font-weight:600; margin-bottom:6px;">System</label>
+          <select id="dsSys" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="decimal" selected>Decimal (1000)</option>
+            <option value="binary">Binary (1024)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="dsConvert" class="tool-button">Convert</button>
+          <button id="dsSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="dsCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="dsResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="dsTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const DEC_UNITS = [ {k:'B',m:1}, {k:'KB',m:1e3}, {k:'MB',m:1e6}, {k:'GB',m:1e9}, {k:'TB',m:1e12} ];
+  const BIN_UNITS = [ {k:'B',m:1}, {k:'KiB',m:1024}, {k:'MiB',m:1024**2}, {k:'GiB',m:1024**3}, {k:'TiB',m:1024**4} ];
+  function getUnits(){ return document.getElementById('dsSys').value==='binary' ? BIN_UNITS : DEC_UNITS; }
+  function populate(){
+    const units = getUnits();
+    const a = document.getElementById('dsFrom');
+    const b = document.getElementById('dsTo');
+    a.innerHTML=''; b.innerHTML='';
+    units.forEach(u=>{ const o=document.createElement('option'); o.value=u.k; o.textContent=u.k; a.appendChild(o.cloneNode(true)); b.appendChild(o); });
+    a.value = units[0].k; b.value = units[2].k;
+  }
+  function toBytes(val, unit){ const u=getUnits().find(x=>x.k===unit); return u? val * u.m : NaN; }
+  function fromBytes(bytes, unit){ const u=getUnits().find(x=>x.k===unit); return u? bytes / u.m : NaN; }
+  function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:6}); }
+  function buildTable(bytes){
+    const units = getUnits();
+    return units.map(u=>`${u.k.padEnd(3,' ')} : ${fmt(fromBytes(bytes,u.k))}`).join('\n');
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{ populate(); });
+  document.getElementById('dsSys').addEventListener('change', ()=>{ populate(); });
+  document.getElementById('dsSwap').addEventListener('click', ()=>{ const a=document.getElementById('dsFrom'); const b=document.getElementById('dsTo'); const t=a.value; a.value=b.value; b.value=t; });
+  document.getElementById('dsConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('dsVal').value);
+    const from = document.getElementById('dsFrom').value;
+    const to = document.getElementById('dsTo').value;
+    const out = document.getElementById('dsResult');
+    const tbl = document.getElementById('dsTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const bytes = toBytes(val, from);
+    const conv = fromBytes(bytes, to);
+    out.textContent = `${fmt(val)} ${from} = ${fmt(conv)} ${to}`;
+    tbl.textContent = buildTable(bytes);
+  });
+  document.getElementById('dsCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('dsResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+

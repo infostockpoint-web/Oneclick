@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calorie Counter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .log{display:grid;gap:8px}
+    .entry{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-utensils tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Calorie Counter</div>
+        <div class="tool-desc">Track meals and calories for the day. Add items, see totals and macronutrient split (optional).</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Food/Meal</label>
+            <input id="name" type="text" placeholder="e.g., Oatmeal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Calories</label>
+            <input id="cal" type="number" min="0" step="1" placeholder="250" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Protein (g)</label>
+            <input id="pro" type="number" min="0" step="0.1" placeholder="10" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Carbs (g)</label>
+            <input id="carb" type="number" min="0" step="0.1" placeholder="40" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Fat (g)</label>
+            <input id="fat" type="number" min="0" step="0.1" placeholder="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="add" class="tool-button">Add</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Calories</div>
+          <div id="totalCal" class="tool-desc" style="font-size:1.3rem;color:#000;">0</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Macros (P/C/F g)</div>
+          <div id="macros" class="tool-desc" style="font-size:1.3rem;color:#000;">0 / 0 / 0</div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;margin-top:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Today Log</div>
+        <div id="log" class="log"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_cal_counter_v1';
+    function today(){return new Date().toISOString().slice(0,10)}
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{} } catch(e){ return {} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function add(){
+      const name=document.getElementById('name').value.trim();
+      const cal=+document.getElementById('cal').value||0;
+      const pro=+document.getElementById('pro').value||0;
+      const carb=+document.getElementById('carb').value||0;
+      const fat=+document.getElementById('fat').value||0;
+      if (!name || !cal){ alert('Enter food name and calories.'); return; }
+      const d=load(); if(!d[today()]) d[today()]=[]; d[today()].push({id:crypto.randomUUID(), name, cal, pro, carb, fat, ts:Date.now()}); save(d);
+      document.getElementById('name').value=''; document.getElementById('cal').value=''; document.getElementById('pro').value=''; document.getElementById('carb').value=''; document.getElementById('fat').value='';
+      render();
+    }
+
+    function render(){
+      const items=(load()[today()]||[]).slice().reverse();
+      const log=document.getElementById('log'); log.innerHTML='';
+      let tc=0,tp=0,tcg=0,tf=0;
+      items.forEach(it=>{ tc+=it.cal; tp+=it.pro; tcg+=it.carb; tf+=it.fat; const row=document.createElement('div'); row.className='entry'; row.innerHTML=`
+        <div>
+          <div style="font-weight:700;">${escapeHtml(it.name)} <small class="tool-desc">${it.cal} kcal</small></div>
+          <div class="tool-desc">P/C/F: ${it.pro}/${it.carb}/${it.fat} g â€¢ ${new Date(it.ts).toLocaleTimeString()}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="tool-button" data-act="edit" data-id="${it.id}"><i class="fas fa-pen"></i></button>
+          <button class="tool-button" data-act="del" data-id="${it.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+        </div>`; log.appendChild(row); });
+      document.getElementById('totalCal').textContent=tc;
+      document.getElementById('macros').textContent=`${tp} / ${tcg} / ${tf}`;
+    }
+
+    document.getElementById('log').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id'); const act=btn.getAttribute('data-act');
+      const d=load(); const arr=d[today()]||[]; const idx=arr.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this entry?')){ arr.splice(idx,1); d[today()]=arr; save(d); render(); } }
+      if (act==='edit'){
+        const it=arr[idx];
+        const name=prompt('Food/Meal', it.name); if(name===null) return;
+        const cal=+prompt('Calories', it.cal); if(!isFinite(cal)) return;
+        const pro=+prompt('Protein (g)', it.pro||0); const carb=+prompt('Carbs (g)', it.carb||0); const fat=+prompt('Fat (g)', it.fat||0);
+        arr[idx]={...it, name:name.trim(), cal, pro, carb, fat}; d[today()]=arr; save(d); render();
+      }
+    });
+
+    document.getElementById('add').addEventListener('click', add);
+    render();
+  </script>
+</body>
+</html>
+
+

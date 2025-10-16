@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Index Checker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end}
+    .kv{display:grid;grid-template-columns:200px 1fr;gap:8px}
+    code{background:#f6f6f6;padding:2px 6px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fab fa-google tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Google Index Checker</div>
+        <div class="tool-desc">Client-side helper: open Google queries and inspect indexing signals (robots/canonical). Live index status requires searching Google.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">URL</label><input id="url" type="url" placeholder="https://example.com/page" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <button id="site" class="tool-button">Open site: query</button>
+          <button id="info" class="tool-button">Open info: query</button>
+          <button id="cache" class="tool-button">Open cache: view</button>
+          <button id="analyze" class="tool-button">Analyze signals</button>
+          <button id="export" class="tool-button"><i class="fas fa-file-export"></i> Export JSON</button>
+        </div>
+        <div class="tool-desc" style="margin-top:8px">Note: This tool will not bypass Google; it provides shortcuts and on-page signal checks via a public read proxy.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Indexing Signals</div>
+        <div id="signals" class="kv tool-desc">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let last=null;
+    function q(url){ return encodeURIComponent(url); }
+    function openGoogle(qs){ window.open('https://www.google.com/search?q='+encodeURIComponent(qs),'_blank'); }
+    function renderSignals(sig){ const box=document.getElementById('signals'); const rows=[]; for(const [k,v] of Object.entries(sig)){ rows.push(`<div>${k}</div><div>${escapeHtml(String(v))}</div>`);} box.innerHTML=rows.join(''); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    async function analyze(){
+      const url=(document.getElementById('url').value||'').trim(); if(!url){ alert('Enter a URL.'); return; }
+      try{
+        const proxy = 'https://r.jina.ai/http://';
+        const u = url.replace(/^https?:\/\//,'');
+        const res=await fetch(proxy+u, {cache:'no-cache'}); if(!res.ok) throw new Error('Fetch failed');
+        const text=await res.text();
+        const robotsMeta=(text.match(/<meta[^>]+name=["']robots["'][^>]*>/i)||[''])[0];
+        const robots=(robotsMeta.match(/content=["']([^"']+)["']/i)||[])[1]||'';
+        const canonical=(text.match(/<link[^>]+rel=["']canonical["'][^>]*>/i)||[''])[0];
+        const canonicalHref=(canonical.match(/href=["']([^"']+)["']/i)||[])[1]||'';
+        const title=(text.match(/<title>([^<]*)<\/title>/i)||[])[1]||'';
+        const noindex=/noindex/i.test(robots);
+        const nofollow=/nofollow/i.test(robots);
+        last={ url, title, robots, noindex, nofollow, canonical: canonicalHref };
+        renderSignals(last);
+      }catch(e){ alert('Could not analyze the page (CORS or proxy error).'); }
+    }
+    function exportJson(){ if(!last){ alert('Run Analyze first.'); return; } const a=document.createElement('a'); const blob=new Blob([JSON.stringify(last,null,2)],{type:'application/json'}); a.href=URL.createObjectURL(blob); a.download='index-signals.json'; a.click(); }
+
+    document.getElementById('site').addEventListener('click',()=>{ const url=(document.getElementById('url').value||'').trim(); if(!url) return; try{ const u=new URL(url); openGoogle('site:'+u.hostname+' '+url); }catch(e){ openGoogle('site:'+url); } });
+    document.getElementById('info').addEventListener('click',()=>{ const url=(document.getElementById('url').value||'').trim(); if(!url) return; openGoogle('info:'+url); });
+    document.getElementById('cache').addEventListener('click',()=>{ const url=(document.getElementById('url').value||'').trim(); if(!url) return; window.open('https://webcache.googleusercontent.com/search?q=cache:'+encodeURIComponent(url),'_blank'); });
+    document.getElementById('analyze').addEventListener('click', analyze);
+    document.getElementById('export').addEventListener('click', exportJson);
+  </script>
+</body>
+</html>
+
+

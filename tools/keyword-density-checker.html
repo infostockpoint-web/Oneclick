@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Keyword Density Checker - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-percentage tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Keyword Density Checker</div>
+      <div class="tool-desc">Analyze word frequency and keyword density. Export results to CSV.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+        <textarea id="kdText" rows="8" placeholder="Paste your content here..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="minLen" style="display:block; font-weight:600; margin-bottom:6px;">Min word length</label>
+            <input id="minLen" type="number" min="1" value="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="topN" style="display:block; font-weight:600; margin-bottom:6px;">Top N</label>
+            <input id="topN" type="number" min="1" value="20" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="exStop" type="checkbox" checked> Exclude common stopwords</label>
+          <div>
+            <label for="customStop" style="display:block; font-weight:600; margin-bottom:6px;">Custom stopwords (comma-separated)</label>
+            <input id="customStop" type="text" placeholder="foo, bar, baz" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <button id="analyze" class="tool-button" style="height:42px;">Analyze</button>
+          <button id="exportCsv" class="tool-button" style="height:42px; background:#555;">Export CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:12px;">
+      <div class="tool-name" style="margin-bottom:8px;">Results</div>
+      <div id="kdSummary" class="tool-desc" style="margin-bottom:8px;">â€”</div>
+      <div id="kdTableWrap" style="overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid #eee;">
+              <th style="padding:8px;">Keyword</th>
+              <th style="padding:8px;">Count</th>
+              <th style="padding:8px;">Density (%)</th>
+            </tr>
+          </thead>
+          <tbody id="kdTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const DEFAULT_STOP = new Set("a,an,and,are,as,at,be,by,for,from,has,have,he,in,is,it,its,of,on,or,that,the,these,this,to,was,were,will,with,not,can,if,into,than,then,them,they,there,here,which,who,whom,whose,what,when,where,why,how,you,your,we,our,us,about,also,all,any,more,most,other,so,do,does,did,been".split(','));
+  function tokenize(text, minLen, excludeStop, custom){
+    const words = (text||'').toLowerCase().match(/[a-zA-Z0-9]+/g) || [];
+    const cust = new Set((custom||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean));
+    const stop = new Set([...DEFAULT_STOP, ...cust]);
+    return words.filter(w => w.length >= minLen && (!excludeStop || !stop.has(w)));
+  }
+  function analyze(){
+    const text = document.getElementById('kdText').value;
+    const minLen = Math.max(1, Number(document.getElementById('minLen').value)||3);
+    const topN = Math.max(1, Number(document.getElementById('topN').value)||20);
+    const excludeStop = document.getElementById('exStop').checked;
+    const custom = document.getElementById('customStop').value;
+    const tokens = tokenize(text, minLen, excludeStop, custom);
+    const totalWords = (text.trim().match(/\b\w+\b/g) || []).length;
+    const freq = new Map();
+    tokens.forEach(w => freq.set(w, (freq.get(w)||0)+1));
+    const rows = Array.from(freq.entries()).sort((a,b)=> b[1]-a[1]).slice(0, topN);
+    const tbody = document.getElementById('kdTbody');
+    tbody.innerHTML='';
+    rows.forEach(([word,count]) => {
+      const tr = document.createElement('tr');
+      const pct = totalWords? ((count/totalWords)*100) : 0;
+      tr.innerHTML = `<td style="padding:8px; border-bottom:1px solid #f2f2f2;">${word}</td>`+
+                     `<td style=\"padding:8px; border-bottom:1px solid #f2f2f2;\">${count}</td>`+
+                     `<td style=\"padding:8px; border-bottom:1px solid #f2f2f2;\">${pct.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('kdSummary').textContent = `Total words: ${totalWords.toLocaleString()} â€¢ Unique (after filters): ${freq.size.toLocaleString()}`;
+    return rows;
+  }
+  function exportCsv(){
+    const rows = analyze();
+    const lines = ['keyword,count'];
+    rows.forEach(([w,c]) => lines.push(`${w},${c}`));
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'keyword-density.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+  document.getElementById('analyze').addEventListener('click', analyze);
+  document.getElementById('exportCsv').addEventListener('click', exportCsv);
+  // initial
+  analyze();
+</script>
+</body></html>
+
+

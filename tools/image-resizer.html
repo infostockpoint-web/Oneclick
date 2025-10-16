@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Resizer - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-expand-arrows-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Image Resizer</div>
+        <div class="tool-desc">Resize images in-browser with presets, percentage, or exact dimensions.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Select Image</label>
+            <input id="file" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Method</label>
+            <select id="method" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="dims">Dimensions</option>
+              <option value="pct">Percentage</option>
+              <option value="preset">Preset</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="run" class="tool-button" disabled>Resize</button>
+            <button id="reset" class="tool-button" style="background:#888;">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Options</div>
+          <div id="opts" style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px;">
+            <div id="dimsBox">
+              <label>Width (px)</label>
+              <input id="w" type="number" min="1" max="6000" value="800" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+              <label style="margin-top:6px; display:block;">Height (px)</label>
+              <input id="h" type="number" min="1" max="6000" value="600" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+              <label style="display:block; margin-top:6px;"><input id="lock" type="checkbox" checked> Maintain aspect</label>
+            </div>
+            <div id="pctBox" style="display:none;">
+              <label>Scale (%)</label>
+              <input id="pct" type="number" min="1" max="500" value="50" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            </div>
+            <div id="presetBox" style="display:none;">
+              <label>Preset</label>
+              <select id="preset" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                <option value="">Chooseâ€¦</option>
+                <option value="150x150">Thumbnail 150Ã—150</option>
+                <option value="320x240">Small 320Ã—240</option>
+                <option value="800x600">Medium 800Ã—600</option>
+                <option value="1280x720">Large 1280Ã—720</option>
+                <option value="1920x1080">HD 1920Ã—1080</option>
+                <option value="1080x1080">Social 1080Ã—1080</option>
+              </select>
+            </div>
+            <div>
+              <label>Format</label>
+              <select id="fmt" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                <option value="jpeg">JPEG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+              </select>
+            </div>
+            <div>
+              <label>Quality <span id="qv">85%</span></label>
+              <input id="q" type="range" min="10" max="100" value="85" style="width:100%;">
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Original</div>
+          <div id="orig" style="margin-top:10px; text-align:center; min-height:200px; display:flex; align-items:center; justify-content:center; border:2px dashed #ddd; border-radius:8px; background:#f9f9f9; color:#666;">
+            <div><i class="fas fa-image" style="font-size:2rem;"></i><div>No image</div></div>
+          </div>
+          <div id="origInfo" style="margin-top:8px; font-size:0.9rem; color:#666;"></div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Resized</div>
+          <div id="resz" style="margin-top:10px; text-align:center; min-height:200px; display:flex; align-items:center; justify-content:center; border:2px dashed #ddd; border-radius:8px; background:#f9f9f9; color:#666;">
+            <div><i class="fas fa-expand-arrows-alt" style="font-size:2rem;"></i><div>Resize to see result</div></div>
+          </div>
+          <div id="reszInfo" style="margin-top:8px; font-size:0.9rem; color:#666;"></div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; text-align:center;">
+        <button id="dl" class="tool-button" style="background:#28a745;" disabled>Download Resized</button>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const file = document.getElementById('file');
+    const method = document.getElementById('method');
+    const w = document.getElementById('w');
+    const h = document.getElementById('h');
+    const lock = document.getElementById('lock');
+    const pct = document.getElementById('pct');
+    const preset = document.getElementById('preset');
+    const fmt = document.getElementById('fmt');
+    const q = document.getElementById('q');
+    const qv = document.getElementById('qv');
+    const run = document.getElementById('run');
+    const reset = document.getElementById('reset');
+    const orig = document.getElementById('orig');
+    const resz = document.getElementById('resz');
+    const origInfo = document.getElementById('origInfo');
+    const reszInfo = document.getElementById('reszInfo');
+    const dl = document.getElementById('dl');
+    const dimsBox = document.getElementById('dimsBox');
+    const pctBox = document.getElementById('pctBox');
+    const presetBox = document.getElementById('presetBox');
+
+    let fileObj=null, dataUrl='', outUrl='';
+    let naturalW=0, naturalH=0;
+
+    function fmtSize(b){ if(!b && b!==0) return 'â€”'; const k=1024,u=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+u[i]; }
+
+    function showImage(container, url, label){
+      const img = new Image();
+      img.onload = ()=>{
+        container.innerHTML = '<img src="'+url+'" alt="'+label+'" style="max-width:100%; max-height:220px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,.1);">\n'
+          + '<div style="margin-top:6px; color:#666; font-size:.9rem;">'+img.naturalWidth+' Ã— '+img.naturalHeight+' px</div>';
+      };
+      img.src = url;
+    }
+
+    function pickDims(){
+      if(method.value==='pct'){
+        const s=(parseInt(pct.value)||100)/100; return { W: Math.max(1, Math.round(naturalW*s)), H: Math.max(1, Math.round(naturalH*s)) };
+      } else if(method.value==='preset'){
+        const v=preset.value; if(!v) return { W:naturalW, H:naturalH }; const [pw,ph]=v.split('x').map(n=>parseInt(n)); return { W:pw, H:ph };
+      } else {
+        let W=parseInt(w.value)||naturalW; let H=parseInt(h.value)||naturalH; if(lock.checked){ const ar=naturalW/naturalH; if(document.activeElement===w){ H=Math.round(W/ar); h.value=H; } else if(document.activeElement===h){ W=Math.round(H*ar); w.value=W; }} return { W:Math.max(1,Math.min(6000,W)), H:Math.max(1,Math.min(6000,H)) };
+      }
+    }
+
+    function mime(){ return 'image/'+fmt.value; }
+
+    function toDataUrl(src, W, H){
+      return new Promise((resolve)=>{
+        const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.drawImage(img,0,0,W,H); const qual = fmt.value==='jpeg'? (parseInt(q.value)/100):1; resolve(c.toDataURL(mime(), qual)); }; img.src=src; });
+    }
+
+    function sizeFromDataUrl(u){ const i=u.indexOf(','); if(i<0) return 0; return Math.ceil((u.length-i-1)*3/4); }
+
+    file.addEventListener('change', (e)=>{
+      const f=e.target.files&&e.target.files[0]; if(!f||!f.type.startsWith('image/')) return;
+      fileObj=f; const r=new FileReader(); r.onload=()=>{ dataUrl=r.result; const img=new Image(); img.onload=()=>{ naturalW=img.naturalWidth; naturalH=img.naturalHeight; showImage(orig, dataUrl, 'Original'); origInfo.innerHTML='Size: '+fmtSize(f.size)+' | Dimensions: '+naturalW+' Ã— '+naturalH+' px | Type: '+(f.type||'â€”'); run.disabled=false; }; img.src=dataUrl; }; r.readAsDataURL(f);
+    });
+
+    method.addEventListener('change', ()=>{ dimsBox.style.display=method.value==='dims'?'block':'none'; pctBox.style.display=method.value==='pct'?'block':'none'; presetBox.style.display=method.value==='preset'?'block':'none'; });
+    q.addEventListener('input', ()=> qv.textContent=q.value+'%');
+
+    run.addEventListener('click', async ()=>{
+      if(!dataUrl) return; const d=pickDims(); outUrl=await toDataUrl(dataUrl, d.W, d.H); showImage(resz, outUrl, 'Resized'); reszInfo.innerHTML='Dimensions: '+d.W+' Ã— '+d.H+' px | Format: '+fmt.value.toUpperCase()+' | Quality: '+(fmt.value==='jpeg'? q.value+'%':'â€”')+' | Size: '+fmtSize(sizeFromDataUrl(outUrl)); dl.disabled=false; });
+
+    dl.addEventListener('click', ()=>{ if(!outUrl) return; const a=document.createElement('a'); a.href=outUrl; a.download='resized_'+Date.now()+'.'+fmt.value; a.click(); });
+    reset.addEventListener('click', ()=>{ file.value=''; dataUrl=''; outUrl=''; run.disabled=true; dl.disabled=true; orig.innerHTML='<div><i class="fas fa-image" style="font-size:2rem;"></i><div>No image</div></div>'; resz.innerHTML='<div><i class="fas fa-expand-arrows-alt" style="font-size:2rem;"></i><div>Resize to see result</div></div>'; origInfo.textContent=''; reszInfo.textContent=''; w.value=800; h.value=600; pct.value=50; preset.value=''; q.value=85; qv.textContent='85%'; fmt.value='jpeg'; method.value='dims'; dimsBox.style.display='block'; pctBox.style.display='none'; presetBox.style.display='none'; });
+  </script>
+</body>
+</html>
+
+

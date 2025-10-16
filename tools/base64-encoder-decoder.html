@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Base64 Encoder & Decoder - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-shield-alt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Base64 Encoder & Decoder</div>
+      <div class="tool-desc">Encode text or files to Base64 format and decode Base64 back to original content.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Operation Mode</label>
+          <select id="mode" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="encode">Encode to Base64</option>
+            <option value="decode">Decode from Base64</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Input Type</label>
+          <select id="inputType" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="text">Text</option>
+            <option value="file">File</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="processBtn" class="tool-button">Process</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Input</div>
+        <div id="inputContainer" style="margin-top:10px;">
+          <div id="textInputContainer">
+            <textarea id="textInput" rows="8" placeholder="Enter text to encode/decode..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:Arial;"></textarea>
+          </div>
+          <div id="fileInputContainer" style="display:none;">
+            <input type="file" id="fileInput" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <div id="fileInfo" style="margin-top:8px; font-size:0.9rem; color:#666;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Output</div>
+        <div id="outputContainer" style="margin-top:10px;">
+          <textarea id="outputText" rows="8" placeholder="Output will appear here..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:monospace;" readonly></textarea>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button id="copyBtn" class="tool-button" style="background:#28a745; font-size:0.9rem; padding:6px 12px;">Copy</button>
+            <button id="downloadBtn" class="tool-button" style="background:#007bff; font-size:0.9rem; padding:6px 12px;">Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Processing Information</div>
+      <div id="info" style="margin-top:10px;">
+        <div id="processingInfo" style="font-size:0.9rem; color:#666;">
+          <div><strong>Status:</strong> <span id="status">Ready</span></div>
+          <div><strong>Input Size:</strong> <span id="inputSize">0 bytes</span></div>
+          <div><strong>Output Size:</strong> <span id="outputSize">0 bytes</span></div>
+          <div><strong>Processing Time:</strong> <span id="processingTime">0ms</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const mode = document.getElementById('mode');
+  const inputType = document.getElementById('inputType');
+  const processBtn = document.getElementById('processBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const textInput = document.getElementById('textInput');
+  const fileInput = document.getElementById('fileInput');
+  const fileInfo = document.getElementById('fileInfo');
+  const outputText = document.getElementById('outputText');
+  const textInputContainer = document.getElementById('textInputContainer');
+  const fileInputContainer = document.getElementById('fileInputContainer');
+  const status = document.getElementById('status');
+  const inputSize = document.getElementById('inputSize');
+  const outputSize = document.getElementById('outputSize');
+  const processingTime = document.getElementById('processingTime');
+
+  let currentFile = null;
+
+  function updateInputContainer() {
+    if (inputType.value === 'text') {
+      textInputContainer.style.display = 'block';
+      fileInputContainer.style.display = 'none';
+    } else {
+      textInputContainer.style.display = 'none';
+      fileInputContainer.style.display = 'block';
+    }
+    clearAll();
+  }
+
+  function updateFileInfo() {
+    if (currentFile) {
+      const size = currentFile.size;
+      const sizeStr = size < 1024 ? `${size} bytes` :
+                     size < 1024 * 1024 ? `${(size / 1024).toFixed(1)} KB` :
+                     `${(size / (1024 * 1024)).toFixed(1)} MB`;
+      fileInfo.innerHTML = `<strong>File:</strong> ${currentFile.name}<br><strong>Size:</strong> ${sizeStr}<br><strong>Type:</strong> ${currentFile.type || 'Unknown'}`;
+    } else {
+      fileInfo.innerHTML = 'No file selected';
+    }
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    });
+  }
+
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function base64Encode(str) {
+    try {
+      return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+      return btoa(str);
+    }
+  }
+
+  function base64Decode(str) {
+    try {
+      return decodeURIComponent(escape(atob(str)));
+    } catch (e) {
+      return atob(str);
+    }
+  }
+
+  function encodeFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function decodeFile(base64, filename) {
+    try {
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return new File([bytes], filename, { type: 'application/octet-stream' });
+    } catch (e) {
+      throw new Error('Invalid Base64 format for file decoding');
+    }
+  }
+
+  async function process() {
+    const startTime = Date.now();
+    status.textContent = 'Processing...';
+    processBtn.disabled = true;
+    processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    try {
+      let input, inputData;
+      const operation = mode.value;
+      const type = inputType.value;
+
+      if (type === 'text') {
+        input = textInput.value.trim();
+        if (!input) {
+          throw new Error('Please enter text to process.');
+        }
+        inputData = input;
+        inputSize.textContent = `${new Blob([input]).size} bytes`;
+      } else {
+        if (!currentFile) {
+          throw new Error('Please select a file to process.');
+        }
+        input = currentFile;
+        updateFileInfo();
+      }
+
+      let output;
+      let outputData;
+
+      if (operation === 'encode') {
+        if (type === 'text') {
+          output = base64Encode(input);
+          outputData = output;
+        } else {
+          output = await encodeFile(input);
+          outputData = output;
+        }
+      } else {
+        if (type === 'text') {
+          output = base64Decode(input);
+          outputData = output;
+        } else {
+          const base64Content = await readFileAsText(input);
+          const decodedFile = decodeFile(base64Content, input.name);
+          output = await readFileAsDataURL(decodedFile);
+          outputData = output;
+        }
+      }
+
+      outputText.value = outputData;
+      outputSize.textContent = `${new Blob([outputData]).size} bytes`;
+
+      const endTime = Date.now();
+      processingTime.textContent = `${endTime - startTime}ms`;
+      status.textContent = 'Completed âœ“';
+
+    } catch (error) {
+      status.textContent = 'Error';
+      alert('Error processing: ' + error.message);
+      outputText.value = 'Error: ' + error.message;
+    }
+
+    processBtn.disabled = false;
+    processBtn.innerHTML = 'Process';
+  }
+
+  async function copyOutput() {
+    const text = outputText.value;
+    if (!text) {
+      alert('No output to copy. Process some data first.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = copyBtn;
+      const originalText = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.background = '#28a745';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '#28a745';
+      }, 1000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Output copied to clipboard!');
+    }
+  }
+
+  function downloadOutput() {
+    const text = outputText.value;
+    if (!text) {
+      alert('No output to download. Process some data first.');
+      return;
+    }
+
+    let filename;
+    let blob;
+
+    if (mode.value === 'encode') {
+      filename = `encoded_${Date.now()}.txt`;
+      blob = new Blob([text], { type: 'text/plain' });
+    } else {
+      filename = `decoded_${Date.now()}.txt`;
+      blob = new Blob([text], { type: 'text/plain' });
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function clearAll() {
+    textInput.value = '';
+    fileInput.value = '';
+    currentFile = null;
+    outputText.value = '';
+    fileInfo.innerHTML = 'No file selected';
+    status.textContent = 'Ready';
+    inputSize.textContent = '0 bytes';
+    outputSize.textContent = '0 bytes';
+    processingTime.textContent = '0ms';
+  }
+
+  // Event listeners
+  mode.addEventListener('change', clearAll);
+  inputType.addEventListener('change', updateInputContainer);
+  processBtn.addEventListener('click', process);
+  clearBtn.addEventListener('click', clearAll);
+  copyBtn.addEventListener('click', copyOutput);
+  downloadBtn.addEventListener('click', downloadOutput);
+
+  // File input handler
+  fileInput.addEventListener('change', (e) => {
+    currentFile = e.target.files[0];
+    updateFileInfo();
+  });
+
+  // Keyboard shortcut (Ctrl+Enter to process)
+  textInput.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      process();
+    }
+  });
+
+  // Auto-focus on text input
+  textInput.focus();
+</script>
+</body></html>
+
+

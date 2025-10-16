@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IP Address Tracker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:8px}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-map-signs tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">IP Address Tracker</div>
+        <div class="tool-desc">Lookup IP details. Note: Some public APIs may block CORS; if so, try another or manual entry.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">IP Address</label><input id="ip" type="text" placeholder="e.g., 8.8.8.8" class="mono" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <button id="myip" class="tool-button">Use My IP</button>
+          <button id="lookup" class="tool-button">Lookup</button>
+        </div>
+        <div class="tool-desc" style="margin-top:8px">Public endpoints tried: ipify (IP), ipapi.co (geo). If blocked by CORS, enter IP manually.</div>
+      </div>
+
+      <div id="result" class="tool-card" style="padding:16px;display:none;"></div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">History</div>
+        <div id="hist" class="tool-desc">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_ip_tracker_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d.slice(-50))); }
+    function pushHist(item){ const d=load(); d.push(item); save(d); renderHist(); }
+    function renderHist(){ const d=load(); const h=document.getElementById('hist'); if(!d.length){ h.textContent='â€”'; return; } h.innerHTML = d.slice().reverse().map(x=>`${escapeHtml(x.ip)} â€¢ ${escapeHtml(x.city||'')} ${escapeHtml(x.country||'')} â€¢ ${new Date(x.ts).toLocaleString()}`).join('<br>'); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    async function getMyIp(){ try{ const r=await fetch('https://api.ipify.org?format=json'); const j=await r.json(); return j.ip; }catch(e){ return null; } }
+    async function geolocate(ip){
+      try{
+        const r=await fetch('https://ipapi.co/'+encodeURIComponent(ip)+'/json/');
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const j=await r.json();
+        return { ip, city:j.city, region:j.region, country:j.country_name, org:j.org||j.org_name, lat:j.latitude, lon:j.longitude, tz:j.timezone };
+      }catch(e){ return null; }
+    }
+
+    async function doLookup(ip){
+      if(!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(ip) && !/^([a-f0-9:]+)$/i.test(ip)) { alert('Enter a valid IPv4 or IPv6.'); return; }
+      let data=await geolocate(ip);
+      const box=document.getElementById('result');
+      if(!data){ box.style.display='block'; box.innerHTML = `<div class="tool-desc">Lookup failed (possibly CORS). Showing IP only.</div><div class="kv"><div>IP</div><div class="mono">${escapeHtml(ip)}</div></div>`; pushHist({ip, ts:Date.now()}); return; }
+      box.style.display='block';
+      box.innerHTML = `
+        <div class="tool-name" style="margin-bottom:6px;">Details</div>
+        <div class="kv">
+          <div>IP</div><div class="mono">${escapeHtml(data.ip)}</div>
+          <div>ISP/Org</div><div>${escapeHtml(data.org||'â€”')}</div>
+          <div>City</div><div>${escapeHtml(data.city||'â€”')}</div>
+          <div>Region</div><div>${escapeHtml(data.region||'â€”')}</div>
+          <div>Country</div><div>${escapeHtml(data.country||'â€”')}</div>
+          <div>Latitude</div><div>${escapeHtml(String(data.lat||'â€”'))}</div>
+          <div>Longitude</div><div>${escapeHtml(String(data.lon||'â€”'))}</div>
+          <div>Timezone</div><div>${escapeHtml(data.tz||'â€”')}</div>
+          <div>Map</div><div><a class="tool-button" target="_blank" rel="noopener" href="https://maps.google.com/?q=${encodeURIComponent((data.lat||'')+','+(data.lon||''))}">Open in Maps</a></div>
+        </div>`;
+      pushHist({...data, ts:Date.now()});
+    }
+
+    document.getElementById('myip').addEventListener('click', async ()=>{ const ip=await getMyIp(); if(!ip){ alert('Failed to get your IP.'); return; } document.getElementById('ip').value=ip; doLookup(ip); });
+    document.getElementById('lookup').addEventListener('click', ()=>{ const ip=document.getElementById('ip').value.trim(); if(!ip){ alert('Enter an IP.'); return;} doLookup(ip); });
+    renderHist();
+  </script>
+</body>
+</html>
+
+

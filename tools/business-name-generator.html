@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Business Name Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    .list{display:grid;gap:8px}
+    .row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-briefcase tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Business Name Generator</div>
+        <div class="tool-desc">Enter keywords and choose a style. Generate brandable name ideas and copy them fast.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div style="grid-column:1/-1">
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Keywords</label>
+            <input id="keywords" type="text" placeholder="tech, cloud, data" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Style</label>
+            <select id="style" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Modern</option>
+              <option>Elegant</option>
+              <option>Playful</option>
+              <option>Compound</option>
+              <option>Short</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Count</label>
+            <input id="count" type="number" min="5" max="50" value="20" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <button id="gen" class="tool-button">Generate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Results</div>
+        <div id="list" class="list"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const PREFIX={Modern:['Neo','Hyper','Meta','Quantum','Cloud','Pixel','Data','Cyber'],Elegant:['Velvet','Aurea','Opal','Ivory','Noble','Serene','Luxe'],Playful:['Happy','Buzzy','Zippy','Jolly','Fizzy','Bingo','Peppy'],Compound:['Blue','Bright','Quick','Prime','Clear','Open'],Short:['Zo','Ly','Qi','Vu','Nex','Zin']};
+    const SUFFIX={Modern:['ly','ify','io','lab','works','stack','base'],Elegant:['ia','ique','elle','aria','luxe','atelier'],Playful:['ster','zoo','bee','pop','doodle','buddies'],Compound:['hub','space','box','cart','mart','point'],Short:['go','co','do','hq','up']};
+    function rand(arr, r){ return arr[Math.floor(r()*arr.length)] }
+    function seededRandom(seed){ let h=0; for(const c of seed) h=(h*31 + c.charCodeAt(0))>>>0; return function(){ h=(h*1664525+1013904223)>>>0; return (h&0xffffff)/0x1000000; }; }
+    function genOnce(style, kw, r){
+      const p=PREFIX[style]||PREFIX.Modern, s=SUFFIX[style]||SUFFIX.Modern;
+      const k = kw? kw.charAt(0).toUpperCase()+kw.slice(1).toLowerCase(): '';
+      const mode = style==='Compound'? 'compound' : style==='Short'? 'short' : 'mixed';
+      if (mode==='compound') return `${rand(p,r)}${k||rand(PREFIX.Modern,r)} ${rand(['Labs','Works','Studio','Market','Point'],r)}`;
+      if (mode==='short') return `${k || rand(PREFIX.Short,r)}${rand(SUFFIX.Short,r)}`;
+      const join = r()>.5? '': '';
+      return `${k || rand(p,r)}${join}${rand(s,r)}`;
+    }
+    function domainHint(name){ const base=name.toLowerCase().replace(/[^a-z0-9]+/g,''); if (!base) return ''; const len=base.length; const tld = len<8? '.io': len<12? '.co': '.com'; return base+tld; }
+    function generate(){
+      const kw=(document.getElementById('keywords').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+      const style=document.getElementById('style').value; const count=+document.getElementById('count').value||20;
+      const r = seededRandom((kw.join('-')+'|'+style+'|'+count));
+      const seen=new Set(); const out=[];
+      while(out.length<count){ const w=kw.length? rand(kw,r):''; const n=genOnce(style,w,r); const key=n.toLowerCase(); if(seen.has(key)) continue; seen.add(key); out.push(n); }
+      const list=document.getElementById('list'); list.innerHTML='';
+      for (const n of out){
+        const row=document.createElement('div'); row.className='row';
+        const dom=domainHint(n);
+        row.innerHTML = `<div><div style="font-weight:700;">${escapeHtml(n)}</div><div class="tool-desc">Try: ${escapeHtml(dom)}</div></div>
+                         <button class="tool-button" data-copy="${escapeHtml(n)}"><i class="far fa-copy"></i></button>`;
+        list.appendChild(row);
+      }
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+    document.getElementById('gen').addEventListener('click', generate);
+    document.getElementById('list').addEventListener('click',(e)=>{ const b=e.target.closest('button[data-copy]'); if(!b) return; const t=b.getAttribute('data-copy'); navigator.clipboard.writeText(t).then(()=>alert('Copied.')); });
+  </script>
+</body>
+</html>
+
+

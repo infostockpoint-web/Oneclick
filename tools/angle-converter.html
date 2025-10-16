@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Angle Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-drafting-compass tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Angle Converter</div>
+      <div class="tool-desc">Convert between degrees (Â°), radians (rad), grads (gon), and turns.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="aVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="aVal" type="number" step="any" placeholder="e.g. 180" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="aFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="aFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="deg" selected>Degrees (deg)</option>
+            <option value="rad">Radians (rad)</option>
+            <option value="grad">Grads (gon)</option>
+            <option value="turn">Turns (rev)</option>
+          </select>
+        </div>
+        <div>
+          <label for="aTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="aTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="deg">Degrees (deg)</option>
+            <option value="rad" selected>Radians (rad)</option>
+            <option value="grad">Grads (gon)</option>
+            <option value="turn">Turns (rev)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="aConvert" class="tool-button">Convert</button>
+          <button id="aSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="aCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="aResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="aTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function toDeg(val, unit){
+    if (unit==='deg') return val;
+    if (unit==='rad') return val * (180/Math.PI);
+    if (unit==='grad') return val * 0.9; // 400 grad = 360 deg
+    if (unit==='turn') return val * 360;
+    return NaN;
+  }
+  function fromDeg(deg, unit){
+    if (unit==='deg') return deg;
+    if (unit==='rad') return deg * (Math.PI/180);
+    if (unit==='grad') return deg / 0.9;
+    if (unit==='turn') return deg / 360;
+    return NaN;
+  }
+  function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:10}); }
+  function buildTable(deg){
+    return [
+      `deg  : ${fmt(fromDeg(deg,'deg'))}`,
+      `rad  : ${fmt(fromDeg(deg,'rad'))}`,
+      `grad : ${fmt(fromDeg(deg,'grad'))}`,
+      `turn : ${fmt(fromDeg(deg,'turn'))}`
+    ].join('\n');
+  }
+  document.getElementById('aSwap').addEventListener('click', ()=>{ const a=document.getElementById('aFrom'); const b=document.getElementById('aTo'); const t=a.value; a.value=b.value; b.value=t; });
+  document.getElementById('aConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('aVal').value);
+    const from = document.getElementById('aFrom').value;
+    const to = document.getElementById('aTo').value;
+    const out = document.getElementById('aResult');
+    const tbl = document.getElementById('aTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const deg = toDeg(val, from);
+    const conv = fromDeg(deg, to);
+    out.textContent = `${fmt(val)} ${from} = ${fmt(conv)} ${to}`;
+    tbl.textContent = buildTable(deg);
+  });
+  document.getElementById('aCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('aResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+
