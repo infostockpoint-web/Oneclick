@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-birthday-cake tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Age Calculator</div>
+        <div class="tool-desc">Calculate your exact age, total days lived, and countdown to next birthday.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="dob" style="display:block; font-weight:600; margin-bottom:6px;">Date of Birth</label>
+            <input id="dob" type="date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="ref" style="display:block; font-weight:600; margin-bottom:6px;">Reference Date (optional)</label>
+            <input id="ref" type="date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <button id="calcAge" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Exact Age</div>
+          <div id="exactAge" class="tool-desc" style="font-size:1.2rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Days Lived</div>
+          <div id="daysLived" class="tool-desc" style="font-size:1.2rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Next Birthday In</div>
+          <div id="nextBday" class="tool-desc" style="font-size:1.2rem; color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function daysBetween(a,b){ const MS=24*60*60*1000; return Math.floor((b - a)/MS); }
+    function parseDate(val){ const d = new Date(val + 'T00:00:00'); return isFinite(d) ? d : null; }
+    function diffYMD(from, to){
+      // Calculate years, months, days difference between two dates
+      let y = to.getFullYear() - from.getFullYear();
+      let m = to.getMonth() - from.getMonth();
+      let d = to.getDate() - from.getDate();
+      if (d < 0){
+        // borrow days from previous month
+        const prevMonth = new Date(to.getFullYear(), to.getMonth(), 0).getDate();
+        d += prevMonth;
+        m -= 1;
+      }
+      if (m < 0){ m += 12; y -= 1; }
+      if (y < 0){ y = 0; m = 0; d = 0; }
+      return { y, m, d };
+    }
+    function nextBirthday(dob, ref){
+      const year = ref.getFullYear();
+      const nb = new Date(year, dob.getMonth(), dob.getDate());
+      return (nb >= ref) ? nb : new Date(year+1, dob.getMonth(), dob.getDate());
+    }
+
+    document.getElementById('calcAge').addEventListener('click', () => {
+      const dobVal = document.getElementById('dob').value;
+      const refVal = document.getElementById('ref').value;
+      const dob = parseDate(dobVal);
+      const now = refVal ? parseDate(refVal) : new Date();
+      const exactEl = document.getElementById('exactAge');
+      const daysEl = document.getElementById('daysLived');
+      const nextEl = document.getElementById('nextBday');
+      if (!dob){ exactEl.textContent = 'Please enter a valid Date of Birth'; daysEl.textContent = 'â€”'; nextEl.textContent = 'â€”'; return; }
+      if (!now){ exactEl.textContent = 'Please enter a valid Reference Date'; daysEl.textContent = 'â€”'; nextEl.textContent = 'â€”'; return; }
+
+      const { y, m, d } = diffYMD(dob, now);
+      exactEl.textContent = `${y} years, ${m} months, ${d} days`;
+
+      daysEl.textContent = daysBetween(dob, now).toLocaleString();
+
+      const nb = nextBirthday(dob, now);
+      const until = daysBetween(now, nb);
+      nextEl.textContent = `${until} days (on ${nb.toLocaleDateString()})`;
+    });
+  </script>
+</body>
+</html>
+
+
