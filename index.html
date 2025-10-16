@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>One Click Tool - Your Daily Tools, All in One Place</title>
+  <meta name="description" content="Convert, calculate, compress, and simplify your everyday tasks — fast and free. 100+ tools in one place." />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Your Daily Tools, All in One Place</h1>
+        <p>Convert, calculate, compress, and simplify your everyday tasks — fast and free.</p>
+        <a href="#tool-categories" class="cta-button">Explore Tools</a>
+        <div class="tool-icons">
+          <div class="tool-icon"><i class="fas fa-image"></i></div>
+          <div class="tool-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="tool-icon"><i class="fas fa-calculator"></i></div>
+          <div class="tool-icon"><i class="fas fa-code"></i></div>
+          <div class="tool-icon"><i class="fas fa-film"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container" id="tool-categories">
+    
+    <section class="search-section">
+      <div class="container">
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" placeholder="Search a tool..." id="searchInput" />
+          <button class="search-button" id="searchButton" aria-label="Search"><i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="no-results" id="noResults">
+      <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 20px;"></i>
+      <h3>No tools found</h3>
+      <p>Try different keywords or browse the categories</p>
+    </div>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🖼 Image Tools</h2>
+        <p class="section-subtitle">Edit, convert, and optimize your images with our easy-to-use tools</p>
+      </div>
+      <div class="tools-grid" id="imageTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">📄 Document Tools</h2>
+        <p class="section-subtitle">Convert, compress, and manage your documents with ease</p>
+      </div>
+      <div class="tools-grid" id="documentTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🎥 Video Tools</h2>
+        <p class="section-subtitle">Download, edit, and enhance your videos</p>
+      </div>
+      <div class="tools-grid" id="videoTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🧮 Calculator Tools</h2>
+        <p class="section-subtitle">Perform calculations and conversions for various purposes</p>
+      </div>
+      <div class="tools-grid" id="calculatorTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🔤 Text Tools</h2>
+        <p class="section-subtitle">Transform and analyze your text with our utilities</p>
+      </div>
+      <div class="tools-grid" id="textTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🌐 Web/Developer Tools</h2>
+        <p class="section-subtitle">Tools for developers and web professionals</p>
+      </div>
+      <div class="tools-grid" id="webTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🤖 AI & ML Tools</h2>
+        <p class="section-subtitle">Artificial Intelligence and Machine Learning tools</p>
+      </div>
+      <div class="tools-grid" id="aiMlTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🎓 Education Tools</h2>
+        <p class="section-subtitle">Tools for students and educators</p>
+      </div>
+      <div class="tools-grid" id="educationTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">💰 Finance Tools</h2>
+        <p class="section-subtitle">Financial calculators and tools</p>
+      </div>
+      <div class="tools-grid" id="financeTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🎨 Design Tools</h2>
+        <p class="section-subtitle">Tools for designers and creatives</p>
+      </div>
+      <div class="tools-grid" id="designTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">💪 Health & Fitness</h2>
+        <p class="section-subtitle">Tools for a healthier lifestyle</p>
+      </div>
+      <div class="tools-grid" id="healthFitnessTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">✈️ Travel Tools</h2>
+        <p class="section-subtitle">Plan your next adventure</p>
+      </div>
+      <div class="tools-grid" id="travelTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">💼 Business Tools</h2>
+        <p class="section-subtitle">Tools for business and entrepreneurship</p>
+      </div>
+      <div class="tools-grid" id="businessTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🛠️ Utility Tools</h2>
+        <p class="section-subtitle">Helpful utilities for everyday tasks</p>
+      </div>
+      <div class="tools-grid" id="utilityTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🎮 Games</h2>
+        <p class="section-subtitle">Fun games to pass your time</p>
+      </div>
+      <div class="tools-grid" id="gameTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🎨 Color Tools</h2>
+        <p class="section-subtitle">Tools for working with colors and palettes</p>
+      </div>
+      <div class="tools-grid" id="colorTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🌍 SEO & Marketing Tools</h2>
+        <p class="section-subtitle">Tools for SEO and marketing professionals</p>
+      </div>
+      <div class="tools-grid" id="seoTools"></div>
+    </section>
+
+    <section class="tools-section">
+      <div class="section-header">
+        <h2 class="section-title">🚆 Indian Tools</h2>
+        <p class="section-subtitle">Tools specifically for Indian users</p>
+      </div>
+      <div class="tools-grid" id="indianTools"></div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="js/include.js"></script>
+  <script src="js/manifest.js"></script>
+  <script src="js/home.js"></script>
+  <script>
+    // Ultra-fallback: if no cards after scripts run, inject minimal defaults
+    (function(){
+      function addCard(gridId, icon, name, desc, url){
+        var grid = document.getElementById(gridId); if(!grid) return;
+        var card = document.createElement('div'); card.className = 'tool-card';
+        card.innerHTML = '<i class="'+icon+' tool-icon-small"></i>'+
+          '<div class="tool-name">'+name+'</div>'+
+          '<div class="tool-desc">'+desc+'</div>'+
+          '<a class="tool-button" href="'+url+'">Open Tool</a>';
+        grid.appendChild(card);
+      }
+      function ensure(){
+        if (!document.querySelector('.tools-grid .tool-card')){
+          addCard('imageTools', 'fas fa-image', 'Image to PNG', 'Convert images to PNG format', 'tools/image-to-png.html');
+          addCard('documentTools', 'fas fa-file-csv', 'PDF to CSV', 'Convert PDF to CSV', 'tools/pdf-to-csv.html');
+          addCard('videoTools', 'fab fa-youtube', 'Thumbnail Downloader', 'Download video thumbnails', 'tools/thumbnail-downloader.html');
+          addCard('calculatorTools', 'fas fa-weight', 'BMI Calculator', 'Calculate your Body Mass Index', 'tools/bmi-calculator.html');
+          addCard('textTools', 'fas fa-sort-amount-down', 'Word & Character Counter', 'Count words and characters in your text', 'tools/word-counter.html');
+          addCard('webTools', 'fas fa-brackets-curly', 'JSON Formatter & Validator', 'Format and validate JSON data', 'tools/json-formatter.html');
+          addCard('gameTools', 'fas fa-gamepad', 'Tic Tac Toe', 'Play tic-tac-toe', 'tools/tic-tac-toe.html');
+          addCard('utilityTools', 'fas fa-qrcode', 'QR Code Generator', 'Create QR codes from text/URL', 'tools/qr-code-generator.html');
+        }
+      }
+      // Try after DOM ready; also retry after a short delay
+      if (document.readyState !== 'loading') { setTimeout(ensure, 200); }
+      else { document.addEventListener('DOMContentLoaded', function(){ setTimeout(ensure, 200); }); }
+    })();
+  </script>
+</body>
+</html>
