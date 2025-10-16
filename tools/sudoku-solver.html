@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sudoku Solver - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(9,40px);gap:2px;justify-content:center}
+    .cell{width:40px;height:40px;text-align:center;font-weight:700;border:1px solid #e5e7eb;border-radius:6px}
+    .box{border:2px solid #cdd5df}
+    .cell:focus{outline:2px solid #1f7ae0}
+    .panel{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:700px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-th tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Sudoku Solver</div>
+        <div class="tool-desc">Enter digits (leave blanks empty). Solve using backtracking. Validate grid.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div id="board" class="grid"></div>
+        <div class="panel" style="margin-top:12px;">
+          <button id="solve" class="tool-button">Solve</button>
+          <button id="clear" class="tool-button" style="background:#e74c3c;">Clear</button>
+          <button id="example" class="tool-button">Load Example</button>
+        </div>
+        <div id="msg" class="tool-desc" style="text-align:center;margin-top:8px;">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const boardEl=document.getElementById('board');
+    function build(){ boardEl.innerHTML=''; for(let r=0;r<9;r++){ for(let c=0;c<9;c++){ const inp=document.createElement('input'); inp.className='cell'; if((r%3===0&&c===0)||(r%3===0&&c===3)||(r%3===0&&c===6)) inp.classList.add('box'); inp.setAttribute('inputmode','numeric'); inp.maxLength=1; inp.dataset.r=r; inp.dataset.c=c; inp.oninput=()=>{ inp.value=inp.value.replace(/[^1-9]/g,'').slice(0,1); }; boardEl.appendChild(inp); } } }
+    function read(){ const grid=Array.from({length:9},()=>Array(9).fill(0)); for(const el of boardEl.querySelectorAll('.cell')){ const r=+el.dataset.r, c=+el.dataset.c; grid[r][c]=parseInt(el.value||'0',10)||0; } return grid; }
+    function write(grid){ for(const el of boardEl.querySelectorAll('.cell')){ const r=+el.dataset.r, c=+el.dataset.c; el.value=grid[r][c]||''; }
+      document.getElementById('msg').textContent=''; }
+    function valid(grid, r, c, v){ for(let i=0;i<9;i++){ if(grid[r][i]===v||grid[i][c]===v) return false; } const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3; for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(grid[br+i][bc+j]===v) return false; return true; }
+    function solveSudoku(grid){ const pos=findEmpty(grid); if(!pos) return true; const [r,c]=pos; for(let v=1;v<=9;v++){ if(valid(grid,r,c,v)){ grid[r][c]=v; if(solveSudoku(grid)) return true; grid[r][c]=0; } } return false; }
+    function findEmpty(g){ for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(!g[r][c]) return [r,c]; return null; }
+    function isConsistent(grid){ for(let r=0;r<9;r++){ const row=new Set(); for(let c=0;c<9;c++){ const v=grid[r][c]; if(v){ if(row.has(v)) return false; row.add(v); } } }
+      for(let c=0;c<9;c++){ const col=new Set(); for(let r=0;r<9;r++){ const v=grid[r][c]; if(v){ if(col.has(v)) return false; col.add(v); } } }
+      for(let br=0;br<9;br+=3) for(let bc=0;bc<9;bc+=3){ const b=new Set(); for(let i=0;i<3;i++) for(let j=0;j<3;j++){ const v=grid[br+i][bc+j]; if(v){ if(b.has(v)) return false; b.add(v); } } }
+      return true; }
+
+    document.getElementById('solve').addEventListener('click',()=>{ const g=read(); if(!isConsistent(g)){ document.getElementById('msg').textContent='Invalid grid: duplicate in row/column/box.'; return; } const copy=g.map(r=>r.slice()); const ok=solveSudoku(copy); if(!ok){ document.getElementById('msg').textContent='No solution found.'; return; } write(copy); document.getElementById('msg').textContent='Solved!'; });
+    document.getElementById('clear').addEventListener('click',()=>{ for(const el of boardEl.querySelectorAll('.cell')) el.value=''; document.getElementById('msg').textContent='â€”'; });
+    document.getElementById('example').addEventListener('click',()=>{ const puzzle=[[5,3,0,0,7,0,0,0,0],[6,0,0,1,9,5,0,0,0],[0,9,8,0,0,0,0,6,0],[8,0,0,0,6,0,0,0,3],[4,0,0,8,0,3,0,0,1],[7,0,0,0,2,0,0,0,6],[0,6,0,0,0,0,2,8,0],[0,0,0,4,1,9,0,0,5],[0,0,0,0,8,0,0,7,9]]; write(puzzle); });
+
+    build();
+  </script>
+</body>
+</html>
+
+

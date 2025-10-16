@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="container" style="padding:40px 0;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-qrcode tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">QR Code Generator</div>
+      <div class="tool-desc">Generate a QR code from text or a URL and download it as PNG.</div>
+    </div>
+
+    <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+
+    <div class="tool-card" style="margin-top:20px; display:grid; gap:12px;">
+      <input id="qrText" type="text" placeholder="Enter text or URL" style="padding:12px; border-radius:8px; border:1px solid #ddd;" />
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <label class="tool-name" for="qrSize">Size</label>
+        <select id="qrSize" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+          <option>128</option>
+          <option selected>256</option>
+          <option>384</option>
+          <option>512</option>
+        </select>
+        <label class="tool-name" for="qrLevel">Error level</label>
+        <select id="qrLevel" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+          <option value="L">L</option>
+          <option value="M" selected>M</option>
+          <option value="Q">Q</option>
+          <option value="H">H</option>
+        </select>
+        <button id="generate" class="tool-button">Generate</button>
+        <button id="download" class="tool-button" style="background:#888;" disabled>Download PNG</button>
+      </div>
+      <div id="qrcode" style="padding:12px; background:#fff; border-radius:10px; width:max-content;"></div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="../js/include.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    let qr;
+    const textEl = document.getElementById('qrText');
+    const sizeEl = document.getElementById('qrSize');
+    const levelEl = document.getElementById('qrLevel');
+    const qrcodeEl = document.getElementById('qrcode');
+    const dl = document.getElementById('download');
+
+    function makeQR() {
+      qrcodeEl.innerHTML = '';
+      const size = parseInt(sizeEl.value, 10) || 256;
+      const lvlMap = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
+      const level = lvlMap[(levelEl.value || 'M')] || QRCode.CorrectLevel.M;
+      qr = new QRCode(qrcodeEl, {
+        text: textEl.value || 'https://',
+        width: size,
+        height: size,
+        correctLevel: level
+      });
+      setTimeout(() => { // ensure canvas rendered
+        const img = qrcodeEl.querySelector('img');
+        const canvas = qrcodeEl.querySelector('canvas');
+        if (img && canvas) { img.src = canvas.toDataURL('image/png'); }
+        dl.disabled = false;
+        dl.style.background = 'var(--primary-blue)';
+      }, 100);
+    }
+
+    document.getElementById('generate').addEventListener('click', makeQR);
+    // Auto-generate on input and option changes (debounced)
+    let tId;
+    function auto() { clearTimeout(tId); tId = setTimeout(makeQR, 250); }
+    textEl.addEventListener('input', auto);
+    sizeEl.addEventListener('change', auto);
+    levelEl.addEventListener('change', auto);
+    dl.addEventListener('click', () => {
+      const canvas = qrcodeEl.querySelector('canvas');
+      if (!canvas) return;
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'qrcode.png';
+      a.click();
+    });
+
+    // initial
+    makeQR();
+  </script>
+</body>
+</html>
+
+

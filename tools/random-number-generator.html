@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Number Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-dice tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Random Number Generator</div>
+        <div class="tool-desc">Generate random integers in a range, with options for quantity, uniqueness, and sorting.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="minVal" style="display:block; font-weight:600; margin-bottom:6px;">Min</label>
+            <input id="minVal" type="number" step="1" value="1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="maxVal" style="display:block; font-weight:600; margin-bottom:6px;">Max</label>
+            <input id="maxVal" type="number" step="1" value="100" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="qty" style="display:block; font-weight:600; margin-bottom:6px;">Quantity</label>
+            <input id="qty" type="number" step="1" value="1" min="1" max="10000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="unique" type="checkbox"/> Unique</label>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="sorted" type="checkbox"/> Sort ascending</label>
+          <button id="genRng" class="tool-button" style="height:42px;">Generate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <textarea id="rngOut" rows="4" readonly style="flex:1; min-width:260px; padding:10px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+          <button id="copyRng" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+        <div id="rngErr" style="color:#b00020; margin-top:8px; display:none;">Invalid input. Ensure Min â‰¤ Max and Quantity is valid.</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function getRandomInt(min, max){
+      // inclusive
+      const range = max - min + 1;
+      if (range <= 0) return null;
+      if (window.crypto && window.crypto.getRandomValues){
+        const maxUint = 0xFFFFFFFF;
+        const arr = new Uint32Array(1);
+        while(true){
+          window.crypto.getRandomValues(arr);
+          const r = arr[0] / (maxUint + 1);
+          const n = Math.floor(r * range) + min;
+          return n;
+        }
+      }
+      return Math.floor(Math.random() * range) + min;
+    }
+    document.getElementById('genRng').addEventListener('click', ()=>{
+      const min = Number(document.getElementById('minVal').value);
+      const max = Number(document.getElementById('maxVal').value);
+      let qty = Number(document.getElementById('qty').value);
+      const unique = document.getElementById('unique').checked;
+      const sorted = document.getElementById('sorted').checked;
+      const out = document.getElementById('rngOut');
+      const err = document.getElementById('rngErr');
+      if (!Number.isInteger(min) || !Number.isInteger(max) || min>max || !Number.isInteger(qty) || qty<=0){ err.style.display='block'; return; }
+      if (unique && qty > (max - min + 1)){ err.style.display='block'; return; }
+      err.style.display='none';
+      const res = [];
+      if (unique){
+        const set = new Set();
+        while(set.size < qty){ set.add(getRandomInt(min,max)); }
+        res.push(...set.values());
+      } else {
+        for (let i=0;i<qty;i++){ res.push(getRandomInt(min,max)); }
+      }
+      if (sorted) res.sort((a,b)=>a-b);
+      out.value = res.join(', ');
+    });
+    document.getElementById('copyRng').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('rngOut').value); } catch(e){} });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PDF to CSV - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-csv tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">PDF to CSV Converter</div>
+      <div class="tool-desc">Extract tabular data from PDF files and convert to CSV format.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="pdfInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PDF File</label>
+          <input type="file" id="pdfInput" accept=".pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="pageRange" style="display:block; font-weight:600; margin-bottom:6px;">Page Range (Optional)</label>
+          <input type="text" id="pageRange" placeholder="e.g., 1-5 or 1,3,5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="convertBtn" class="tool-button">Convert to CSV</button>
+          <button id="previewBtn" class="tool-button" style="background:#28a745;">Preview Data</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Extracted Data Preview</div>
+        <div id="dataPreview" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:monospace; white-space:pre; overflow:auto; margin-top:10px;">
+          Select a PDF file to preview extracted data...
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Conversion Options</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="includeHeaders" checked> Include column headers (if detected)</label><br>
+          <label><input type="checkbox" id="autoDetectDelimiter" checked> Auto-detect delimiter</label><br>
+          <label><input type="checkbox" id="skipEmptyRows" checked> Skip empty rows</label>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none; background:#007bff;">Download CSV</button>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  const pdfInput = document.getElementById('pdfInput');
+  const pageRange = document.getElementById('pageRange');
+  const convertBtn = document.getElementById('convertBtn');
+  const previewBtn = document.getElementById('previewBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const dataPreview = document.getElementById('dataPreview');
+  const includeHeaders = document.getElementById('includeHeaders');
+  const autoDetectDelimiter = document.getElementById('autoDetectDelimiter');
+  const skipEmptyRows = document.getElementById('skipEmptyRows');
+
+  let currentPdfData = null;
+
+  function parsePageRange(rangeStr, totalPages) {
+    if (!rangeStr.trim()) {
+      return Array.from({length: totalPages}, (_, i) => i + 1);
+    }
+
+    const pages = [];
+    const ranges = rangeStr.split(',');
+
+    ranges.forEach(range => {
+      const trimmed = range.trim();
+      if (trimmed.includes('-')) {
+        const [start, end] = trimmed.split('-').map(Number);
+        const startPage = Math.max(1, start);
+        const endPage = Math.min(totalPages, end || totalPages);
+
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(i);
+        }
+      } else {
+        const pageNum = parseInt(trimmed);
+        if (pageNum >= 1 && pageNum <= totalPages) {
+          pages.push(pageNum);
+        }
+      }
+    });
+
+    return [...new Set(pages)]; // Remove duplicates
+  }
+
+  async function extractTextFromPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+
+    const pagesToExtract = parsePageRange(pageRange.value, pdf.numPages);
+    const extractedText = [];
+
+    for (const pageNum of pagesToExtract) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      extractedText.push({
+        page: pageNum,
+        text: pageText
+      });
+    }
+
+    return extractedText;
+  }
+
+  function textToCSVData(textData) {
+    const csvRows = [];
+    let headers = [];
+
+    textData.forEach(pageData => {
+      // Split text into lines
+      const lines = pageData.text.split('\n').filter(line => line.trim());
+
+      lines.forEach((line, lineIndex) => {
+        // Clean up the line
+        let cleanLine = line.trim();
+
+        // Skip if empty and skipEmptyRows is checked
+        if (skipEmptyRows.checked && !cleanLine) {
+          return;
+        }
+
+        // Try to detect if this line contains headers
+        if (includeHeaders.checked && lineIndex === 0 && !headers.length) {
+          headers = cleanLine.split(/\s{2,}|\t|,/).map(h => h.trim().replace(/"/g, '""'));
+          if (headers.length > 1) {
+            csvRows.push('"' + headers.join('","') + '"');
+            return;
+          }
+        }
+
+        // Split by common delimiters
+        let delimiter = ',';
+        if (autoDetectDelimiter.checked) {
+          const commaCount = (cleanLine.match(/,/g) || []).length;
+          const tabCount = (cleanLine.match(/\t/g) || []).length;
+          const pipeCount = (cleanLine.match(/\|/g) || []).length;
+          const semicolonCount = (cleanLine.match(/;/g) || []).length;
+
+          const maxCount = Math.max(commaCount, tabCount, pipeCount, semicolonCount);
+          if (maxCount === tabCount) delimiter = '\t';
+          else if (maxCount === pipeCount) delimiter = '|';
+          else if (maxCount === semicolonCount) delimiter = ';';
+        }
+
+        const cells = cleanLine.split(delimiter).map(cell => {
+          const trimmed = cell.trim();
+          // Escape quotes and wrap in quotes if contains special characters
+          if (trimmed.includes(',') || trimmed.includes('"') || trimmed.includes('\n')) {
+            return '"' + trimmed.replace(/"/g, '""') + '"';
+          }
+          return trimmed;
+        });
+
+        csvRows.push(cells.join(','));
+      });
+    });
+
+    return csvRows.join('\n');
+  }
+
+  async function previewPDFData() {
+    if (!pdfInput.files[0]) {
+      alert('Please select a PDF file to preview.');
+      return;
+    }
+
+    previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    previewBtn.disabled = true;
+
+    try {
+      const textData = await extractTextFromPDF(pdfInput.files[0]);
+      let previewText = `PDF Analysis Complete\n`;
+      previewText += `Pages found: ${textData.length}\n`;
+      previewText += `Page range: ${parsePageRange(pageRange.value, textData.length).join(', ')}\n\n`;
+
+      previewText += `Extracted text preview:\n`;
+      previewText += `----------------------------------------\n`;
+
+      textData.forEach(page => {
+        previewText += `Page ${page.page}:\n`;
+        previewText += page.text.substring(0, 200) + (page.text.length > 200 ? '...' : '') + '\n\n';
+      });
+
+      dataPreview.textContent = previewText;
+      currentPdfData = textData;
+
+    } catch (error) {
+      alert('Error processing PDF: ' + error.message);
+      dataPreview.textContent = 'Error processing PDF file';
+    }
+
+    previewBtn.innerHTML = 'Preview Data';
+    previewBtn.disabled = false;
+  }
+
+  async function convertPDFToCSV() {
+    if (!pdfInput.files[0]) {
+      alert('Please select a PDF file to convert.');
+      return;
+    }
+
+    if (!currentPdfData) {
+      await previewPDFData();
+      if (!currentPdfData) return;
+    }
+
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+    convertBtn.disabled = true;
+
+    try {
+      const csvData = textToCSVData(currentPdfData);
+      const csvBlob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+
+      // Create download link
+      const url = URL.createObjectURL(csvBlob);
+      const filename = pdfInput.files[0].name.replace(/\.pdf$/i, '.csv');
+
+      downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      downloadBtn.style.display = 'block';
+      dataPreview.textContent = `CSV Conversion Complete!\n\nPreview of generated CSV:\n${csvData.substring(0, 500)}${csvData.length > 500 ? '\n...(truncated)' : ''}`;
+
+    } catch (error) {
+      alert('Error converting PDF: ' + error.message);
+      dataPreview.textContent = 'Error converting PDF to CSV';
+    }
+
+    convertBtn.innerHTML = 'Convert to CSV';
+    convertBtn.disabled = false;
+  }
+
+  function clearAll() {
+    pdfInput.value = '';
+    pageRange.value = '';
+    dataPreview.textContent = 'Select a PDF file to preview extracted data...';
+    downloadBtn.style.display = 'none';
+    currentPdfData = null;
+  }
+
+  // Event listeners
+  pdfInput.addEventListener('change', () => {
+    clearAll();
+    if (pdfInput.files[0]) {
+      dataPreview.textContent = `Selected: ${pdfInput.files[0].name}\nClick "Preview Data" to extract text from PDF.`;
+    }
+  });
+
+  previewBtn.addEventListener('click', previewPDFData);
+  convertBtn.addEventListener('click', convertPDFToCSV);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Initialize
+  downloadBtn.style.display = 'none';
+</script>
+</body></html>
+
+

@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF Lock/Unlock - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    input[type=file], input[type=text], input[type=password]{padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff;width:100%}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+  </style>
+  <!-- zip.js for password-protected ZIPs -->
+  <script src="https://unpkg.com/@zip.js/zip.js/dist/zip-full.min.js"></script>
+  <!-- pdf-lib for watermarking -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:950px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">PDF Lock/Unlock</div>
+        <div class="tool-desc">True PDF password encryption/decryption isn't broadly supported in-browser. Use these secure alternatives:</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <input id="pdfFile" type="file" accept="application/pdf"/>
+          <div class="row">
+            <div style="flex:1;min-width:260px">
+              <label>Password-protect as ZIP (recommended)</label>
+              <input id="zipPass" type="password" placeholder="Enter password for ZIP"/>
+              <div style="margin-top:8px;text-align:right"><button id="zipProtect" class="tool-button">Create Password-protected ZIP</button></div>
+              <div class="tool-desc">Creates AES-encrypted .zip containing your PDF. Share the ZIP + password.</div>
+            </div>
+            <div style="flex:1;min-width:260px">
+              <label>Visual Watermark (deterrent)</label>
+              <input id="wmText" type="text" placeholder="e.g., Confidential â€“ Do Not Share"/>
+              <div style="margin-top:8px;text-align:right"><button id="addWm" class="tool-button">Add Watermark & Download</button></div>
+              <div class="tool-desc">Adds a semi-transparent diagonal text watermark to every page.</div>
+            </div>
+          </div>
+          <div class="tool-desc" id="status">Tip: To remove a password from a truly encrypted PDF, use a desktop PDF tool after opening it with the password.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // ZIP password protection
+    async function zipProtect(){
+      const fileEl=document.getElementById('pdfFile');
+      const pass=(document.getElementById('zipPass').value||'').trim();
+      if(!fileEl.files[0]){ alert('Choose a PDF first.'); return; }
+      if(!pass){ alert('Enter a password for the ZIP.'); return; }
+      const status=document.getElementById('status');
+      status.textContent='Creating encrypted ZIPâ€¦';
+      const f=fileEl.files[0];
+      const blob = new Blob([await f.arrayBuffer()], {type:'application/pdf'});
+      const writer = new zip.ZipWriter(new zip.BlobWriter('application/zip'));
+      await writer.add(f.name, new zip.BlobReader(blob), { password: pass, level: 9 });
+      const zipBlob = await writer.close();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(zipBlob);
+      a.download=(f.name.replace(/\.pdf$/i,'')||'document')+'-protected.zip';
+      a.click();
+      status.textContent='ZIP created successfully.';
+    }
+    document.getElementById('zipProtect').addEventListener('click', zipProtect);
+
+    // Watermark with pdf-lib
+    async function addWatermark(){
+      const fileEl=document.getElementById('pdfFile');
+      const text=(document.getElementById('wmText').value||'').trim();
+      if(!fileEl.files[0]){ alert('Choose a PDF first.'); return; }
+      if(!text){ alert('Enter watermark text.'); return; }
+      const status=document.getElementById('status');
+      status.textContent='Adding watermarkâ€¦';
+      const bytes=new Uint8Array(await fileEl.files[0].arrayBuffer());
+      const pdf=await PDFLib.PDFDocument.load(bytes);
+      const pages=pdf.getPages();
+      const font=await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
+      pages.forEach(p=>{
+        const { width, height } = p.getSize();
+        const fontSize = Math.min(width,height)/10;
+        const opacity = 0.15;
+        const textWidth = font.widthOfTextAtSize(text, fontSize);
+        const textHeight = font.heightAtSize(fontSize);
+        const angle = Math.atan2(height, width);
+        p.drawText(text, {
+          x: (width - textWidth)/2,
+          y: (height - textHeight)/2,
+          size: fontSize,
+          font,
+          color: PDFLib.rgb(1,0,0),
+          rotate: PDFLib.degrees(45),
+          opacity
+        });
+      });
+      const out=await pdf.save();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([out],{type:'application/pdf'}));
+      a.download=(fileEl.files[0].name.replace(/\.pdf$/i,'')||'document')+'-watermarked.pdf';
+      a.click();
+      status.textContent='Watermark added.';
+    }
+    document.getElementById('addWm').addEventListener('click', addWatermark);
+  </script>
+</body></html>
+
+

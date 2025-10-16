@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to HTML - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end; }
+    .area { border:1px solid #e5e7eb; background:#f8fafc; padding:10px; border-radius:8px; min-height:220px; overflow:auto; }
+    .area iframe { width:100%; height:420px; border:0; background:#fff; }
+    .progress { height:10px; background:#eef2ff; border-radius:6px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:#4a6cf7; transition:width .2s ease; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-code tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">PDF to HTML</div>
+        <div class="tool-desc">Extract text and create a basic HTML file with per-page sections.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="pdfInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PDF File</label>
+            <input type="file" id="pdfInput" accept="application/pdf,.pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="pageRange" style="display:block; font-weight:600; margin-bottom:6px;">Page Range (optional)</label>
+            <input type="text" id="pageRange" placeholder="e.g., 1-3,5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="generateBtn" class="tool-button"><i class="fas fa-file-code"></i> Generate HTML</button>
+            <button id="downloadBtn" class="tool-button" style="display:none;"><i class="fas fa-download"></i> Download HTML</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;" class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div class="area" id="previewArea"><iframe id="previewFrame"></iframe></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Details</div>
+          <div id="details" style="margin-top:8px; color:#374151; font-size:.95rem;">—</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdfInput = document.getElementById('pdfInput');
+    const pageRange = document.getElementById('pageRange');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewFrame = document.getElementById('previewFrame');
+    const details = document.getElementById('details');
+    const progressBar = document.getElementById('progressBar');
+
+    let htmlBlob = null;
+
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    function reset(){ htmlBlob=null; previewFrame.srcdoc=''; details.textContent='—'; setProgress(0); downloadBtn.style.display='none'; }
+    clearBtn.addEventListener('click', ()=>{ pdfInput.value=''; pageRange.value=''; reset(); });
+    pdfInput.addEventListener('change', ()=>{ reset(); if (pdfInput.files[0]) details.textContent = `Selected: ${pdfInput.files[0].name}`; });
+
+    function parseRange(rangeStr, total){
+      if (!rangeStr || !rangeStr.trim()) return Array.from({length: total}, (_,i)=>i+1);
+      const out = new Set();
+      rangeStr.split(',').forEach(p => {
+        const t = p.trim(); if (!t) return;
+        if (t.includes('-')) { const [a,b] = t.split('-').map(n=>parseInt(n,10)); const s = Math.max(1, isNaN(a)?1:a); const e = Math.min(total, isNaN(b)?total:b); for (let i=s;i<=e;i++) out.add(i); }
+        else { const n = parseInt(t,10); if (n>=1 && n<=total) out.add(n); }
+      });
+      return Array.from(out).sort((a,b)=>a-b);
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]||c));
+    }
+
+    async function buildHtml(file){
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const pages = parseRange(pageRange.value, pdf.numPages);
+      let body = '';
+      for (let i=0;i<pages.length;i++){
+        const pNum = pages[i];
+        const page = await pdf.getPage(pNum);
+        const tc = await page.getTextContent();
+        const text = tc.items.map(it => it.str).join(' ');
+        body += `<section style="margin:24px 0;">\n<h2>Page ${pNum}</h2>\n<p>${escapeHtml(text).replace(/\n/g,'<br>')}</p>\n</section>\n`;
+        setProgress(Math.round(((i+1)/pages.length)*100));
+      }
+      const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Converted from PDF</title><meta name="viewport" content="width=device-width, initial-scale=1">`+
+      `<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:1.6;padding:20px;max-width:900px;margin:0 auto;}h2{margin:.2rem 0 .4rem 0;}</style>`+
+      `</head><body><h1>Converted from PDF</h1>${body}</body></html>`;
+      return new Blob([doc], { type:'text/html;charset=utf-8' });
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      if (!pdfInput.files[0]) { alert('Please select a PDF file.'); return; }
+      try {
+        generateBtn.disabled = true; generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        htmlBlob = await buildHtml(pdfInput.files[0]);
+        const url = URL.createObjectURL(htmlBlob);
+        previewFrame.srcdoc = await htmlBlob.text();
+        details.textContent = 'HTML generated.';
+        downloadBtn.style.display = 'inline-block';
+        URL.revokeObjectURL(url);
+      } catch(e){
+        alert('Failed to generate HTML: ' + e.message);
+      } finally {
+        generateBtn.disabled = false; generateBtn.innerHTML = '<i class="fas fa-file-code"></i> Generate HTML';
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!htmlBlob) return;
+      const url = URL.createObjectURL(htmlBlob);
+      const base = (pdfInput.files[0]?.name || 'document').replace(/\.pdf$/i,'');
+      const a = document.createElement('a'); a.href = url; a.download = base + '.html';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sitemap Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-sitemap tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Sitemap Generator</div>
+      <div class="tool-desc">Add your URLs and export a valid XML sitemap.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+        <div style="flex:2; min-width:260px;">
+          <label for="smUrl" style="display:block; font-weight:600; margin-bottom:6px;">URL</label>
+          <input id="smUrl" type="url" placeholder="https://example.com/page" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="smLastmod" style="display:block; font-weight:600; margin-bottom:6px;">Last modified</label>
+          <input id="smLastmod" type="date" style="width:220px; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="smFreq" style="display:block; font-weight:600; margin-bottom:6px;">Changefreq</label>
+          <select id="smFreq" style="width:180px; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="">(none)</option>
+            <option>always</option>
+            <option>hourly</option>
+            <option>daily</option>
+            <option>weekly</option>
+            <option>monthly</option>
+            <option>yearly</option>
+            <option>never</option>
+          </select>
+        </div>
+        <div>
+          <label for="smPrio" style="display:block; font-weight:600; margin-bottom:6px;">Priority</label>
+          <input id="smPrio" type="number" step="0.1" min="0" max="1" placeholder="0.8" style="width:120px; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <button id="addUrl" class="tool-button">Add URL</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:12px;">
+      <div class="tool-name" style="margin-bottom:8px;">Entries</div>
+      <div id="tableWrap" style="overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid #eee;">
+              <th style="padding:8px;">URL</th>
+              <th style="padding:8px;">Lastmod</th>
+              <th style="padding:8px;">Changefreq</th>
+              <th style="padding:8px;">Priority</th>
+              <th style="padding:8px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="smTbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="genSm" class="tool-button">Generate XML</button>
+        <button id="copySm" class="tool-button" style="background:#555;">Copy</button>
+        <button id="dlSm" class="tool-button" style="background:#888;">Download</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">XML Output</div>
+      <textarea id="smOut" rows="16" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const rows = [];
+  function render(){
+    const tbody = document.getElementById('smTbody');
+    tbody.innerHTML = '';
+    rows.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding:8px; border-bottom:1px solid #f2f2f2;">${r.loc}</td>
+        <td style="padding:8px; border-bottom:1px solid #f2f2f2;">${r.lastmod||''}</td>
+        <td style="padding:8px; border-bottom:1px solid #f2f2f2;">${r.changefreq||''}</td>
+        <td style="padding:8px; border-bottom:1px solid #f2f2f2;">${r.priority||''}</td>
+        <td style="padding:8px; border-bottom:1px solid #f2f2f2;"><button data-idx="${idx}" class="tool-button" style="background:#c62828;">Remove</button></td>`;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('button[data-idx]').forEach(btn => btn.addEventListener('click', (e)=>{
+      const i = Number(btn.getAttribute('data-idx')); rows.splice(i,1); render();
+    }));
+  }
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function generateXML(){
+    const items = rows.map(r => {
+      const parts = [`  <url>`,`    <loc>${esc(r.loc)}</loc>`];
+      if (r.lastmod) parts.push(`    <lastmod>${esc(r.lastmod)}</lastmod>`);
+      if (r.changefreq) parts.push(`    <changefreq>${esc(r.changefreq)}</changefreq>`);
+      if (r.priority) parts.push(`    <priority>${esc(r.priority)}</priority>`);
+      parts.push(`  </url>`);
+      return parts.join('\n');
+    }).join('\n');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n`+
+`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</urlset>\n`;
+    document.getElementById('smOut').value = xml;
+  }
+  document.getElementById('addUrl').addEventListener('click', () => {
+    const loc = document.getElementById('smUrl').value.trim();
+    const lastmod = document.getElementById('smLastmod').value;
+    const changefreq = document.getElementById('smFreq').value;
+    const priority = document.getElementById('smPrio').value;
+    if (!loc){ alert('Please enter a valid URL'); return; }
+    rows.push({ loc, lastmod, changefreq, priority });
+    render();
+  });
+  document.getElementById('genSm').addEventListener('click', generateXML);
+  document.getElementById('copySm').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('smOut').value); } catch(e){} });
+  document.getElementById('dlSm').addEventListener('click', ()=>{
+    const blob = new Blob([document.getElementById('smOut').value || ''], {type:'application/xml'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'sitemap.xml'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  // initial render
+  render();
+</script>
+</body></html>
+
+

@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Manager - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-tasks tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Task Manager</div>
+        <div class="tool-desc">Create tasks, set priority and due date, track progress, and filter. Stored locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Task</label>
+            <input id="title" type="text" placeholder="e.g., Publish blog post" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Priority</label>
+            <select id="priority" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Low</option><option>Medium</option><option>High</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Due</label>
+            <input id="due" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="add" class="tool-button" style="height:42px;">Add</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="search" type="search" placeholder="Search..." style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+          <select id="fStatus" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+            <option>All</option><option>Pending</option><option>In Progress</option><option>Completed</option>
+          </select>
+          <select id="fPriority" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+            <option>All</option><option>Low</option><option>Medium</option><option>High</option>
+          </select>
+          <button id="exportJson" class="tool-button"><i class="fas fa-file-export"></i> Export JSON</button>
+          <button id="importJsonBtn" class="tool-button"><i class="fas fa-file-import"></i> Import JSON</button>
+          <input id="importJson" type="file" accept="application/json" style="display:none;"/>
+        </div>
+      </div>
+
+      <div id="list" style="display:grid;gap:10px;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_task_manager_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function render(){
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const fs=document.getElementById('fStatus').value;
+      const fp=document.getElementById('fPriority').value;
+      const list=document.getElementById('list'); list.innerHTML='';
+      const items=load().filter(t=>(!q||t.title.toLowerCase().includes(q)) && (fs==='All'||t.status===fs) && (fp==='All'||t.priority===fp));
+      if (!items.length){ list.innerHTML='<div class="tool-card" style="padding:16px;">No tasks.</div>'; return; }
+      for (const t of items){
+        const el=document.createElement('div'); el.className='tool-card'; el.style.padding='12px';
+        el.innerHTML=`
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(t.title)}</div>
+              <div class="tool-desc">Priority: ${escapeHtml(t.priority)} â€¢ Status: ${escapeHtml(t.status)} â€¢ Due: ${escapeHtml(t.due||'â€”')}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select data-act="status" data-id="${t.id}" style="padding:6px;border:1px solid #ddd;border-radius:8px;">
+                <option ${t.status==='Pending'?'selected':''}>Pending</option>
+                <option ${t.status==='In Progress'?'selected':''}>In Progress</option>
+                <option ${t.status==='Completed'?'selected':''}>Completed</option>
+              </select>
+              <button class="tool-button" data-act="edit" data-id="${t.id}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-id="${t.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+    }
+
+    document.getElementById('add').addEventListener('click',()=>{
+      const title=document.getElementById('title').value.trim();
+      const priority=document.getElementById('priority').value;
+      const due=document.getElementById('due').value;
+      if (!title){ alert('Enter a task.'); return; }
+      const d=load(); d.push({id:crypto.randomUUID(), title, priority, due, status:'Pending'}); save(d); document.getElementById('title').value=''; render();
+    });
+
+    document.getElementById('list').addEventListener('change',(e)=>{
+      const sel=e.target.closest('select[data-act="status"]'); if (!sel) return; const id=sel.getAttribute('data-id');
+      const d=load(); const idx=d.findIndex(x=>x.id===id); if(idx===-1) return; d[idx].status=sel.value; save(d); render();
+    });
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id'); const act=btn.getAttribute('data-act');
+      const d=load(); const idx=d.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this task?')){ d.splice(idx,1); save(d); render(); } }
+      if (act==='edit'){
+        const t=prompt('Edit task', d[idx].title); if(t===null) return;
+        const p=prompt('Edit priority (Low/Medium/High)', d[idx].priority); if(p===null) return;
+        const du=prompt('Edit due date (YYYY-MM-DD)', d[idx].due||''); if(du===null) return;
+        d[idx].title=t.trim(); d[idx].priority=p.trim(); d[idx].due=du.trim(); save(d); render();
+      }
+    });
+
+    ['search','fStatus','fPriority'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+
+    // Export / Import JSON
+    function exportTasks(){
+      const data = load();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tasks.json'; a.click();
+    }
+    function isTask(obj){
+      return obj && typeof obj.id === 'string' && typeof obj.title === 'string';
+    }
+    function importTasks(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const incoming = JSON.parse(reader.result);
+          if (!Array.isArray(incoming)) throw new Error('File must contain a JSON array.');
+          const current = load();
+          const byId = new Map(current.map(t=>[t.id, t]));
+          let added=0, updated=0;
+          for (const item of incoming){
+            if (!isTask(item)) continue;
+            if (byId.has(item.id)){ byId.set(item.id, {...byId.get(item.id), ...item}); updated++; }
+            else { byId.set(item.id, item); added++; }
+          }
+          const merged = Array.from(byId.values());
+          save(merged); render();
+          alert(`Import complete. Added: ${added}, Updated: ${updated}.`);
+        } catch (e){
+          alert('Invalid JSON: ' + e.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+    document.getElementById('exportJson').addEventListener('click', exportTasks);
+    document.getElementById('importJsonBtn').addEventListener('click', ()=> document.getElementById('importJson').click());
+    document.getElementById('importJson').addEventListener('change', (e)=>{ const f=e.target.files[0]; if (f) importTasks(f); e.target.value=''; });
+
+    render();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan EMI Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-money-check-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Loan EMI Calculator</div>
+        <div class="tool-desc">Estimate your EMI, total interest, and total payment.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="principal" style="display:block; font-weight:600; margin-bottom:6px;">Loan Amount</label>
+            <input id="principal" type="number" step="any" placeholder="e.g. 500000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="rate" style="display:block; font-weight:600; margin-bottom:6px;">Annual Interest Rate (%)</label>
+            <input id="rate" type="number" step="any" placeholder="e.g. 9.5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="tenure" style="display:block; font-weight:600; margin-bottom:6px;">Tenure</label>
+            <input id="tenure" type="number" step="1" placeholder="e.g. 60" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="tenureUnit" style="display:block; font-weight:600; margin-bottom:6px;">Unit</label>
+            <select id="tenureUnit" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="months" selected>Months</option>
+              <option value="years">Years</option>
+            </select>
+          </div>
+          <button id="calcEmi" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Monthly EMI</div>
+          <div id="emiOut" class="tool-desc" style="font-size:1.4rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Interest</div>
+          <div id="interestOut" class="tool-desc" style="font-size:1.2rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Payment</div>
+          <div id="totalOut" class="tool-desc" style="font-size:1.2rem; color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
+    function calcEMI(P, annualRate, nMonths){
+      const r = (annualRate/100) / 12; // monthly
+      if (r === 0){ const emi = P / nMonths; return { emi, total: emi*nMonths, interest: (emi*nMonths - P) }; }
+      const pow = Math.pow(1+r, nMonths);
+      const emi = P * r * pow / (pow - 1);
+      const total = emi * nMonths;
+      const interest = total - P;
+      return { emi, total, interest };
+    }
+    document.getElementById('calcEmi').addEventListener('click', () => {
+      const P = Number(document.getElementById('principal').value);
+      const R = Number(document.getElementById('rate').value);
+      let N = Number(document.getElementById('tenure').value);
+      const unit = document.getElementById('tenureUnit').value;
+      const emiEl = document.getElementById('emiOut');
+      const intEl = document.getElementById('interestOut');
+      const totEl = document.getElementById('totalOut');
+      if (!isFinite(P) || !isFinite(R) || !isFinite(N) || P<=0 || R<0 || N<=0){ emiEl.textContent='Invalid input'; intEl.textContent='â€”'; totEl.textContent='â€”'; return; }
+      if (unit === 'years') N = N * 12;
+      const { emi, total, interest } = calcEMI(P, R, N);
+      emiEl.textContent = fmt(emi);
+      intEl.textContent = fmt(interest);
+      totEl.textContent = fmt(total);
+    });
+  </script>
+</body>
+</html>
+
+

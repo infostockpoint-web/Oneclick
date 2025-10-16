@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Random String Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-random tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Random String Generator</div>
+        <div class="tool-desc">Generate secure random strings with custom character sets.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="len" style="display:block; font-weight:600; margin-bottom:6px;">Length</label>
+            <input id="len" type="number" min="1" max="1024" value="16" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="incLower" type="checkbox" checked/> Include lowercase</label>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="incUpper" type="checkbox" checked/> Include uppercase</label>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="incDigits" type="checkbox" checked/> Include digits</label>
+          <label style="display:flex; align-items:center; gap:8px;"><input id="incSymbols" type="checkbox"/> Include symbols</label>
+          <button id="gen" class="tool-button" style="height:42px;">Generate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <input id="out" type="text" readonly style="flex:1; min-width:240px; padding:10px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"/>
+          <button id="copy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function getRandomValues(count){
+      if (window.crypto && window.crypto.getRandomValues){
+        const arr = new Uint32Array(count);
+        window.crypto.getRandomValues(arr);
+        return Array.from(arr);
+      }
+      // Fallback (less secure)
+      return Array.from({length:count}, ()=> Math.floor(Math.random()*0xFFFFFFFF));
+    }
+    function generate(){
+      const length = Math.max(1, Math.min(1024, Number(document.getElementById('len').value)||16));
+      const lower = document.getElementById('incLower').checked ? 'abcdefghijklmnopqrstuvwxyz' : '';
+      const upper = document.getElementById('incUpper').checked ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '';
+      const digits = document.getElementById('incDigits').checked ? '0123456789' : '';
+      const symbols = document.getElementById('incSymbols').checked ? '!@#$%^&*()-_=+[]{};:,./?\\|`~' : '';
+      const pool = lower + upper + digits + symbols;
+      const outEl = document.getElementById('out');
+      if (!pool){ outEl.value = 'Please select at least one character set'; return; }
+      const rnd = getRandomValues(length);
+      let s = '';
+      for (let i=0;i<length;i++) s += pool[rnd[i] % pool.length];
+      outEl.value = s;
+    }
+    document.getElementById('gen').addEventListener('click', generate);
+    document.getElementById('copy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('out').value); } catch(e){} });
+    // Initial
+    generate();
+  </script>
+</body></html>
+
+

@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Social Media Post Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-pencil-alt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Social Media Post Generator</div>
+      <div class="tool-desc">Choose a template, fill variables, set tone and emojis, then generate multiple captions. Copy or export.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="spTemplate" style="display:block; font-weight:600; margin-bottom:6px;">Template</label>
+          <select id="spTemplate" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="promo" selected>Promotion (product/offer)</option>
+            <option value="launch">Product Launch</option>
+            <option value="event">Event Invite</option>
+            <option value="tip">Quick Tip</option>
+          </select>
+        </div>
+        <div>
+          <label for="spTone" style="display:block; font-weight:600; margin-bottom:6px;">Tone</label>
+          <select id="spTone" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="friendly" selected>Friendly</option>
+            <option value="excited">Excited</option>
+            <option value="professional">Professional</option>
+            <option value="playful">Playful</option>
+          </select>
+        </div>
+        <div>
+          <label for="spEmojis" style="display:block; font-weight:600; margin-bottom:6px;">Emojis</label>
+          <select id="spEmojis" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="auto" selected>Auto</option>
+            <option value="few">Few</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div>
+          <label for="spVariants" style="display:block; font-weight:600; margin-bottom:6px;">Variants</label>
+          <input id="spVariants" type="number" min="1" max="10" value="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:12px;">
+        <div>
+          <label for="spProduct" style="display:block; font-weight:600; margin-bottom:6px;">Product/Topic</label>
+          <input id="spProduct" type="text" placeholder="e.g. EcoWater Bottle" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="spBenefit" style="display:block; font-weight:600; margin-bottom:6px;">Benefit/Hook</label>
+          <input id="spBenefit" type="text" placeholder="e.g. Keeps drinks cold for 24h" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="spOffer" style="display:block; font-weight:600; margin-bottom:6px;">Offer/CTA</label>
+          <input id="spOffer" type="text" placeholder="e.g. 20% off this week" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="spLink" style="display:block; font-weight:600; margin-bottom:6px;">Link (optional)</label>
+          <input id="spLink" type="url" placeholder="https://example.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="spHashtags" style="display:block; font-weight:600; margin-bottom:6px;">Hashtags (optional)</label>
+          <input id="spHashtags" type="text" placeholder="#eco #bottle #hydration" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+          <button id="spGen" class="tool-button" style="height:42px;">Generate</button>
+          <button id="spCopyAll" class="tool-button" style="height:42px; background:#555;">Copy All</button>
+          <button id="spExport" class="tool-button" style="height:42px; background:#888;">Export TXT</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:12px;">
+      <div class="tool-name" style="margin-bottom:8px;">Generated Captions</div>
+      <div id="spOut" style="display:grid; gap:10px;"></div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const EMO_MAP = {
+    friendly: ['ðŸ˜Š','ðŸŒŸ','ðŸ‘','ðŸ’™','ðŸ™Œ'],
+    excited: ['ðŸ”¥','ðŸš€','ðŸŽ‰','âœ¨','ðŸ’¥'],
+    professional: ['âœ…','ðŸ“Œ','ðŸ“ˆ','ðŸ’¼'],
+    playful: ['ðŸ˜Ž','ðŸ¤©','ðŸŽˆ','ðŸ€','ðŸ’«']
+  };
+  const TEMPLATES = {
+    promo: [
+      "{hook} {product}. {benefit}. {cta} {link} {hashtags}",
+      "Say hello to {product}! {benefit}. {cta} {link} {hashtags}",
+      "Level up your day with {product} â€” {benefit}. {cta} {link} {hashtags}"
+    ],
+    launch: [
+      "We're launching {product}! {benefit}. {cta} {link} {hashtags}",
+      "Introducing {product} ðŸŽ‰ {benefit}. {cta} {link} {hashtags}"
+    ],
+    event: [
+      "Join us for {product}! {benefit}. {cta} {link} {hashtags}",
+      "Don't miss {product} â€” {benefit}. {cta} {link} {hashtags}"
+    ],
+    tip: [
+      "Quick tip: {benefit}. Try {product}. {cta} {link} {hashtags}",
+      "Pro move: {benefit}. Use {product}. {cta} {link} {hashtags}"
+    ]
+  };
+  function fmtHashtags(s){ return (s||'').trim(); }
+  function pickEmojis(tone, mode){ if (mode==='none') return ''; const base = EMO_MAP[tone]||[]; const count = mode==='auto'? 2 : 1; let out=''; for(let i=0;i<count;i++){ out += ' '+(base[i%base.length]||''); } return out.trim(); }
+  function buildOne(tpl, vars, tone, emojiMode){
+    const link = vars.link ? vars.link : '';
+    const hashtags = fmtHashtags(vars.hashtags);
+    let s = tpl.replaceAll('{product}', vars.product||'').replaceAll('{benefit}', vars.benefit||'').replaceAll('{hook}', vars.benefit||'').replaceAll('{cta}', vars.offer||'').replaceAll('{link}', link).replaceAll('{hashtags}', hashtags);
+    const em = pickEmojis(tone, emojiMode);
+    if (em) s += ' '+em;
+    return s.trim().replace(/\s+/g,' ');
+  }
+  function generate(){
+    const tplKey = document.getElementById('spTemplate').value;
+    const tone = document.getElementById('spTone').value;
+    const emojiMode = document.getElementById('spEmojis').value;
+    const variants = Math.max(1, Math.min(10, Number(document.getElementById('spVariants').value)||3));
+    const vars = {
+      product: document.getElementById('spProduct').value.trim(),
+      benefit: document.getElementById('spBenefit').value.trim(),
+      offer: document.getElementById('spOffer').value.trim(),
+      link: document.getElementById('spLink').value.trim(),
+      hashtags: document.getElementById('spHashtags').value.trim()
+    };
+    const out = document.getElementById('spOut'); out.innerHTML='';
+    const pool = TEMPLATES[tplKey]||[];
+    for (let i=0;i<variants;i++){
+      const tpl = pool[i % pool.length];
+      const text = buildOne(tpl, vars, tone, emojiMode);
+      const card = document.createElement('div');
+      card.className = 'tool-card';
+      card.style.padding = '12px';
+      card.innerHTML = `<div style="white-space:pre-wrap;">${text}</div>`+
+                       `<div style="margin-top:8px; display:flex; gap:8px;">`+
+                       `<button class=\"tool-button\" data-copy>Copy</button>`+
+                       `</div>`;
+      card.querySelector('[data-copy]').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(text); } catch(e){} });
+      out.appendChild(card);
+    }
+  }
+  document.getElementById('spGen').addEventListener('click', generate);
+  document.getElementById('spCopyAll').addEventListener('click', async ()=>{
+    const texts = Array.from(document.querySelectorAll('#spOut .tool-card div:first-child')).map(n=>n.textContent);
+    try { await navigator.clipboard.writeText(texts.join('\n\n')); } catch(e){}
+  });
+  document.getElementById('spExport').addEventListener('click', ()=>{
+    const texts = Array.from(document.querySelectorAll('#spOut .tool-card div:first-child')).map(n=>n.textContent);
+    const blob = new Blob([texts.join('\n\n')], {type:'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'social-posts.txt'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  // initial
+  generate();
+</script>
+</body></html>
+
+

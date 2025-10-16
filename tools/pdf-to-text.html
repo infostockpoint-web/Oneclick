@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to Text - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .area { border:1px solid #e5e7eb; background:#f8fafc; padding:10px; border-radius:8px; min-height:220px; white-space:pre-wrap; overflow:auto; }
+    .progress { height:10px; background:#eef2ff; border-radius:6px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:#4a6cf7; transition:width .2s ease; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">PDF to Text</div>
+        <div class="tool-desc">Extract plain text from your PDF pages in the browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="pdfInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PDF File</label>
+            <input type="file" id="pdfInput" accept="application/pdf,.pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="pageRange" style="display:block; font-weight:600; margin-bottom:6px;">Page Range (optional)</label>
+            <input type="text" id="pageRange" placeholder="e.g., 1-5 or 1,3,6" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="previewBtn" class="tool-button"><i class="fas fa-search"></i> Preview</button>
+            <button id="downloadBtn" class="tool-button" style="display:none;"><i class="fas fa-download"></i> Download .txt</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;" class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Extracted Text Preview</div>
+          <div id="preview" class="area mono">Select a PDF and click Preview.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Details</div>
+          <div id="details" style="margin-top:8px; color:#374151; font-size:.95rem;">—</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const pdfInput = document.getElementById('pdfInput');
+    const pageRange = document.getElementById('pageRange');
+    const previewBtn = document.getElementById('previewBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const preview = document.getElementById('preview');
+    const details = document.getElementById('details');
+    const progressBar = document.getElementById('progressBar');
+
+    let extracted = '';
+
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+
+    function parseRange(rangeStr, total){
+      if (!rangeStr || !rangeStr.trim()) return Array.from({length: total}, (_,i)=>i+1);
+      const out = new Set();
+      rangeStr.split(',').forEach(part => {
+        const t = part.trim();
+        if (!t) return;
+        if (t.includes('-')){
+          const [a,b] = t.split('-').map(n=>parseInt(n,10));
+          const start = Math.max(1, isNaN(a)?1:a);
+          const end = Math.min(total, isNaN(b)?total:b);
+          for (let i=start;i<=end;i++) out.add(i);
+        } else {
+          const n = parseInt(t,10);
+          if (n>=1 && n<=total) out.add(n);
+        }
+      });
+      return Array.from(out).sort((a,b)=>a-b);
+    }
+
+    function reset(){
+      extracted = '';
+      preview.textContent = 'Select a PDF and click Preview.';
+      details.textContent = '—';
+      setProgress(0);
+      downloadBtn.style.display = 'none';
+    }
+
+    clearBtn.addEventListener('click', () => { pdfInput.value=''; pageRange.value=''; reset(); });
+    pdfInput.addEventListener('change', () => { reset(); if (pdfInput.files[0]) details.textContent = `Selected: ${pdfInput.files[0].name}`; });
+
+    async function extractText(file){
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const pages = parseRange(pageRange.value, pdf.numPages);
+      let all = '';
+      for (let i=0;i<pages.length;i++){
+        const pNum = pages[i];
+        const page = await pdf.getPage(pNum);
+        const tc = await page.getTextContent();
+        const text = tc.items.map(it => it.str).join(' ');
+        all += `\n\n=== Page ${pNum} ===\n` + text + '\n';
+        setProgress(Math.round(((i+1)/pages.length)*100));
+      }
+      return all.trimStart();
+    }
+
+    previewBtn.addEventListener('click', async () => {
+      if (!pdfInput.files[0]) { alert('Please select a PDF file.'); return; }
+      try {
+        previewBtn.disabled = true; previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extracting...';
+        extracted = await extractText(pdfInput.files[0]);
+        preview.textContent = extracted.substring(0, 20000) + (extracted.length > 20000 ? '\n...(truncated)' : '');
+        details.textContent = `Characters extracted: ${extracted.length.toLocaleString()}`;
+        downloadBtn.style.display = extracted ? 'inline-block' : 'none';
+      } catch(e){
+        alert('Failed to extract text: ' + e.message);
+      } finally {
+        previewBtn.disabled = false; previewBtn.innerHTML = '<i class="fas fa-search"></i> Preview';
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!extracted) return;
+      const blob = new Blob([extracted], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const base = (pdfInput.files[0]?.name || 'document').replace(/\.pdf$/i,'');
+      const a = document.createElement('a'); a.href = url; a.download = base + '.txt';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

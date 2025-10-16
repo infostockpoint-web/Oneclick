@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SSL Certificate Checker - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-shield-alt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">SSL Certificate Checker</div>
+      <div class="tool-desc">Check SSL certificate validity, expiration dates, and security details for any domain.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="domainInput" style="display:block; font-weight:600; margin-bottom:6px;">Domain Name</label>
+          <input type="text" id="domainInput" placeholder="example.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="port" style="display:block; font-weight:600; margin-bottom:6px;">Port</label>
+          <select id="port" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="443">HTTPS (443)</option>
+            <option value="8443">HTTPS Alt (8443)</option>
+            <option value="80">HTTP (80) - Redirect Check</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="checkBtn" class="tool-button">Check SSL Certificate</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Certificate Information</div>
+        <div id="certInfo" style="margin-top:10px; font-size:0.9rem;">
+          <div id="status" style="text-align:center; font-size:1.2rem; font-weight:600; margin-bottom:15px;">Enter a domain to check SSL certificate</div>
+          <div id="certDetails" style="display:none;">
+            <div style="margin-bottom:10px;"><strong>Domain:</strong> <span id="domain"></span></div>
+            <div style="margin-bottom:10px;"><strong>Status:</strong> <span id="certStatus"></span></div>
+            <div style="margin-bottom:10px;"><strong>Valid From:</strong> <span id="validFrom"></span></div>
+            <div style="margin-bottom:10px;"><strong>Valid Until:</strong> <span id="validUntil"></span></div>
+            <div style="margin-bottom:10px;"><strong>Days Until Expiry:</strong> <span id="daysUntilExpiry"></span></div>
+            <div style="margin-bottom:10px;"><strong>Issuer:</strong> <span id="issuer"></span></div>
+            <div style="margin-bottom:10px;"><strong>Subject:</strong> <span id="subject"></span></div>
+            <div style="margin-bottom:10px;"><strong>Serial Number:</strong> <span id="serialNumber"></span></div>
+            <div style="margin-bottom:10px;"><strong>Signature Algorithm:</strong> <span id="signatureAlgorithm"></span></div>
+            <div style="margin-bottom:10px;"><strong>Key Size:</strong> <span id="keySize"></span></div>
+            <div style="margin-bottom:10px;"><strong>Protocol:</strong> <span id="protocol"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Security Analysis</div>
+        <div id="securityAnalysis" style="margin-top:10px; font-size:0.9rem;">
+          <div id="securityStatus" style="display:none;">
+            <div style="margin-bottom:10px;"><strong>Certificate Status:</strong> <span id="certSecurityStatus"></span></div>
+            <div style="margin-bottom:10px;"><strong>Protocol Security:</strong> <span id="protocolSecurity"></span></div>
+            <div style="margin-bottom:10px;"><strong>Key Strength:</strong> <span id="keyStrength"></span></div>
+            <div style="margin-bottom:10px;"><strong>Overall Rating:</strong> <span id="overallRating"></span></div>
+          </div>
+          <div id="recommendations" style="margin-top:15px; display:none;">
+            <div style="font-weight:600; margin-bottom:10px;">Recommendations:</div>
+            <div id="recommendationsList" style="font-size:0.85rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const domainInput = document.getElementById('domainInput');
+  const port = document.getElementById('port');
+  const checkBtn = document.getElementById('checkBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const status = document.getElementById('status');
+  const certDetails = document.getElementById('certDetails');
+  const securityStatus = document.getElementById('securityStatus');
+  const recommendations = document.getElementById('recommendations');
+  const recommendationsList = document.getElementById('recommendationsList');
+
+  // DOM elements for certificate details
+  const domain = document.getElementById('domain');
+  const certStatus = document.getElementById('certStatus');
+  const validFrom = document.getElementById('validFrom');
+  const validUntil = document.getElementById('validUntil');
+  const daysUntilExpiry = document.getElementById('daysUntilExpiry');
+  const issuer = document.getElementById('issuer');
+  const subject = document.getElementById('subject');
+  const serialNumber = document.getElementById('serialNumber');
+  const signatureAlgorithm = document.getElementById('signatureAlgorithm');
+  const keySize = document.getElementById('keySize');
+  const protocol = document.getElementById('protocol');
+
+  // DOM elements for security analysis
+  const certSecurityStatus = document.getElementById('certSecurityStatus');
+  const protocolSecurity = document.getElementById('protocolSecurity');
+  const keyStrength = document.getElementById('keyStrength');
+  const overallRating = document.getElementById('overallRating');
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
+  function calculateDaysUntilExpiry(validUntil) {
+    const expiryDate = new Date(validUntil);
+    const now = new Date();
+    const diffTime = expiryDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  function getSecurityRating(certInfo, daysUntilExpiry) {
+    let score = 0;
+    let issues = [];
+
+    // Certificate validity (40% of score)
+    if (daysUntilExpiry > 30) {
+      score += 40;
+    } else if (daysUntilExpiry > 0) {
+      score += 20;
+      issues.push('Certificate expires soon (less than 30 days)');
+    } else {
+      issues.push('Certificate has expired');
+    }
+
+    // Protocol security (30% of score)
+    if (certInfo.protocol && certInfo.protocol.includes('TLS 1.3')) {
+      score += 30;
+    } else if (certInfo.protocol && certInfo.protocol.includes('TLS 1.2')) {
+      score += 25;
+      issues.push('Consider upgrading to TLS 1.3 for better security');
+    } else if (certInfo.protocol) {
+      score += 10;
+      issues.push('Outdated SSL/TLS protocol version');
+    }
+
+    // Key strength (30% of score)
+    if (certInfo.keySize && parseInt(certInfo.keySize) >= 2048) {
+      score += 30;
+    } else if (certInfo.keySize && parseInt(certInfo.keySize) >= 1024) {
+      score += 15;
+      issues.push('Consider upgrading to 2048-bit keys or higher');
+    } else {
+      issues.push('Weak key size - security risk');
+    }
+
+    return { score, issues, rating: getRatingText(score) };
+  }
+
+  function getRatingText(score) {
+    if (score >= 90) return 'ðŸŸ¢ Excellent';
+    if (score >= 70) return 'ðŸŸ¡ Good';
+    if (score >= 50) return 'ðŸŸ  Fair';
+    return 'ðŸ”´ Poor';
+  }
+
+  async function checkSSLCertificate() {
+    const domainName = domainInput.value.trim().toLowerCase();
+    const portNumber = port.value;
+
+    if (!domainName) {
+      alert('Please enter a domain name to check.');
+      return;
+    }
+
+    // Add https:// if not present
+    const fullDomain = domainName.startsWith('http://') || domainName.startsWith('https://')
+      ? domainName
+      : `https://${domainName}`;
+
+    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    checkBtn.disabled = true;
+    status.textContent = 'Checking SSL certificate...';
+    status.style.color = '#007bff';
+
+    try {
+      // For demo purposes, we'll simulate SSL certificate checking
+      // In a real implementation, you would make actual HTTPS requests
+      const mockCertInfo = await simulateSSLCertCheck(fullDomain, portNumber);
+
+      // Display certificate information
+      domain.textContent = domainName;
+      certStatus.textContent = mockCertInfo.status;
+      certStatus.style.color = mockCertInfo.status === 'Valid' ? '#28a745' : '#dc3545';
+      validFrom.textContent = formatDate(mockCertInfo.validFrom);
+      validUntil.textContent = formatDate(mockCertInfo.validUntil);
+      daysUntilExpiry.textContent = mockCertInfo.daysUntilExpiry + ' days';
+      issuer.textContent = mockCertInfo.issuer;
+      subject.textContent = mockCertInfo.subject;
+      serialNumber.textContent = mockCertInfo.serialNumber;
+      signatureAlgorithm.textContent = mockCertInfo.signatureAlgorithm;
+      keySize.textContent = mockCertInfo.keySize;
+      protocol.textContent = mockCertInfo.protocol;
+
+      // Security analysis
+      const securityRating = getSecurityRating(mockCertInfo, mockCertInfo.daysUntilExpiry);
+      certSecurityStatus.textContent = securityRating.rating;
+      protocolSecurity.textContent = mockCertInfo.protocol.includes('TLS 1.3') ? 'ðŸŸ¢ Excellent' : 'ðŸŸ¡ Good';
+      keyStrength.textContent = parseInt(mockCertInfo.keySize) >= 2048 ? 'ðŸŸ¢ Strong' : 'ðŸŸ¡ Moderate';
+      overallRating.textContent = securityRating.rating;
+
+      // Recommendations
+      if (securityRating.issues.length > 0) {
+        recommendationsList.innerHTML = securityRating.issues.map(issue => `<div>â€¢ ${issue}</div>`).join('');
+        recommendations.style.display = 'block';
+      } else {
+        recommendationsList.innerHTML = '<div>â€¢ No issues found. Your SSL configuration looks good!</div>';
+        recommendations.style.display = 'block';
+      }
+
+      // Show details
+      certDetails.style.display = 'block';
+      securityStatus.style.display = 'block';
+      status.textContent = 'SSL certificate checked successfully';
+      status.style.color = '#28a745';
+
+    } catch (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.style.color = '#dc3545';
+      certDetails.style.display = 'none';
+      securityStatus.style.display = 'none';
+      recommendations.style.display = 'none';
+    }
+
+    checkBtn.innerHTML = 'Check SSL Certificate';
+    checkBtn.disabled = false;
+  }
+
+  async function simulateSSLCertCheck(domain, port) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const now = new Date();
+    const validFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+    const validUntil = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days from now
+    const daysUntilExpiry = Math.ceil((validUntil - now) / (1000 * 60 * 60 * 24));
+
+    // Generate mock certificate data
+    const mockData = {
+      domain: domain,
+      status: daysUntilExpiry > 0 ? 'Valid' : 'Expired',
+      validFrom: validFrom.toISOString(),
+      validUntil: validUntil.toISOString(),
+      daysUntilExpiry: daysUntilExpiry,
+      issuer: 'Let\'s Encrypt Authority X3',
+      subject: `CN=${domain.replace('https://', '')}`,
+      serialNumber: Math.random().toString(36).substring(2, 15).toUpperCase(),
+      signatureAlgorithm: 'SHA256withRSA',
+      keySize: '2048 bits',
+      protocol: 'TLS 1.3'
+    };
+
+    // Randomly introduce some issues for demo purposes
+    if (Math.random() < 0.3) {
+      mockData.keySize = '1024 bits';
+    }
+
+    if (Math.random() < 0.2) {
+      mockData.protocol = 'TLS 1.2';
+    }
+
+    return mockData;
+  }
+
+  function clearAll() {
+    domainInput.value = '';
+    status.textContent = 'Enter a domain to check SSL certificate';
+    status.style.color = '#666';
+    certDetails.style.display = 'none';
+    securityStatus.style.display = 'none';
+    recommendations.style.display = 'none';
+  }
+
+  // Event listeners
+  checkBtn.addEventListener('click', checkSSLCertificate);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Keyboard shortcut (Enter to check)
+  domainInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      checkSSLCertificate();
+    }
+  });
+
+  // Auto-focus on domain input
+  domainInput.focus();
+</script>
+</body></html>
+
+

@@ -1,0 +1,245 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Media Analytics - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-chart-bar tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Social Media Analytics</div>
+        <div class="tool-desc">Analyze basic metrics from your exported post data. Works fully offline in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+              <label for="platform" style="display:block; font-weight:600; margin-bottom:6px;">Platform</label>
+              <select id="platform" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option>Instagram</option>
+                <option>Twitter/X</option>
+                <option>Facebook</option>
+                <option>LinkedIn</option>
+                <option>TikTok</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInput" style="display:block; font-weight:600; margin-bottom:6px;">Paste CSV or JSON</label>
+              <textarea id="dataInput" rows="4" placeholder='CSV headers example: date,impressions,likes,comments,shares,clicks\nJSON example: [{"date":"2025-01-01","impressions":1000,"likes":50}]' style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">or Upload File</label>
+              <input type="file" id="fileInput" accept=".csv,.json" />
+            </div>
+            <button id="analyze" class="tool-button" style="height:42px;">Analyze</button>
+          </div>
+          <small>We do not send any data to a server. Parsing happens locally in your browser.</small>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;" id="kpis">
+        <div class="tool-card" style="padding:16px;"><div class="tool-name">Total Posts</div><div id="k_total" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div></div>
+        <div class="tool-card" style="padding:16px;"><div class="tool-name">Total Impressions</div><div id="k_impr" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div></div>
+        <div class="tool-card" style="padding:16px;"><div class="tool-name">Engagements</div><div id="k_eng" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div></div>
+        <div class="tool-card" style="padding:16px;"><div class="tool-name">Engagement Rate</div><div id="k_rate" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div class="tool-name" style="margin-bottom:8px;">Trend (Impressions)</div>
+        <canvas id="chart" height="120" style="width:100%;"></canvas>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px; overflow:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="tool-name">Parsed Data</div>
+          <div>
+            <input type="search" id="search" placeholder="Filter..." style="padding:8px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+        </div>
+        <table id="table" style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <thead>
+            <tr>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">Date</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Impr.</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Likes</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Comments</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Shares</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Clicks</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Engagement</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function parseCSV(text){
+      // Very simple CSV parser assuming commas and no escaped commas in quotes
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return [];
+      const headers = lines[0].split(',').map(h=>h.trim().toLowerCase());
+      const idx = (k) => headers.indexOf(k);
+      const out = [];
+      for (let i=1;i<lines.length;i++){
+        const parts = lines[i].split(',');
+        if (parts.length !== headers.length) continue;
+        out.push({
+          date: parts[idx('date')]?.trim(),
+          impressions: +parts[idx('impressions')]||0,
+          likes: +parts[idx('likes')]||0,
+          comments: +parts[idx('comments')]||0,
+          shares: +parts[idx('shares')]||0,
+          clicks: +parts[idx('clicks')]||0,
+        });
+      }
+      return out;
+    }
+
+    function tryParse(input){
+      const t = input.trim();
+      if (!t) return [];
+      // Try JSON first
+      try {
+        const j = JSON.parse(t);
+        if (Array.isArray(j)) return j.map(normalizeRow);
+      } catch(e) {}
+      // Fallback to CSV
+      return parseCSV(t).map(normalizeRow);
+    }
+
+    function normalizeRow(r){
+      return {
+        date: r.date || '',
+        impressions: Number(r.impressions)||0,
+        likes: Number(r.likes)||0,
+        comments: Number(r.comments)||0,
+        shares: Number(r.shares)||0,
+        clicks: Number(r.clicks)||0,
+      };
+    }
+
+    function drawChart(ctx, labels, data){
+      const W = ctx.canvas.width = ctx.canvas.clientWidth;
+      const H = ctx.canvas.height = ctx.canvas.clientHeight;
+      ctx.clearRect(0,0,W,H);
+      if (!data.length) return;
+      const max = Math.max(...data);
+      const min = 0;
+      const pad = 24;
+      const innerW = W - pad*2;
+      const innerH = H - pad*2;
+      ctx.strokeStyle = '#eee';
+      ctx.lineWidth = 1;
+      // grid lines
+      for (let i=0;i<=4;i++){
+        const y = pad + innerH * (i/4);
+        ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W-pad, y); ctx.stroke();
+      }
+      // polyline
+      ctx.strokeStyle = '#1f7ae0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      data.forEach((v,i)=>{
+        const x = pad + innerW * (i/(data.length-1||1));
+        const y = pad + innerH * (1 - (v-min)/(max-min||1));
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+
+    function format(n){ return Number(n).toLocaleString(); }
+
+    function analyze(rows){
+      const tbody = document.querySelector('#table tbody');
+      tbody.innerHTML='';
+      if (!rows.length){
+        setKPIs(0,0,0,0);
+        drawChart(document.getElementById('chart').getContext('2d'), [], []);
+        return;
+      }
+      // Sort by date asc
+      rows.sort((a,b)=> new Date(a.date) - new Date(b.date));
+      const totals = rows.reduce((acc,r)=>{
+        acc.posts++;
+        acc.impr += r.impressions||0;
+        acc.eng += (r.likes||0)+(r.comments||0)+(r.shares||0)+(r.clicks||0);
+        return acc;
+      },{posts:0,impr:0,eng:0});
+      const rate = totals.impr ? (totals.eng / totals.impr) : 0;
+      setKPIs(totals.posts, totals.impr, totals.eng, rate);
+
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const filtered = rows.filter(r => !q || (r.date+' '+r.impressions+' '+r.likes+' '+r.comments+' '+r.shares+' '+r.clicks).toLowerCase().includes(q));
+      for (const r of filtered){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;">${r.date||''}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format(r.impressions)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format(r.likes)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format(r.comments)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format(r.shares)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format(r.clicks)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${format((r.likes+r.comments+r.shares+r.clicks))}</td>`;
+        tbody.appendChild(tr);
+      }
+
+      drawChart(
+        document.getElementById('chart').getContext('2d'),
+        rows.map(r=>r.date),
+        rows.map(r=>r.impressions||0)
+      );
+    }
+
+    function setKPIs(posts, impr, eng, rate){
+      document.getElementById('k_total').textContent = format(posts);
+      document.getElementById('k_impr').textContent = format(impr);
+      document.getElementById('k_eng').textContent = format(eng);
+      document.getElementById('k_rate').textContent = impr? (rate*100).toFixed(2)+'%':'â€”';
+    }
+
+    document.getElementById('fileInput').addEventListener('change', async (e)=>{
+      const f = e.target.files[0];
+      if (!f) return;
+      const text = await f.text();
+      document.getElementById('dataInput').value = text;
+    });
+
+    document.getElementById('analyze').addEventListener('click', () => {
+      const input = document.getElementById('dataInput').value;
+      const rows = tryParse(input);
+      analyze(rows);
+    });
+
+    document.getElementById('search').addEventListener('input', () => {
+      const rows = tryParse(document.getElementById('dataInput').value);
+      analyze(rows);
+    });
+
+    // Seed with sample data for first-time users
+    const sample = [
+      {date:'2025-01-01', impressions: 1200, likes: 50, comments: 7, shares: 4, clicks: 20},
+      {date:'2025-01-03', impressions: 900, likes: 40, comments: 6, shares: 5, clicks: 12},
+      {date:'2025-01-05', impressions: 1600, likes: 80, comments: 12, shares: 9, clicks: 35},
+      {date:'2025-01-08', impressions: 700, likes: 25, comments: 3, shares: 2, clicks: 8}
+    ];
+    document.getElementById('dataInput').value = JSON.stringify(sample, null, 2);
+    analyze(sample);
+  </script>
+</body>
+</html>
+
+

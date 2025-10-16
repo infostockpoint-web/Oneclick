@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitter Video Downloader - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fab fa-twitter tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Twitter Video Downloader</div>
+        <div class="tool-desc">Paste a public tweet URL. We will try to find the video URL via a CORS-friendly proxy. If direct video is not available due to site restrictions, we will show the thumbnail and guidance.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="tweetUrl" style="display:block; font-weight:600; margin-bottom:6px;">Tweet URL</label>
+            <input id="tweetUrl" type="url" placeholder="https://twitter.com/user/status/XXXXXXXXX" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="fetchBtn" class="tool-button"><i class="fas fa-search"></i> Fetch</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <p style="margin-top:8px; color:#666; font-size:0.9rem;">Note: Twitter may block direct video access from browser clients. If the download fails, try using the "Open" link to view and save, or use a server-based downloader.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div id="preview" style="margin-top:10px; text-align:center;">
+            <video id="video" controls style="max-width:100%; border-radius:8px; border:1px solid #eee; display:none;"></video>
+            <img id="thumb" alt="thumbnail" style="max-width:100%; border-radius:8px; border:1px solid #eee; display:none;" />
+            <div id="status" style="color:#666; font-size:0.95rem;">No media loaded.</div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button id="downloadBtn" class="tool-button" style="background:#28a745;" disabled><i class="fas fa-download"></i> Download</button>
+            <a id="openBtn" class="tool-button" target="_blank" rel="noopener" style="pointer-events:none; background:#888;">Open</a>
+          </div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Direct Media URL (optional)</div>
+          <input id="directUrl" type="url" placeholder="https://.../video.mp4" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          <button id="useDirect" class="tool-button" style="margin-top:8px;"><i class="fas fa-video"></i> Load Direct URL</button>
+          <div style="margin-top:8px; color:#666; font-size:0.9rem;">If fetch fails, paste a direct media URL here (mp4). We will preview and allow download.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const tweetUrl = document.getElementById('tweetUrl');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const video = document.getElementById('video');
+    const thumb = document.getElementById('thumb');
+    const statusEl = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const openBtn = document.getElementById('openBtn');
+    const directUrl = document.getElementById('directUrl');
+    const useDirect = document.getElementById('useDirect');
+
+    let mediaUrl = '';
+
+    function setVideo(url){
+      mediaUrl = url || '';
+      if(url){
+        video.src = url; video.style.display='block'; thumb.style.display='none'; statusEl.textContent=url;
+        downloadBtn.disabled=false; openBtn.href=url; openBtn.style.pointerEvents='auto'; openBtn.style.background='var(--primary-blue)';
+      } else {
+        video.style.display='none'; downloadBtn.disabled=true; openBtn.style.pointerEvents='none'; openBtn.style.background='#888';
+      }
+    }
+    function setThumb(url){
+      if(url){ thumb.src=url; thumb.style.display='block'; } else { thumb.style.display='none'; }
+    }
+
+    async function fetchTweet(u){
+      // Use r.jina.ai to fetch HTML as text (CORS-friendly)
+      const proxied = 'https://r.jina.ai/' + u.replace(/^https?:\/\//,'http://');
+      const r = await fetch(proxied);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const text = await r.text();
+      // Try to extract video URL candidates
+      const patterns = [
+        /"video_url"\s*:\s*"([^"]+)"/i,
+        /"contentUrl"\s*:\s*"([^"]+)"/i,
+        /property=["']og:video["'][^>]+content=["']([^"']+)/i,
+      ];
+      for(const p of patterns){
+        const m = text.match(p); if(m && m[1]) return { video:m[1].replace(/\\\//g,'/') };
+      }
+      // Fallback: thumbnail
+      const thumbMatch = text.match(/property=["']og:image["'][^>]+content=["']([^"']+)/i);
+      if(thumbMatch && thumbMatch[1]) return { thumb: thumbMatch[1] };
+      throw new Error('Could not extract media. Tweet may be restricted.');
+    }
+
+    fetchBtn.addEventListener('click', async ()=>{
+      const u = tweetUrl.value.trim();
+      if(!u){ statusEl.textContent='Enter a public tweet URL.'; return; }
+      statusEl.textContent='Fetching...';
+      try{
+        const res = await fetchTweet(u);
+        if(res.video){ setVideo(res.video); setThumb(''); }
+        else { setVideo(''); setThumb(res.thumb); statusEl.textContent='Showing thumbnail (video blocked)'; }
+      }catch(e){ setVideo(''); setThumb(''); statusEl.textContent='Error: '+e.message; }
+    });
+
+    useDirect.addEventListener('click', ()=>{
+      const u = directUrl.value.trim(); if(!u){ statusEl.textContent='Enter a direct mp4 URL.'; return; }
+      setVideo(u); statusEl.textContent=u;
+    });
+
+    clearBtn.addEventListener('click', ()=>{ tweetUrl.value=''; directUrl.value=''; setVideo(''); setThumb(''); statusEl.textContent='No media loaded.'; });
+    downloadBtn.addEventListener('click', ()=>{ if(!mediaUrl) return; const a=document.createElement('a'); a.href=mediaUrl; a.download='twitter_video.mp4'; document.body.appendChild(a); a.click(); document.body.removeChild(a); });
+  </script>
+</body>
+</html>
+
+

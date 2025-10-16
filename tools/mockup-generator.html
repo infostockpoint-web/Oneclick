@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mockup Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:end}
+    .preview{display:flex;align-items:center;justify-content:center;border:1px solid #eee;border-radius:12px;background:#fff;min-height:300px}
+    .device{position:relative;display:inline-block}
+    .screen{position:absolute;inset:10% 8%;overflow:hidden;border-radius:8px}
+    .screen img{width:100%;height:100%;object-fit:cover}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-mobile-screen-button tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Mockup Generator</div>
+        <div class="tool-desc">Place your screenshot into a device frame (phone or laptop) and download as PNG.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Upload Image</label>
+            <input id="img" type="file" accept="image/*"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Device</label>
+            <select id="device" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="phone">Phone</option>
+              <option value="laptop">Laptop</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Background</label>
+            <input id="bg" type="color" value="#f5f7fb" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="download" class="tool-button">Download PNG</button>
+        </div>
+      </div>
+
+      <div class="preview" id="preview">
+        <div class="device" id="frame"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const phoneSvg = (w=300,h=600)=>`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 300 600'>
+      <rect x='10' y='10' rx='40' ry='40' width='280' height='580' fill='#111'/>
+      <rect x='30' y='70' rx='12' ry='12' width='240' height='480' fill='#222'/>
+      <circle cx='150' cy='40' r='6' fill='#444'/>
+    </svg>`;
+    const laptopSvg = (w=700,h=450)=>`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 700 450'>
+      <rect x='50' y='20' rx='12' ry='12' width='600' height='360' fill='#111'/>
+      <rect x='70' y='40' rx='6' ry='6' width='560' height='320' fill='#222'/>
+      <rect x='0' y='400' width='700' height='40' fill='#ddd'/>
+      <rect x='100' y='405' rx='6' ry='6' width='500' height='30' fill='#ccc'/>
+    </svg>`;
+
+    let uploaded=null;
+    function buildFrame(){
+      const type=document.getElementById('device').value;
+      const wrap=document.getElementById('frame'); wrap.innerHTML='';
+      const svgWrap=document.createElement('div'); svgWrap.innerHTML=(type==='phone'? phoneSvg(): laptopSvg());
+      const svg=svgWrap.firstChild; wrap.appendChild(svg);
+      const screen=document.createElement('div'); screen.className='screen'; wrap.appendChild(screen);
+      if (type==='laptop'){ screen.style.inset='9% 10% 20% 10%'; }
+      if (uploaded){ const img=document.createElement('img'); img.src=uploaded; screen.appendChild(img); }
+      document.getElementById('preview').style.background=document.getElementById('bg').value;
+    }
+    ['device','bg'].forEach(id=>document.getElementById(id).addEventListener('input', buildFrame));
+    document.getElementById('img').addEventListener('change',(e)=>{ const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); uploaded=url; buildFrame(); });
+
+    document.getElementById('download').addEventListener('click',()=>{
+      // rasterize to canvas
+      const frame=document.getElementById('frame');
+      const type=document.getElementById('device').value;
+      const scale=2; const w= type==='phone'?300:700; const h= type==='phone'?600:450;
+      const c=document.createElement('canvas'); c.width=w*scale; c.height=h*scale; const ctx=c.getContext('2d');
+      // background
+      ctx.fillStyle=document.getElementById('bg').value; ctx.fillRect(0,0,c.width,c.height);
+      // draw device as image via SVG data URL
+      const svgStr=(type==='phone'? phoneSvg(w,h):laptopSvg(w,h));
+      const img1=new Image(); img1.onload=()=>{
+        ctx.drawImage(img1, (c.width-w*scale)/2, (c.height-h*scale)/2, w*scale, h*scale);
+        if(uploaded){
+          const img2=new Image(); img2.onload=()=>{
+            // approximate screen box
+            const inset = type==='phone'? {top:70,bottom:50,left:30,right:30}:{top:40,bottom:90,left:70,right:70};
+            const sw = w - inset.left - inset.right; const sh = h - inset.top - inset.bottom;
+            ctx.save(); ctx.beginPath(); const x=(c.width-w*scale)/2 + inset.left*scale; const y=(c.height-h*scale)/2 + inset.top*scale; const rw=sw*scale; const rh=sh*scale; ctx.rect(x,y,rw,rh); ctx.clip();
+            ctx.drawImage(img2, x, y, rw, rh); ctx.restore();
+            const a=document.createElement('a'); a.download='mockup.png'; a.href=c.toDataURL('image/png'); a.click();
+          }; img2.src=uploaded;
+        } else {
+          const a=document.createElement('a'); a.download='mockup.png'; a.href=c.toDataURL('image/png'); a.click();
+        }
+      }; img1.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
+    });
+
+    buildFrame();
+  </script>
+</body>
+</html>
+
+

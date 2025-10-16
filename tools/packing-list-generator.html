@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Packing List Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .cat{font-weight:700;margin-bottom:6px}
+    .item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border:1px solid #eee;border-radius:8px;background:#fff;margin-bottom:6px}
+    .muted{color:#888}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-suitcase tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Packing List Generator</div>
+        <div class="tool-desc">Generate a packing checklist based on trip type, duration, and weather. Customize and check off items. Saved locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Trip Type</label>
+            <select id="type" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Leisure</option>
+              <option>Business</option>
+              <option>Adventure</option>
+              <option>Beach</option>
+              <option>City</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Duration (days)</label>
+            <input id="days" type="number" min="1" value="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Weather</label>
+            <select id="weather" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Mild</option>
+              <option>Hot</option>
+              <option>Cold</option>
+              <option>Rainy</option>
+            </select>
+          </div>
+          <button id="generate" class="tool-button">Generate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button id="addCat" class="tool-button"><i class="fas fa-folder-plus"></i> Add Category</button>
+          <button id="addItem" class="tool-button"><i class="fas fa-plus"></i> Add Item</button>
+          <button id="reset" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Reset</button>
+        </div>
+      </div>
+
+      <div id="list" class="grid"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_packing_list_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{} } catch(e){ return {} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    function baseTemplate(){
+      return {
+        Clothing: ['T-shirts','Pants/Jeans','Underwear','Socks','Jacket'],
+        Toiletries: ['Toothbrush','Toothpaste','Deodorant','Shampoo','Sunscreen'],
+        Electronics: ['Phone + Charger','Power Bank','Headphones','Travel Adapter'],
+        Documents: ['ID/Passport','Tickets','Hotel Booking','Travel Insurance']
+      };
+    }
+
+    function generate(){
+      const type=document.getElementById('type').value;
+      const days=+document.getElementById('days').value||1;
+      const weather=document.getElementById('weather').value;
+      const tpl=baseTemplate();
+      // Adjust counts based on duration
+      tpl.Clothing = [`${Math.max(2,days)} x T-shirts`,`$${Math.ceil(days/2)} x Pants/Shorts`,'Underwear (per day)','Socks (per day)','Jacket'];
+      // Weather-specific additions
+      if (weather==='Hot'){ tpl.Toiletries.push('Aloe Gel'); tpl.Clothing.push('Hat/Cap'); }
+      if (weather==='Cold'){ tpl.Clothing.push('Thermals','Gloves','Beanie'); }
+      if (weather==='Rainy'){ tpl.Clothing.push('Raincoat'); tpl.Electronics.push('Waterproof Pouch'); }
+      // Type-specific
+      if (type==='Business'){ tpl.Documents.push('Business Cards'); tpl.Clothing.push('Formal Wear'); }
+      if (type==='Beach'){ tpl.Toiletries.push('After-sun'); tpl.Clothing.push('Swimwear','Flip-flops'); }
+      if (type==='Adventure'){ tpl.Documents.push('Permits'); tpl.Electronics.push('Headlamp'); }
+      save({cats:tpl, checked:{}});
+      render();
+    }
+
+    function render(){
+      const data=load(); const list=document.getElementById('list'); list.innerHTML=''; if (!data.cats){ list.innerHTML='<div class="tool-card" style="padding:16px;">Click Generate to start.</div>'; return; }
+      for (const [cat, items] of Object.entries(data.cats)){
+        const card=document.createElement('div'); card.className='tool-card'; card.style.padding='12px';
+        const inner=document.createElement('div');
+        inner.innerHTML = `<div class="cat">${escapeHtml(cat)}</div>`;
+        const wrap=document.createElement('div');
+        items.forEach((it, idx)=>{
+          const row=document.createElement('div'); row.className='item';
+          row.innerHTML = `
+            <label style="display:flex;gap:8px;align-items:center;flex:1;">
+              <input type="checkbox" data-cat="${encodeURIComponent(cat)}" data-idx="${idx}" ${data.checked?.[cat]?.[idx]?'checked':''}>
+              <span ${data.checked?.[cat]?.[idx]?'class="muted"':''}>${escapeHtml(it)}</span>
+            </label>
+            <div style="display:flex;gap:6px;">
+              <button class="tool-button" data-act="edit" data-cat="${encodeURIComponent(cat)}" data-idx="${idx}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-cat="${encodeURIComponent(cat)}" data-idx="${idx}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>`;
+          wrap.appendChild(row);
+        });
+        inner.appendChild(wrap);
+        // add item to category
+        const add=document.createElement('div'); add.style.marginTop='8px'; add.innerHTML=`
+          <div style="display:flex;gap:8px;">
+            <input type="text" placeholder="Add item to ${escapeHtml(cat)}" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;">
+            <button class="tool-button" data-act="addItemToCat" data-cat="${encodeURIComponent(cat)}"><i class="fas fa-plus"></i> Add</button>
+          </div>`;
+        inner.appendChild(add);
+        card.appendChild(inner); list.appendChild(card);
+      }
+    }
+
+    function onListClick(e){
+      const btn=e.target.closest('button[data-act]'); const chk=e.target.closest('input[type="checkbox"][data-cat]'); const data=load(); if (!data.cats) return;
+      if (chk){ const c=decodeURIComponent(chk.getAttribute('data-cat')); const idx=+chk.getAttribute('data-idx'); data.checked[data.checked[c]?c:(data.checked[c]={})][idx]=chk.checked; save(data); render(); return; }
+      if (!btn) return; const act=btn.getAttribute('data-act'); const cat=decodeURIComponent(btn.getAttribute('data-cat')||''); const idx=+btn.getAttribute('data-idx');
+      if (act==='del'){ data.cats[cat].splice(idx,1); save(data); render(); }
+      if (act==='edit'){ const cur=data.cats[cat][idx]; const v=prompt('Edit item', cur); if(v===null) return; data.cats[cat][idx]=v.trim(); save(data); render(); }
+      if (act==='addItemToCat'){ const inp=btn.parentElement.querySelector('input'); const v=inp.value.trim(); if(!v) return; data.cats[cat].push(v); inp.value=''; save(data); render(); }
+    }
+
+    function addCat(){ const data=load(); const name=prompt('Category name'); if(!name) return; if(!data.cats) data.cats=baseTemplate(); if(!data.cats[name]) data.cats[name]=[]; save(data); render(); }
+    function addItem(){ const data=load(); const cat=prompt('Add to which category?'); if(!cat) return; const v=prompt('Item name'); if(!v) return; if(!data.cats) data.cats=baseTemplate(); if(!data.cats[cat]) data.cats[cat]=[]; data.cats[cat].push(v.trim()); save(data); render(); }
+    function resetList(){ if(!confirm('Reset the packing list?')) return; localStorage.removeItem(KEY); render(); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    document.getElementById('list').addEventListener('click', onListClick);
+    document.getElementById('addCat').addEventListener('click', addCat);
+    document.getElementById('addItem').addEventListener('click', addItem);
+    document.getElementById('reset').addEventListener('click', resetList);
+
+    render();
+  </script>
+</body>
+</html>
+
+

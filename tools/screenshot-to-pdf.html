@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot to PDF Converter - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Screenshot to PDF Converter</div>
+        <div class="tool-desc">Combine screenshots or images into a single PDF. All processing happens in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Select Images</label>
+            <input id="fileInput" type="file" accept="image/*" multiple style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Page Size</label>
+            <select id="pageSize" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="a4" selected>A4 (210 Ã— 297 mm)</option>
+              <option value="letter">Letter (8.5 Ã— 11 in)</option>
+              <option value="legal">Legal (8.5 Ã— 14 in)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Orientation</label>
+            <select id="orientation" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="portrait" selected>Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Margins (mm)</label>
+            <input id="margin" type="number" min="0" max="50" value="10" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="generateBtn" class="tool-button" disabled><i class="fas fa-file-export"></i> Generate PDF</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Selected Images (drag to reorder)</div>
+          <div id="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px; min-height:120px;"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div id="preview" style="margin-top:10px; text-align:center; color:#666;">Add images to preview.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const list = document.getElementById('list');
+    const preview = document.getElementById('preview');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const pageSize = document.getElementById('pageSize');
+    const orientation = document.getElementById('orientation');
+    const margin = document.getElementById('margin');
+
+    let items = []; // {file, url, img}
+    let dragIndex = null;
+
+    function renderList(){
+      list.innerHTML = '';
+      if(!items.length){ list.innerHTML = '<div style="color:#888;">No images selected.</div>'; generateBtn.disabled = true; preview.innerHTML='Add images to preview.'; return; }
+      generateBtn.disabled = false;
+      items.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.style.cssText = 'display:flex; align-items:center; gap:10px; border:1px solid #eee; border-radius:8px; padding:8px; background:#fafbff; cursor:move;';
+        row.setAttribute('draggable','true');
+        row.addEventListener('dragstart', ()=>{ dragIndex = idx; row.style.opacity='0.6'; });
+        row.addEventListener('dragend', ()=>{ dragIndex = null; row.style.opacity='1'; });
+        row.addEventListener('dragover', (e)=>{ e.preventDefault(); });
+        row.addEventListener('drop', (e)=>{ e.preventDefault(); if(dragIndex===null) return; const from=dragIndex; const to=idx; if(from===to) return; const [m]=items.splice(from,1); items.splice(to,0,m); renderList(); renderPreview(); });
+
+        row.innerHTML = `
+          <img src="${it.url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #eaeaea;" alt="thumb">
+          <div style="flex:1; min-width:140px;">
+            <div style="font-weight:600;">${it.file?.name || 'Image ' + (idx+1)}</div>
+            <div style="color:#666; font-size:0.9rem;">${it.img.naturalWidth} Ã— ${it.img.naturalHeight} px</div>
+          </div>
+          <button class="tool-button" style="background:#e74c3c;" data-idx="${idx}"><i class="fas fa-trash"></i></button>
+        `;
+        row.querySelector('button').addEventListener('click', (e)=>{ const i = parseInt(e.currentTarget.getAttribute('data-idx')); items.splice(i,1); renderList(); renderPreview(); });
+        list.appendChild(row);
+      });
+    }
+
+    function renderPreview(){
+      if(!items.length){ preview.innerHTML = 'Add images to preview.'; return; }
+      preview.innerHTML = '';
+      items.slice(0,3).forEach(it => {
+        const img = document.createElement('img');
+        img.src = it.url; img.style.maxWidth='100%'; img.style.maxHeight='220px'; img.style.border='1px solid #eee'; img.style.borderRadius='8px'; img.style.margin='6px 0';
+        preview.appendChild(img);
+      });
+      if(items.length > 3){
+        const more = document.createElement('div');
+        more.style.color = '#666'; more.textContent = `+ ${items.length - 3} more...`;
+        preview.appendChild(more);
+      }
+    }
+
+    function fileToImage(file){
+      return new Promise((resolve,reject)=>{
+        const r = new FileReader();
+        r.onload = ()=>{
+          const img = new Image();
+          img.onload = ()=> resolve({ url:r.result, img });
+          img.onerror = reject;
+          img.src = r.result;
+        };
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    fileInput.addEventListener('change', async (e)=>{
+      const files = Array.from(e.target.files||[]).filter(f=>f.type.startsWith('image/'));
+      if(!files.length) return;
+      // load sequentially
+      for(const f of files){
+        try{ const { url, img } = await fileToImage(f); items.push({ file:f, url, img }); }catch(_){ /* ignore */ }
+      }
+      renderList();
+      renderPreview();
+    });
+
+    clearBtn.addEventListener('click', ()=>{ items=[]; fileInput.value=''; renderList(); renderPreview(); });
+
+    generateBtn.addEventListener('click', async ()=>{
+      if(!items.length) return;
+      const { jsPDF } = window.jspdf;
+      const ori = orientation.value;
+      const size = pageSize.value;
+      const m = Math.max(0, Math.min(50, parseInt(margin.value)||0));
+
+      const doc = new jsPDF({ orientation: ori, unit: 'mm', format: size });
+      for(let i=0;i<items.length;i++){
+        const it = items[i];
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const maxW = pageW - 2*m; const maxH = pageH - 2*m;
+        const iw = it.img.naturalWidth; const ih = it.img.naturalHeight;
+        const scale = Math.min(maxW/iw, maxH/ih);
+        const w = Math.max(1, Math.floor(iw * scale));
+        const h = Math.max(1, Math.floor(ih * scale));
+        const x = m + Math.floor((maxW - w)/2);
+        const y = m + Math.floor((maxH - h)/2);
+        if(i>0) doc.addPage(size, ori);
+        doc.addImage(it.url, 'JPEG', x, y, w, h);
+      }
+      doc.save('screenshots.pdf');
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Railways PNR Status - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-train tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Indian Railways PNR Status</div>
+        <div class="tool-desc">Check booking status, coach and berth details. No login or API key needed. Results are generated in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="pnrInput" style="display:block; font-weight:600; margin-bottom:6px;">Enter 10-digit PNR</label>
+            <input id="pnrInput" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="e.g., 4523987612" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <div id="pnrHint" style="font-size:0.85rem; color:#666; margin-top:6px;">PNR is printed on top-left of your ticket and in SMS/email.</div>
+          </div>
+          <div>
+            <label for="journeyDate" style="display:block; font-weight:600; margin-bottom:6px;">Journey Date (optional)</label>
+            <input id="journeyDate" type="date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="checkBtn" class="tool-button">Check Status</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:10px; font-size:0.9rem; color:#666;">
+          Tip: Try sample PNRs
+          <span class="tool-button" data-sample="6209453781" style="background:#eef2ff; color:#1f3bb3; padding:6px 10px;">6209453781</span>
+          <span class="tool-button" data-sample="3741598206" style="background:#eef2ff; color:#1f3bb3; padding:6px 10px;">3741598206</span>
+          <span class="tool-button" data-sample="9157304628" style="background:#eef2ff; color:#1f3bb3; padding:6px 10px;">9157304628</span>
+        </div>
+      </div>
+
+      <div id="resultWrap" style="display:none; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; align-items:center;">
+            <div>
+              <div class="tool-name" style="font-size:1.2rem;">PNR Summary</div>
+              <div id="pnrSummary" style="margin-top:8px; color:#333;"></div>
+            </div>
+            <div>
+              <div class="tool-name" style="font-size:1.2rem;">Train</div>
+              <div id="trainInfo" style="margin-top:8px; color:#333;"></div>
+            </div>
+            <div>
+              <div class="tool-name" style="font-size:1.2rem;">Journey</div>
+              <div id="journeyInfo" style="margin-top:8px; color:#333;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:0; overflow:auto;">
+          <table style="width:100%; border-collapse:collapse; min-width:720px;">
+            <thead>
+              <tr style="background:#f3f6ff; text-align:left;">
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Passenger</th>
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Quota</th>
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Booking Status</th>
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Current Status</th>
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Coach</th>
+                <th style="padding:12px; border-bottom:1px solid #e7ebff;">Berth</th>
+              </tr>
+            </thead>
+            <tbody id="passengerRows"></tbody>
+          </table>
+        </div>
+
+        <div class="tool-card" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="copyBtn" class="tool-button" style="background:#6c5ce7;">Copy Result</button>
+          <button id="downloadBtn" class="tool-button" style="background:#28a745;">Download JSON</button>
+          <span id="copyStatus" style="font-size:0.9rem; color:#666;"></span>
+        </div>
+
+        <div class="tool-card" style="padding:12px; color:#555;">
+          Disclaimer: This is a demo tool without official Indian Railways API. Results are generated locally to simulate realistic PNR responses for testing and UI demonstration.
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const pnrInput = document.getElementById('pnrInput');
+    const journeyDate = document.getElementById('journeyDate');
+    const checkBtn = document.getElementById('checkBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultWrap = document.getElementById('resultWrap');
+    const pnrSummary = document.getElementById('pnrSummary');
+    const trainInfo = document.getElementById('trainInfo');
+    const journeyInfo = document.getElementById('journeyInfo');
+    const passengerRows = document.getElementById('passengerRows');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyStatus = document.getElementById('copyStatus');
+
+    // Sample buttons
+    document.querySelectorAll('[data-sample]').forEach(el => {
+      el.addEventListener('click', () => {
+        pnrInput.value = el.getAttribute('data-sample');
+      });
+    });
+
+    function isValidPNR(p) {
+      return /^[0-9]{10}$/.test(p);
+    }
+
+    // Deterministic pseudo-random from PNR
+    function seedFromPNR(p) {
+      let h = 2166136261 >>> 0; // FNV-1a
+      for (let i = 0; i < p.length; i++) {
+        h ^= p.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function rng(seed) {
+      // xorshift32
+      let x = seed || 123456789;
+      return function() {
+        x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+        return (x >>> 0) / 4294967296;
+      }
+    }
+
+    function pick(r, arr) { return arr[Math.floor(r() * arr.length)] }
+
+    function formatDate(d) {
+      const dt = new Date(d);
+      if (isNaN(dt)) return 'â€”';
+      return dt.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'2-digit' });
+    }
+
+    function makeMockPNR(pnr, dateStr) {
+      const seed = seedFromPNR(pnr);
+      const r = rng(seed);
+
+      const trains = [
+        { no:'12030', name:'Swarn Shatabdi' },
+        { no:'12951', name:'Mumbai Rajdhani' },
+        { no:'12627', name:'Karnataka Express' },
+        { no:'12229', name:'Lucknow Mail' },
+        { no:'12841', name:'Coromandel Express' },
+        { no:'12423', name:'Rajdhani Express' },
+        { no:'12565', name:'Bihar Sampark Kranti' }
+      ];
+      const stations = ['NDLS','BCT','CSMT','SBC','MAS','HWH','PNBE','LKO','BBS','SEC','NZM','ADI','CNB','BPL'];
+      const quotas = ['GNWL','TQWL','PQWL','RLWL','RAC'];
+      const classes = ['2S','SL','3A','2A','1A','CC','EC'];
+      const berthTypes = ['LB','MB','UB','SL','SU','WS'];
+
+      const train = pick(r, trains);
+      const from = pick(r, stations);
+      let to = pick(r, stations);
+      if (to === from) to = pick(r, stations);
+
+      const cls = pick(r, classes);
+      const quota = pick(r, quotas);
+      const doj = dateStr || new Date(Date.now() + Math.floor(r()*14)*86400000).toISOString().slice(0,10);
+
+      const paxCount = 1 + Math.floor(r()*4); // 1-4 passengers
+      const passengers = [];
+      for (let i=1; i<=paxCount; i++) {
+        const booked = pick(r, ['WL '+(10+Math.floor(r()*50)), 'RAC '+(1+Math.floor(r()*30)), 'CNF']);
+        const statusPool = booked.startsWith('WL') ? ['WL '+Math.max(1, Math.floor(r()*10)), 'RAC '+(1+Math.floor(r()*10)), 'CNF']
+                        : booked.startsWith('RAC') ? ['RAC '+(1+Math.floor(r()*10)), 'CNF']
+                        : ['CNF'];
+        const current = pick(r, statusPool);
+        const coach = current==='CNF' ? (pick(r, ['S','B','A','H','C']) + (1+Math.floor(r()*10))) : 'â€”';
+        const berth = current==='CNF' ? pick(r, berthTypes) + ' ' + (1+Math.floor(r()*72)) : 'â€”';
+        passengers.push({
+          passenger: 'Passenger '+i,
+          quota,
+          bookingStatus: booked,
+          currentStatus: current,
+          coach, berth
+        });
+      }
+
+      const prob = Math.round(r()*100);
+      const chartBadge = prob >= 80 ? 'background:#e7f8ee;color:#1b6e3b;' : prob >= 50 ? 'background:#fff7e6;color:#9a6b00;' : 'background:#fdecec;color:#8a1f1f;';
+
+      return {
+        pnr,
+        train,
+        class: cls,
+        quota,
+        from, to,
+        journeyDate: doj,
+        passengers,
+        confirmationProbability: prob,
+        chartStyle: chartBadge
+      };
+    }
+
+    function renderResult(data) {
+      resultWrap.style.display = 'block';
+      pnrSummary.innerHTML = `
+        <div><strong>PNR:</strong> ${data.pnr}</div>
+        <div><strong>Class:</strong> ${data.class}</div>
+        <div><strong>Quota:</strong> ${data.quota}</div>
+        <div style="margin-top:8px; display:inline-block; padding:6px 10px; border-radius:999px; ${data.chartStyle}">
+          Probability of Confirmation: <strong>${data.confirmationProbability}%</strong>
+        </div>
+      `;
+      trainInfo.innerHTML = `
+        <div><strong>${data.train.no}</strong> â€” ${data.train.name}</div>
+      `;
+      journeyInfo.innerHTML = `
+        <div><strong>${data.from}</strong> â†’ <strong>${data.to}</strong></div>
+        <div>Date of Journey: ${formatDate(data.journeyDate)}</div>
+      `;
+
+      // rows
+      passengerRows.innerHTML = data.passengers.map(p => `
+        <tr>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.passenger}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.quota}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.bookingStatus}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.currentStatus}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.coach}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">${p.berth}</td>
+        </tr>
+      `).join('');
+
+      // Copy and download handlers depend on last data
+      copyBtn.onclick = async () => {
+        const text = [
+          `PNR: ${data.pnr}`,
+          `${data.train.no} ${data.train.name}`,
+          `From ${data.from} to ${data.to} on ${formatDate(data.journeyDate)}`,
+          `Class: ${data.class} | Quota: ${data.quota}`,
+          `Probability: ${data.confirmationProbability}%`,
+          'Passengers:',
+          ...data.passengers.map(p => ` - ${p.passenger}: Booked ${p.bookingStatus}, Current ${p.currentStatus}, ${p.coach} ${p.berth}`)
+        ].join('\n');
+        try {
+          await navigator.clipboard.writeText(text);
+          copyStatus.textContent = 'Copied to clipboard';
+          setTimeout(()=>copyStatus.textContent='', 2000);
+        } catch(e) {
+          copyStatus.textContent = 'Copy failed';
+          setTimeout(()=>copyStatus.textContent='', 2000);
+        }
+      };
+
+      downloadBtn.onclick = () => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pnr_${data.pnr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    function checkPNR() {
+      const p = (pnrInput.value || '').trim();
+      if (!isValidPNR(p)) {
+        pnrInput.focus();
+        pnrInput.style.borderColor = '#e74c3c';
+        setTimeout(()=> pnrInput.style.borderColor = '#ddd', 1500);
+        return;
+      }
+      const data = makeMockPNR(p, journeyDate.value);
+      renderResult(data);
+    }
+
+    pnrInput.addEventListener('input', () => {
+      // allow only digits
+      pnrInput.value = pnrInput.value.replace(/[^0-9]/g,'').slice(0,10);
+    });
+
+    checkBtn.addEventListener('click', checkPNR);
+    pnrInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPNR();
+    });
+    clearBtn.addEventListener('click', () => {
+      pnrInput.value = '';
+      journeyDate.value = '';
+      resultWrap.style.display = 'none';
+      passengerRows.innerHTML = '';
+      pnrSummary.innerHTML = '';
+      trainInfo.innerHTML = '';
+      journeyInfo.innerHTML = '';
+    });
+  </script>
+</body>
+</html>
+
+

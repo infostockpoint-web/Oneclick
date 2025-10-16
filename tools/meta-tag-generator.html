@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Meta Tag Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-tags tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Meta Tag Generator</div>
+      <div class="tool-desc">Generate SEO, Open Graph, and Twitter Card meta tags. Copy or download as an HTML snippet.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div>
+          <label for="mtTitle" style="display:block; font-weight:600; margin-bottom:6px;">Page title</label>
+          <input id="mtTitle" type="text" placeholder="My Awesome Page" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtDesc" style="display:block; font-weight:600; margin-bottom:6px;">Description</label>
+          <input id="mtDesc" type="text" placeholder="Short page description (<=160 chars)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtKeywords" style="display:block; font-weight:600; margin-bottom:6px;">Keywords</label>
+          <input id="mtKeywords" type="text" placeholder="keyword1, keyword2" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtAuthor" style="display:block; font-weight:600; margin-bottom:6px;">Author</label>
+          <input id="mtAuthor" type="text" placeholder="Your Name or Brand" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtRobots" style="display:block; font-weight:600; margin-bottom:6px;">Robots</label>
+          <select id="mtRobots" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="index,follow" selected>index,follow</option>
+            <option value="noindex,nofollow">noindex,nofollow</option>
+            <option value="index,nofollow">index,nofollow</option>
+            <option value="noindex,follow">noindex,follow</option>
+          </select>
+        </div>
+        <div>
+          <label for="mtViewport" style="display:block; font-weight:600; margin-bottom:6px;">Viewport</label>
+          <input id="mtViewport" type="text" value="width=device-width, initial-scale=1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtTheme" style="display:block; font-weight:600; margin-bottom:6px;">Theme color</label>
+          <input id="mtTheme" type="color" value="#0d6efd" style="width:100%; height:44px; padding:6px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="mtCanonical" style="display:block; font-weight:600; margin-bottom:6px;">Canonical URL</label>
+          <input id="mtCanonical" type="url" placeholder="https://example.com/page" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+
+      <hr style="margin:16px 0; border:none; border-top:1px solid #eee;"/>
+
+      <div class="tool-name" style="margin-bottom:8px;">Open Graph</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div>
+          <label for="ogTitle" style="display:block; font-weight:600; margin-bottom:6px;">og:title</label>
+          <input id="ogTitle" type="text" placeholder="Title for social sharing" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ogDesc" style="display:block; font-weight:600; margin-bottom:6px;">og:description</label>
+          <input id="ogDesc" type="text" placeholder="Description for social sharing" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ogImage" style="display:block; font-weight:600; margin-bottom:6px;">og:image</label>
+          <input id="ogImage" type="url" placeholder="https://example.com/image.jpg" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ogUrl" style="display:block; font-weight:600; margin-bottom:6px;">og:url</label>
+          <input id="ogUrl" type="url" placeholder="https://example.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+
+      <hr style="margin:16px 0; border:none; border-top:1px solid #eee;"/>
+
+      <div class="tool-name" style="margin-bottom:8px;">Twitter Card</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div>
+          <label for="twCard" style="display:block; font-weight:600; margin-bottom:6px;">twitter:card</label>
+          <select id="twCard" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="summary" selected>summary</option>
+            <option value="summary_large_image">summary_large_image</option>
+          </select>
+        </div>
+        <div>
+          <label for="twSite" style="display:block; font-weight:600; margin-bottom:6px;">twitter:site (@handle)</label>
+          <input id="twSite" type="text" placeholder="@yoursite" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="twCreator" style="display:block; font-weight:600; margin-bottom:6px;">twitter:creator (@handle)</label>
+          <input id="twCreator" type="text" placeholder="@creator" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="mtGen" class="tool-button">Generate</button>
+        <button id="mtCopy" class="tool-button" style="background:#555;">Copy</button>
+        <button id="mtDl" class="tool-button" style="background:#888;">Download</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">HTML snippet</div>
+      <textarea id="mtOut" rows="16" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function genMeta(){
+    const title = document.getElementById('mtTitle').value.trim();
+    const desc = document.getElementById('mtDesc').value.trim();
+    const keywords = document.getElementById('mtKeywords').value.trim();
+    const author = document.getElementById('mtAuthor').value.trim();
+    const robots = document.getElementById('mtRobots').value;
+    const viewport = document.getElementById('mtViewport').value.trim();
+    const theme = document.getElementById('mtTheme').value;
+    const canonical = document.getElementById('mtCanonical').value.trim();
+    const ogTitle = document.getElementById('ogTitle').value.trim() || title;
+    const ogDesc = document.getElementById('ogDesc').value.trim() || desc;
+    const ogImage = document.getElementById('ogImage').value.trim();
+    const ogUrl = document.getElementById('ogUrl').value.trim() || canonical;
+    const twCard = document.getElementById('twCard').value;
+    const twSite = document.getElementById('twSite').value.trim();
+    const twCreator = document.getElementById('twCreator').value.trim();
+
+    const lines = [];
+    if (title) lines.push(`<title>${esc(title)}</title>`);
+    if (desc) lines.push(`<meta name="description" content="${esc(desc)}">`);
+    if (keywords) lines.push(`<meta name="keywords" content="${esc(keywords)}">`);
+    if (author) lines.push(`<meta name="author" content="${esc(author)}">`);
+    if (robots) lines.push(`<meta name="robots" content="${esc(robots)}">`);
+    if (viewport) lines.push(`<meta name="viewport" content="${esc(viewport)}">`);
+    if (theme) lines.push(`<meta name="theme-color" content="${esc(theme)}">`);
+    if (canonical) lines.push(`<link rel="canonical" href="${esc(canonical)}">`);
+
+    // Open Graph
+    if (ogTitle) lines.push(`<meta property="og:title" content="${esc(ogTitle)}">`);
+    if (ogDesc) lines.push(`<meta property="og:description" content="${esc(ogDesc)}">`);
+    if (ogUrl) lines.push(`<meta property="og:url" content="${esc(ogUrl)}">`);
+    if (ogImage) lines.push(`<meta property="og:image" content="${esc(ogImage)}">`);
+    lines.push(`<meta property="og:type" content="website">`);
+
+    // Twitter
+    lines.push(`<meta name="twitter:card" content="${esc(twCard)}">`);
+    if (twSite) lines.push(`<meta name="twitter:site" content="${esc(twSite)}">`);
+    if (twCreator) lines.push(`<meta name="twitter:creator" content="${esc(twCreator)}">`);
+    if (ogTitle) lines.push(`<meta name="twitter:title" content="${esc(ogTitle)}">`);
+    if (ogDesc) lines.push(`<meta name="twitter:description" content="${esc(ogDesc)}">`);
+    if (ogImage) lines.push(`<meta name="twitter:image" content="${esc(ogImage)}">`);
+
+    document.getElementById('mtOut').value = lines.join('\n');
+  }
+  document.getElementById('mtGen').addEventListener('click', genMeta);
+  document.getElementById('mtCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('mtOut').value); } catch(e){} });
+  document.getElementById('mtDl').addEventListener('click', ()=>{
+    const blob = new Blob([document.getElementById('mtOut').value || ''], {type:'text/html'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'meta-tags.html'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  // initial
+  genMeta();
+</script>
+</body></html>
+
+

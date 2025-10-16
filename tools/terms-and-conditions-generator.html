@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Terms & Conditions Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-contract tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Terms & Conditions Generator</div>
+      <div class="tool-desc">Fill in details and generate a simple Terms & Conditions page. Copy or download.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="tcSite" style="display:block; font-weight:600; margin-bottom:6px;">Website Name</label>
+          <input id="tcSite" type="text" placeholder="MySite" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcUrl" style="display:block; font-weight:600; margin-bottom:6px;">Website URL</label>
+          <input id="tcUrl" type="url" placeholder="https://mysite.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcCompany" style="display:block; font-weight:600; margin-bottom:6px;">Company/Owner</label>
+          <input id="tcCompany" type="text" placeholder="My Company LLC" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcEmail" style="display:block; font-weight:600; margin-bottom:6px;">Contact Email</label>
+          <input id="tcEmail" type="email" placeholder="hello@mysite.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcAddress" style="display:block; font-weight:600; margin-bottom:6px;">Business Address</label>
+          <input id="tcAddress" type="text" placeholder="123 Main St, City, Country" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcCountry" style="display:block; font-weight:600; margin-bottom:6px;">Jurisdiction/Country</label>
+          <input id="tcCountry" type="text" placeholder="India" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tcDate" style="display:block; font-weight:600; margin-bottom:6px;">Effective Date</label>
+          <input id="tcDate" type="date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+
+      <hr style="margin:16px 0; border:none; border-top:1px solid #eee;"/>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px;">
+        <div>
+          <div class="tool-name" style="margin-bottom:6px;">Include Sections</div>
+          <label style="display:block; margin-bottom:6px;"><input id="secAccounts" type="checkbox" checked> User Accounts</label>
+          <label style="display:block; margin-bottom:6px;"><input id="secIP" type="checkbox" checked> Intellectual Property</label>
+          <label style="display:block; margin-bottom:6px;"><input id="secPayments" type="checkbox"> Payments & Refunds</label>
+          <label style="display:block; margin-bottom:6px;"><input id="secLimit" type="checkbox" checked> Limitations of Liability</label>
+          <label style="display:block; margin-bottom:6px;"><input id="secTerminate" type="checkbox" checked> Termination</label>
+          <label style="display:block; margin-bottom:6px;"><input id="secLaw" type="checkbox" checked> Governing Law</label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="tcGen" class="tool-button">Generate</button>
+        <button id="tcCopy" class="tool-button" style="background:#555;">Copy</button>
+        <button id="tcDl" class="tool-button" style="background:#888;">Download</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Terms & Conditions</div>
+      <textarea id="tcOut" rows="20" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function todayISO(){ const d=new Date(); return d.toISOString().split('T')[0]; }
+  function val(id){ return (document.getElementById(id).value||'').trim(); }
+  function section(title, content){ return `${title}\n${content}\n`; }
+  function makeTC(){
+    const site = val('tcSite');
+    const url = val('tcUrl');
+    const company = val('tcCompany');
+    const email = val('tcEmail');
+    const addr = val('tcAddress');
+    const country = val('tcCountry');
+    const eff = val('tcDate') || todayISO();
+
+    let out = `${site||'Our website'} - Terms & Conditions\nEffective date: ${eff}\n\n`;
+    out += `By accessing or using ${site||'this website'} (${url||''}), you agree to be bound by these Terms. If you do not agree, please discontinue use.\n\n`;
+    if (document.getElementById('secAccounts').checked){
+      out += section('Accounts', 'You are responsible for maintaining the confidentiality of your account and password, and for all activities under your account. You must provide accurate and complete information.');
+    }
+    if (document.getElementById('secIP').checked){
+      out += section('Intellectual Property', `${site||'This website'} and its original content are the exclusive property of ${company||'the owner'} and are protected by applicable laws.`);
+    }
+    if (document.getElementById('secPayments').checked){
+      out += section('Payments & Refunds', 'Prices are subject to change. If refunds are offered, they will be processed according to our refund policy.');
+    }
+    if (document.getElementById('secLimit').checked){
+      out += section('Limitation of Liability', 'To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.');
+    }
+    if (document.getElementById('secTerminate').checked){
+      out += section('Termination', 'We may terminate or suspend access immediately, without prior notice, for any reason including breach of the Terms.');
+    }
+    if (document.getElementById('secLaw').checked){
+      out += section('Governing Law', `These Terms are governed by the laws of ${country||'your jurisdiction'}, without regard to its conflict of law provisions.`);
+    }
+    out += section('Contact', `For questions about these Terms, contact us at ${email||'your-email@example.com'} or ${addr||'your address'}.`);
+    out += 'We may update these Terms from time to time. Continued use of the site after changes constitutes acceptance of the new Terms.';
+    return out;
+  }
+  function generate(){ document.getElementById('tcOut').value = makeTC(); }
+  document.getElementById('tcGen').addEventListener('click', generate);
+  document.getElementById('tcCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('tcOut').value); } catch(e){} });
+  document.getElementById('tcDl').addEventListener('click', ()=>{ const blob=new Blob([document.getElementById('tcOut').value||makeTC()],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='terms-and-conditions.txt'; a.click(); URL.revokeObjectURL(a.href); });
+  // initial
+  generate();
+</script>
+</body></html>
+
+

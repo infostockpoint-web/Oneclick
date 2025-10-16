@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SWOT Analysis Tool - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .box{background:#fff;border:1px solid #eee;border-radius:10px;padding:12px}
+    .box h3{margin:0 0 8px 0;font-size:1rem}
+    .tags{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{background:#f1f1f1;border-radius:999px;padding:4px 10px;display:flex;gap:6px;align-items:center}
+    @media(max-width:720px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-chart-pie tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">SWOT Analysis Tool</div>
+        <div class="tool-desc">Capture Strengths, Weaknesses, Opportunities, Threats. Export to HTML. Saved locally.</div>
+      </div>
+
+      <div class="grid">
+        <div class="box"><h3>Strengths</h3><div class="tags" id="S"></div><div style="display:flex;gap:8px;margin-top:8px;"><input id="Sin" type="text" placeholder="Add strength" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"><button class="tool-button" data-add="S">Add</button></div></div>
+        <div class="box"><h3>Weaknesses</h3><div class="tags" id="W"></div><div style="display:flex;gap:8px;margin-top:8px;"><input id="Win" type="text" placeholder="Add weakness" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"><button class="tool-button" data-add="W">Add</button></div></div>
+        <div class="box"><h3>Opportunities</h3><div class="tags" id="O"></div><div style="display:flex;gap:8px;margin-top:8px;"><input id="Oin" type="text" placeholder="Add opportunity" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"><button class="tool-button" data-add="O">Add</button></div></div>
+        <div class="box"><h3>Threats</h3><div class="tags" id="T"></div><div style="display:flex;gap:8px;margin-top:8px;"><input id="Tin" type="text" placeholder="Add threat" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;"><button class="tool-button" data-add="T">Add</button></div></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="save" class="tool-button">Save</button>
+        <button id="export" class="tool-button"><i class="fas fa-download"></i> Export HTML</button>
+        <button id="clear" class="tool-button" style="background:#e74c3c;"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_swot_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{S:[],W:[],O:[],T:[]} }catch(e){ return {S:[],W:[],O:[],T:[]} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function render(){ const d=load(); ['S','W','O','T'].forEach(k=>{ const box=document.getElementById(k); box.innerHTML=''; d[k].forEach((txt,i)=>{ const t=document.createElement('span'); t.className='tag'; t.innerHTML=`<span>${escapeHtml(txt)}</span><button class="tool-button" data-del="${k}|${i}" style="padding:2px 6px;">Ã—</button>`; box.appendChild(t); }); }); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    document.body.addEventListener('click',(e)=>{
+      const add=e.target.closest('button[data-add]'); if(add){ const k=add.getAttribute('data-add'); const inp=document.getElementById(k+'in'); const v=inp.value.trim(); if(!v) return; const d=load(); d[k].push(v); save(d); inp.value=''; render(); }
+      const del=e.target.closest('button[data-del]'); if(del){ const [k,i]=del.getAttribute('data-del').split('|'); const d=load(); d[k].splice(+i,1); save(d); render(); }
+    });
+    document.getElementById('save').addEventListener('click', ()=>{ alert('Saved locally.'); });
+    document.getElementById('clear').addEventListener('click', ()=>{ if(!confirm('Clear SWOT?')) return; localStorage.removeItem(KEY); render(); });
+    document.getElementById('export').addEventListener('click', ()=>{
+      const d=load(); const sec=(title,items)=>`<div style="border:1px solid #eee;border-radius:10px;padding:10px;"><h3 style=\"margin:0 0 6px 0;font-family:Arial\">${title}</h3><ul>${items.map(it=>`<li>${escapeHtml(it)}</li>`).join('')}</ul></div>`;
+      const html=`<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>SWOT Analysis</title></head><body style="font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;">
+        <div style="max-width:1000px;margin:20px auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${sec('Strengths',d.S)}${sec('Weaknesses',d.W)}${sec('Opportunities',d.O)}${sec('Threats',d.T)}
+        </div>
+      </body></html>`;
+      const a=document.createElement('a'); const blob=new Blob([html],{type:'text/html'}); a.href=URL.createObjectURL(blob); a.download='swot.html'; a.click();
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

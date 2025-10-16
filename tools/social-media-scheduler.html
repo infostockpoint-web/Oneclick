@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Media Post Scheduler - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-share-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Social Media Post Scheduler</div>
+        <div class="tool-desc">Plan and organize posts for multiple platforms. Client-side only (no auto-posting). Use copy when it's time to post.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div>
+            <label for="postText" style="display:block; font-weight:600; margin-bottom:6px;">Post Content</label>
+            <textarea id="postText" rows="5" maxlength="2200" placeholder="Write your post..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+            <div style="display:flex; justify-content:space-between; margin-top:6px;">
+              <small id="postCount">0/2200</small>
+              <small>Tip: Tailor text per platform when you copy.</small>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Platforms</label>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <label><input type="checkbox" class="pf" value="instagram"/> Instagram</label>
+                <label><input type="checkbox" class="pf" value="twitter"/> Twitter/X</label>
+                <label><input type="checkbox" class="pf" value="facebook"/> Facebook</label>
+                <label><input type="checkbox" class="pf" value="linkedin"/> LinkedIn</label>
+                <label><input type="checkbox" class="pf" value="tiktok"/> TikTok</label>
+              </div>
+            </div>
+            <div>
+              <label for="schedTime" style="display:block; font-weight:600; margin-bottom:6px;">Schedule Time</label>
+              <input type="datetime-local" id="schedTime" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <div>
+              <label for="postNote" style="display:block; font-weight:600; margin-bottom:6px;">Note (optional)</label>
+              <input type="text" id="postNote" placeholder="Campaign, target audience, etc." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <button id="savePost" class="tool-button" style="height:42px;">Save Schedule</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="tool-name">Scheduled Posts</div>
+          <div>
+            <input type="search" id="search" placeholder="Search..." style="padding:8px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+        </div>
+        <div id="emptyList" class="tool-desc">No scheduled posts yet.</div>
+        <div id="postList" style="display:grid; gap:10px; margin-top:10px;"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY = 'oneclick_social_sched_v1';
+
+    const postText = document.getElementById('postText');
+    const postCount = document.getElementById('postCount');
+    postText.addEventListener('input',()=>{ postCount.textContent = `${postText.value.length}/2200`; });
+
+    function loadAll(){ try { return JSON.parse(localStorage.getItem(KEY))||[]; } catch(e){ return []; } }
+    function saveAll(items){ localStorage.setItem(KEY, JSON.stringify(items)); }
+
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function render(){
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const items = loadAll().sort((a,b)=>new Date(a.time)-new Date(b.time));
+      const list = document.getElementById('postList');
+      const empty = document.getElementById('emptyList');
+      list.innerHTML = '';
+      const filtered = items.filter(it => !q || it.text.toLowerCase().includes(q) || (it.note||'').toLowerCase().includes(q) || it.platforms.join(',').includes(q));
+      if (!filtered.length){ empty.style.display='block'; return; }
+      empty.style.display='none';
+      for (const it of filtered){
+        const box = document.createElement('div');
+        box.className = 'tool-card';
+        box.style.padding = '12px';
+        box.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:start;">
+            <div>
+              <div style="font-weight:600;">${escapeHtml(it.text).replace(/\n/g,'<br>')}</div>
+              <div class="tool-desc" style="margin-top:6px;">
+                <i class="far fa-clock"></i> ${new Date(it.time).toLocaleString()} â€¢ ${it.platforms.map(p => `<span class=\"tag\">${p}</span>`).join(' ')} ${it.note?`â€¢ ${escapeHtml(it.note)}`:''}
+              </div>
+              <style>.tag{display:inline-block;padding:3px 8px;border-radius:999px;background:#f1f1f1;margin-right:6px;font-size:.8rem}</style>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              ${it.platforms.map(p => `<button class=\"tool-button\" data-act=\"copy\" data-id=\"${it.id}\" data-p=\"${p}\"><i class=\"far fa-copy\"></i> ${p}</button>`).join('')}
+              <button class="tool-button" data-act="simulate" data-id="${it.id}"><i class="fas fa-paper-plane"></i></button>
+              <button class="tool-button" data-act="delete" data-id="${it.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(box);
+      }
+    }
+
+    document.getElementById('savePost').addEventListener('click', () => {
+      const text = postText.value.trim();
+      const time = document.getElementById('schedTime').value;
+      const note = document.getElementById('postNote').value.trim();
+      const platforms = Array.from(document.querySelectorAll('.pf:checked')).map(x=>x.value);
+      if (!text){ alert('Please enter post content.'); return; }
+      if (!time){ alert('Please set a schedule time.'); return; }
+      if (!platforms.length){ alert('Please select at least one platform.'); return; }
+      const when = new Date(time);
+      if (!isFinite(when)) { alert('Invalid schedule time.'); return; }
+      const items = loadAll();
+      items.push({ id: crypto.randomUUID(), text, time: when.toISOString(), note, platforms });
+      saveAll(items);
+      postText.value=''; postCount.textContent='0/2200';
+      document.getElementById('schedTime').value='';
+      document.getElementById('postNote').value='';
+      document.querySelectorAll('.pf:checked').forEach(x=>x.checked=false);
+      render();
+    });
+
+    document.getElementById('postList').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const act = btn.getAttribute('data-act');
+      const items = loadAll();
+      const idx = items.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      if (act === 'delete'){
+        if (confirm('Delete this scheduled post?')){ items.splice(idx,1); saveAll(items); render(); }
+      } else if (act === 'simulate') {
+        alert('Simulated posting (all platforms):\n\n' + items[idx].text + '\n\nUse copy buttons to paste on each platform at the scheduled time.');
+      } else if (act === 'copy') {
+        const p = btn.getAttribute('data-p');
+        let content = items[idx].text;
+        // Simple per-platform hints (could be expanded)
+        if (p === 'twitter' && content.length > 280) content = content.slice(0,277) + '...';
+        navigator.clipboard.writeText(content).then(()=>{
+          alert(`Post content copied for ${p}.`);
+        });
+      }
+    });
+
+    document.getElementById('search').addEventListener('input', render);
+
+    render();
+  </script>
+</body>
+</html>
+
+

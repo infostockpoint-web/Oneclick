@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trip Planner - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-route tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Trip Planner</div>
+        <div class="tool-desc">Plan itinerary day-by-day with places, notes, and estimated costs. Stored locally in your browser.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Trip Name</label>
+            <input id="tripName" type="text" placeholder="e.g., Goa Getaway" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Start Date</label>
+            <input id="start" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">End Date</label>
+            <input id="end" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="create" class="tool-button" style="height:42px;">Create Trip</button>
+        </div>
+      </div>
+
+      <div id="tripArea" style="display:none;">
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="tool-name" id="title"></div>
+            <div class="tool-desc" id="dates"></div>
+            <div class="tool-desc">Budget: â‚¹ <input id="budget" type="number" min="0" step="0.01" style="width:140px;padding:6px;border:1px solid #ddd;border-radius:8px;"> <button id="saveBudget" class="tool-button">Save</button></div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Day</label>
+              <select id="daySelect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
+            </div>
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Place / Activity</label>
+              <input id="place" type="text" placeholder="e.g., Baga Beach" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+            </div>
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Time</label>
+              <input id="time" type="time" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+            </div>
+            <div>
+              <label style="display:block;font-weight:600;margin-bottom:6px;">Cost (â‚¹)</label>
+              <input id="cost" type="number" min="0" step="0.01" placeholder="0" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+            </div>
+            <button id="addEntry" class="tool-button" style="height:42px;">Add</button>
+          </div>
+        </div>
+
+        <div id="days" style="display:grid;gap:12px;"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_trip_planner_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{} } catch(e){ return {} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    let curId=null;
+
+    function createTrip(){
+      const name=document.getElementById('tripName').value.trim();
+      const start=document.getElementById('start').value; const end=document.getElementById('end').value;
+      if (!name||!start||!end){ alert('Please fill trip name and dates.'); return; }
+      const id=crypto.randomUUID();
+      const data=load();
+      // build days
+      const s=new Date(start), e=new Date(end);
+      if (e < s){ alert('End date must be after start date.'); return; }
+      const days=[]; const d=new Date(s);
+      while (d <= e){ days.push({date:d.toISOString().slice(0,10), entries:[]}); d.setDate(d.getDate()+1); }
+      data[id]={id,name,start,end,budget:0,days}; save(data); curId=id; renderTrip();
+    }
+
+    function current(){ const data=load(); return curId? data[curId]: null; }
+
+    function renderTrip(){
+      const trip=current(); if (!trip){ document.getElementById('tripArea').style.display='none'; return; }
+      document.getElementById('tripArea').style.display='block';
+      document.getElementById('title').textContent=trip.name;
+      document.getElementById('dates').textContent=`${trip.start} to ${trip.end}`;
+      document.getElementById('budget').value=trip.budget||0;
+      // day select
+      const sel=document.getElementById('daySelect'); sel.innerHTML='';
+      trip.days.forEach((d,idx)=>{ const o=document.createElement('option'); o.value=idx; o.textContent=`Day ${idx+1} â€¢ ${d.date}`; sel.appendChild(o); });
+      // days list
+      const wrap=document.getElementById('days'); wrap.innerHTML='';
+      let totalCost=0;
+      trip.days.forEach((d,idx)=>{
+        const card=document.createElement('div'); card.className='tool-card'; card.style.padding='12px';
+        const entriesHtml = d.entries.map((en,i)=>{
+          totalCost += (+en.cost||0);
+          return `<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+                    <div>
+                      <div style=\"font-weight:700;\">${escapeHtml(en.place)} <small class=\"tool-desc\">${escapeHtml(en.time||'')}${en.cost?` â€¢ â‚¹${en.cost}`:''}</small></div>
+                      ${en.note?`<div class=\"tool-desc\">${escapeHtml(en.note)}</div>`:''}
+                    </div>
+                    <div style=\"display:flex;gap:8px;\">
+                      <button class=\"tool-button\" data-act=\"edit\" data-day=\"${idx}\" data-i=\"${i}\"><i class=\"fas fa-pen\"></i></button>
+                      <button class=\"tool-button\" data-act=\"del\" data-day=\"${idx}\" data-i=\"${i}\" style=\"background:#e74c3c;\"><i class=\"fas fa-trash\"></i></button>
+                    </div>
+                  </div>`;
+        }).join('');
+        card.innerHTML=`
+          <div class="tool-name">Day ${idx+1} â€¢ ${d.date}</div>
+          ${entriesHtml || '<div class="tool-desc">No entries yet.</div>'}
+        `;
+        wrap.appendChild(card);
+      });
+      // budget info
+      const remain=(trip.budget||0) - totalCost;
+      const info=document.createElement('div'); info.className='tool-card'; info.style.padding='12px';
+      info.innerHTML=`<div class="tool-desc">Estimated total cost: â‚¹${totalCost.toFixed(2)} â€¢ Budget remaining: â‚¹${remain.toFixed(2)}</div>`;
+      wrap.appendChild(info);
+    }
+
+    function addEntry(){
+      const trip=current(); if (!trip) return;
+      const dayIdx=+document.getElementById('daySelect').value;
+      const place=document.getElementById('place').value.trim();
+      const time=document.getElementById('time').value;
+      const cost=+document.getElementById('cost').value||0;
+      if (!place){ alert('Enter a place or activity.'); return; }
+      trip.days[dayIdx].entries.push({place,time,cost,note:''});
+      const data=load(); data[trip.id]=trip; save(data);
+      document.getElementById('place').value=''; document.getElementById('time').value=''; document.getElementById('cost').value='';
+      renderTrip();
+    }
+
+    function onDaysClick(e){
+      const btn=e.target.closest('button[data-act]'); if(!btn) return;
+      const trip=current(); if (!trip) return;
+      const dayIdx=+btn.getAttribute('data-day'); const i=+btn.getAttribute('data-i');
+      if (btn.getAttribute('data-act')==='del'){
+        if (confirm('Delete this entry?')){ trip.days[dayIdx].entries.splice(i,1); const data=load(); data[trip.id]=trip; save(data); renderTrip(); }
+      } else if (btn.getAttribute('data-act')==='edit'){
+        const en=trip.days[dayIdx].entries[i];
+        const p=prompt('Edit place/activity', en.place); if(p===null) return;
+        const t=prompt('Edit time (HH:MM)', en.time||''); if(t===null) return;
+        const c=prompt('Edit cost (â‚¹)', String(en.cost||0)); if(c===null) return;
+        const n=prompt('Edit note (optional)', en.note||''); if(n===null) return;
+        en.place=p.trim(); en.time=t.trim(); en.cost=+c||0; en.note=n.trim();
+        const data=load(); data[trip.id]=trip; save(data); renderTrip();
+      }
+    }
+
+    function saveBudget(){ const trip=current(); if(!trip) return; trip.budget=+document.getElementById('budget').value||0; const data=load(); data[trip.id]=trip; save(data); renderTrip(); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    document.getElementById('create').addEventListener('click', createTrip);
+    document.getElementById('addEntry').addEventListener('click', addEntry);
+    document.getElementById('days').addEventListener('click', onDaysClick);
+    document.getElementById('saveBudget').addEventListener('click', saveBudget);
+
+    // Restore last trip if any
+    const dataInit=load(); const ids=Object.keys(dataInit);
+    if (ids.length){ curId=ids[ids.length-1]; renderTrip(); }
+  </script>
+</body>
+</html>
+
+

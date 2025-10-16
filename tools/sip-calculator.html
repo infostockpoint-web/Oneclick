@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-chart-line tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">SIP Calculator</div>
+        <div class="tool-desc">Estimate maturity from monthly investing.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="sipAmt" style="display:block; font-weight:600; margin-bottom:6px;">Monthly Amount</label>
+            <input id="sipAmt" type="number" step="any" placeholder="5000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="sipRate" style="display:block; font-weight:600; margin-bottom:6px;">Annual Return %</label>
+            <input id="sipRate" type="number" step="any" placeholder="12" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="sipTen" style="display:block; font-weight:600; margin-bottom:6px;">Tenure</label>
+            <input id="sipTen" type="number" step="1" placeholder="10" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="sipUnit" style="display:block; font-weight:600; margin-bottom:6px;">Unit</label>
+            <select id="sipUnit" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="years" selected>Years</option>
+              <option value="months">Months</option>
+            </select>
+          </div>
+          <button id="calcSIP" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Invested</div>
+          <div id="sipInvested" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Returns</div>
+          <div id="sipReturns" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Maturity</div>
+          <div id="sipMaturity" style="font-size:1.4rem;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
+    // FV of SIP: A * [ ((1+r)^n - 1) / r ] * (1+r)
+    document.getElementById('calcSIP').addEventListener('click', () => {
+      const A = Number(document.getElementById('sipAmt').value);
+      const R = Number(document.getElementById('sipRate').value);
+      let T = Number(document.getElementById('sipTen').value);
+      const unit = document.getElementById('sipUnit').value;
+      const invEl = document.getElementById('sipInvested');
+      const retEl = document.getElementById('sipReturns');
+      const matEl = document.getElementById('sipMaturity');
+      if (!isFinite(A) || !isFinite(R) || !isFinite(T) || A<=0 || R<0 || T<=0){ invEl.textContent='Invalid input'; retEl.textContent='â€”'; matEl.textContent='â€”'; return; }
+      const n = unit==='years' ? T*12 : T;
+      const r = (R/100)/12;
+      let fv;
+      if (r===0){ fv = A * n; }
+      else { fv = A * ((Math.pow(1+r,n)-1)/r) * (1+r); }
+      const invested = A * n;
+      const returns = fv - invested;
+      invEl.textContent = fmt(invested);
+      retEl.textContent = fmt(returns);
+      matEl.textContent = fmt(fv);
+    });
+  </script>
+</body>
+</html>
+
+

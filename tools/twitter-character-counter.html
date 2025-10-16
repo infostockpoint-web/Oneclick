@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Twitter Character Counter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:900px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fab fa-twitter tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Twitter Character Counter</div>
+      <div class="tool-desc">Live count for up to 280 characters. Shows remaining, words, and lines.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <textarea id="twText" rows="6" placeholder="Write your tweet here..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:10px;"></textarea>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; align-items:center; margin-top:12px;">
+        <div class="tool-card" style="padding:12px;">
+          <div class="tool-name">Used</div>
+          <div id="twUsed" style="font-size:1.4rem;">0</div>
+        </div>
+        <div class="tool-card" style="padding:12px;">
+          <div class="tool-name">Remaining</div>
+          <div id="twRemain" style="font-size:1.4rem;">280</div>
+        </div>
+        <div class="tool-card" style="padding:12px;">
+          <div class="tool-name">Words</div>
+          <div id="twWords" style="font-size:1.2rem;">0</div>
+        </div>
+        <div class="tool-card" style="padding:12px;">
+          <div class="tool-name">Lines</div>
+          <div id="twLines" style="font-size:1.2rem;">0</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="twCopy" class="tool-button">Copy</button>
+          <button id="twClear" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+      <div id="twWarn" style="margin-top:10px; font-weight:600; color:#c62828; display:none;">Limit reached (280)</div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const LIMIT = 280;
+  const txt = document.getElementById('twText');
+  const usedEl = document.getElementById('twUsed');
+  const remEl = document.getElementById('twRemain');
+  const wordsEl = document.getElementById('twWords');
+  const linesEl = document.getElementById('twLines');
+  const warnEl = document.getElementById('twWarn');
+
+  function count(){
+    let val = txt.value || '';
+    if (val.length > LIMIT){
+      val = val.slice(0, LIMIT);
+      txt.value = val;
+    }
+    const used = val.length;
+    const remain = LIMIT - used;
+    const words = (val.trim().match(/\b\w+\b/g) || []).length;
+    const lines = val ? val.split(/\n/).length : 0;
+    usedEl.textContent = used;
+    remEl.textContent = remain;
+    wordsEl.textContent = words;
+    linesEl.textContent = lines;
+    // warning color when close to limit
+    remEl.style.color = remain <= 20 ? '#c62828' : (remain <= 40 ? '#f57c00' : '');
+    warnEl.style.display = remain === 0 ? '' : 'none';
+  }
+  txt.addEventListener('input', count);
+  document.getElementById('twCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(txt.value); } catch(e){} });
+  document.getElementById('twClear').addEventListener('click', ()=>{ txt.value=''; count(); });
+  // initial
+  count();
+</script>
+</body></html>
+
+

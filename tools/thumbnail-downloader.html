@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Thumbnail Downloader - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-download tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Thumbnail Downloader</div>
+      <div class="tool-desc">Download thumbnails from YouTube, Vimeo, and other video platforms.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="videoUrl" style="display:block; font-weight:600; margin-bottom:6px;">Video URL</label>
+          <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="quality" style="display:block; font-weight:600; margin-bottom:6px;">Thumbnail Quality</label>
+          <select id="quality" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="default">Default</option>
+            <option value="high">High Quality (HQ)</option>
+            <option value="medium">Medium Quality (MQ)</option>
+            <option value="low">Low Quality</option>
+            <option value="maxres">Maximum Resolution</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="downloadBtn" class="tool-button">Download Thumbnail</button>
+          <button id="previewBtn" class="tool-button" style="background:#28a745;">Preview</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Thumbnail Preview</div>
+        <div id="thumbnailContainer" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; text-align:center; margin-top:10px;">
+          <div id="previewText" style="color:#666; font-style:italic;">Enter a video URL and click Preview to see the thumbnail</div>
+          <img id="thumbnailImage" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin-top:10px;" />
+        </div>
+        <div style="margin-top:10px;">
+          <button id="downloadFromPreview" class="tool-button" style="width:100%; background:#007bff;">Download This Thumbnail</button>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Supported Platforms</div>
+        <div id="supportedPlatforms" style="margin-top:10px; font-size:0.9rem;">
+          <div><i class="fab fa-youtube" style="color:#ff0000;"></i> YouTube</div>
+          <div><i class="fab fa-vimeo" style="color:#1ab7ea;"></i> Vimeo</div>
+          <div><i class="fas fa-globe" style="color:#666;"></i> Other video sites</div>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Usage Tips</div>
+        <div style="margin-top:5px; font-size:0.85rem; color:#666;">
+          â€¢ Works with YouTube, Vimeo, and most video platforms<br>
+          â€¢ Supports different thumbnail qualities<br>
+          â€¢ Download multiple thumbnails if available
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const videoUrl = document.getElementById('videoUrl');
+  const quality = document.getElementById('quality');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const previewBtn = document.getElementById('previewBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadFromPreview = document.getElementById('downloadFromPreview');
+  const thumbnailContainer = document.getElementById('thumbnailContainer');
+  const previewText = document.getElementById('previewText');
+  const thumbnailImage = document.getElementById('thumbnailImage');
+
+  let currentThumbnailUrl = '';
+
+  // Extract thumbnail URL from various platforms
+  function extractThumbnailUrl(url, quality) {
+    try {
+      const urlObj = new URL(url);
+      let thumbnailUrl = '';
+      let platform = '';
+
+      // YouTube
+      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+        platform = 'YouTube';
+        let videoId = '';
+
+        if (urlObj.hostname.includes('youtu.be')) {
+          videoId = urlObj.pathname.substring(1);
+        } else if (urlObj.pathname.includes('/watch')) {
+          videoId = urlObj.searchParams.get('v');
+        } else if (urlObj.pathname.includes('/embed/')) {
+          videoId = urlObj.pathname.split('/embed/')[1];
+        }
+
+        if (videoId) {
+          switch (quality) {
+            case 'maxres':
+              thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+              break;
+            case 'high':
+              thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+              break;
+            case 'medium':
+              thumbnailUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+              break;
+            case 'low':
+              thumbnailUrl = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+              break;
+            case 'default':
+            default:
+              thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+              break;
+          }
+        }
+      }
+      // Vimeo
+      else if (urlObj.hostname.includes('vimeo.com')) {
+        platform = 'Vimeo';
+        const videoId = urlObj.pathname.split('/').pop();
+
+        if (videoId) {
+          switch (quality) {
+            case 'high':
+            case 'maxres':
+              thumbnailUrl = `https://vumbnail.com/${videoId}.jpg`;
+              break;
+            case 'medium':
+            case 'default':
+            default:
+              thumbnailUrl = `https://vumbnail.com/${videoId}.jpg`;
+              break;
+            case 'low':
+              thumbnailUrl = `https://vumbnail.com/${videoId}.jpg`;
+              break;
+          }
+        }
+      }
+      // Generic fallback for other sites
+      else {
+        platform = 'Other';
+        // Try to find og:image meta tag or other thumbnail sources
+        // For demo purposes, we'll show a placeholder
+        thumbnailUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gdGh1bWJuYWlsIGZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+      }
+
+      return { url: thumbnailUrl, platform: platform, videoId: videoId || 'N/A' };
+    } catch (error) {
+      console.error('Error extracting thumbnail URL:', error);
+      return { url: '', platform: 'Unknown', error: error.message };
+    }
+  }
+
+  // Preview thumbnail
+  function previewThumbnail() {
+    const url = videoUrl.value.trim();
+    if (!url) {
+      alert('Please enter a video URL to preview.');
+      return;
+    }
+
+    previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    previewBtn.disabled = true;
+
+    const thumbnailInfo = extractThumbnailUrl(url, quality.value);
+
+    if (thumbnailInfo.error) {
+      previewText.textContent = 'Error: ' + thumbnailInfo.error;
+      previewText.style.color = '#dc3545';
+      thumbnailImage.style.display = 'none';
+    } else {
+      if (thumbnailInfo.url.startsWith('data:')) {
+        // For placeholder images
+        thumbnailImage.src = thumbnailInfo.url;
+        thumbnailImage.style.display = 'block';
+        previewText.style.display = 'none';
+        currentThumbnailUrl = '';
+      } else {
+        // For real thumbnails, load them
+        thumbnailImage.onload = () => {
+          thumbnailImage.style.display = 'block';
+          previewText.style.display = 'none';
+          currentThumbnailUrl = thumbnailInfo.url;
+        };
+
+        thumbnailImage.onerror = () => {
+          previewText.textContent = 'Failed to load thumbnail. The video might be private or the thumbnail might not be available.';
+          previewText.style.color = '#dc3545';
+          thumbnailImage.style.display = 'none';
+        };
+
+        thumbnailImage.src = thumbnailInfo.url;
+      }
+    }
+
+    previewBtn.innerHTML = 'Preview';
+    previewBtn.disabled = false;
+  }
+
+  // Download thumbnail
+  function downloadThumbnail() {
+    const url = videoUrl.value.trim();
+    if (!url) {
+      alert('Please enter a video URL to download.');
+      return;
+    }
+
+    const thumbnailInfo = extractThumbnailUrl(url, quality.value);
+    if (!thumbnailInfo.url || thumbnailInfo.error) {
+      alert('Could not extract thumbnail URL. Please check the video URL.');
+      return;
+    }
+
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+    downloadBtn.disabled = true;
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = thumbnailInfo.url;
+    link.download = `thumbnail_${thumbnailInfo.platform}_${Date.now()}.jpg`;
+    link.target = '_blank';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    downloadBtn.innerHTML = 'Download Thumbnail';
+    downloadBtn.disabled = false;
+  }
+
+  // Download from preview
+  function downloadFromPreviewFunc() {
+    if (currentThumbnailUrl) {
+      const link = document.createElement('a');
+      link.href = currentThumbnailUrl;
+      link.download = `thumbnail_preview_${Date.now()}.jpg`;
+      link.target = '_blank';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert('No thumbnail available for download. Please preview first.');
+    }
+  }
+
+  function clearAll() {
+    videoUrl.value = '';
+    previewText.style.display = 'block';
+    previewText.textContent = 'Enter a video URL and click Preview to see the thumbnail';
+    previewText.style.color = '#666';
+    thumbnailImage.style.display = 'none';
+    thumbnailImage.src = '';
+    currentThumbnailUrl = '';
+  }
+
+  // Event listeners
+  downloadBtn.addEventListener('click', downloadThumbnail);
+  previewBtn.addEventListener('click', previewThumbnail);
+  downloadFromPreview.addEventListener('click', downloadFromPreviewFunc);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Auto-focus on URL input
+  videoUrl.focus();
+</script>
+</body></html>
+
+

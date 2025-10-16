@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Name Numerology Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-magic tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Name Numerology Calculator</div>
+        <div class="tool-desc">Compute numerology value with Pythagorean or Chaldean mappings. Shows per-letter breakdown and reduction steps.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Name</label><input id="name" type="text" placeholder="e.g., John Doe" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">System</label><select id="system" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"><option value="pyth">Pythagorean</option><option value="chald">Chaldean</option></select></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Keep Master Numbers</label><select id="master" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px"><option value="11,22">11 & 22</option><option value="11,22,33">11, 22 & 33</option><option value="">None</option></select></div>
+          <button id="calc" class="tool-button">Calculate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Breakdown</div>
+        <div id="breakdown" class="tool-desc" style="white-space:pre-wrap"></div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">History</div>
+        <div id="hist" class="tool-desc">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_numerology_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d.slice(-50))); }
+    function pushHist(item){ const d=load(); d.push(item); save(d); renderHist(); }
+    function renderHist(){ const d=load(); const h=document.getElementById('hist'); if(!d.length){ h.textContent='â€”'; return; } h.innerHTML=d.slice().reverse().map(x=>`${escapeHtml(x.name)} â€¢ ${escapeHtml(x.system)} â€¢ ${escapeHtml(x.total)} (${escapeHtml(x.final)})`).join('<br>'); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    const MAP_PYTH = { a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8,i:9,j:1,k:2,l:3,m:4,n:5,o:6,p:7,q:8,r:9,s:1,t:2,u:3,v:4,w:5,x:6,y:7,z:8 };
+    const MAP_CHAL = { a:1,b:2,c:3,d:4,e:5,f:8,g:3,h:5,i:1,j:1,k:2,l:3,m:4,n:5,o:7,p:8,q:1,r:2,s:3,t:4,u:6,v:6,w:6,x:5,y:1,z:7 };
+
+    function reduceNumber(n, masters){
+      const masterSet=new Set((masters||'').split(',').filter(Boolean).map(s=>parseInt(s,10)));
+      let steps=[n];
+      while(n>9 && !masterSet.has(n)){
+        n = String(n).split('').reduce((a,d)=>a+parseInt(d,10),0);
+        steps.push(n);
+      }
+      return {final:n, steps};
+    }
+
+    function calc(){
+      const name=(document.getElementById('name').value||'').trim(); if(!name){ alert('Enter a name.'); return; }
+      const sys=document.getElementById('system').value; const masters=document.getElementById('master').value;
+      const map = sys==='chald'? MAP_CHAL: MAP_PYTH;
+      const letters = name.toLowerCase().replace(/[^a-z]/g,'').split('');
+      if (!letters.length){ alert('Name must contain letters A-Z.'); return; }
+      const nums = letters.map(ch=> map[ch]||0);
+      const total = nums.reduce((a,b)=>a+b,0);
+      const {final, steps} = reduceNumber(total, masters);
+      const pairs = letters.map((ch,i)=> `${ch.toUpperCase()}=${nums[i]}`);
+      const breakdown = `System: ${sys==='chald'?'Chaldean':'Pythagorean'}\nLetters: ${pairs.join(', ')}\nTotal: ${total}\nReduce: ${steps.join(' â†’ ')}\nFinal: ${final}`;
+      document.getElementById('breakdown').textContent=breakdown;
+      pushHist({name, system: sys, total, final, ts:Date.now()});
+    }
+    document.getElementById('calc').addEventListener('click', calc);
+    renderHist();
+  </script>
+</body>
+</html>
+
+

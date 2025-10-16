@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Robots.txt Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-robot tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Robots.txt Generator</div>
+      <div class="tool-desc">Create a valid robots.txt for your site. Add rules, preview, copy, and download.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        <div>
+          <label for="ua" style="display:block; font-weight:600; margin-bottom:6px;">User-agent</label>
+          <input id="ua" type="text" value="*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          <small>Example: * or Googlebot</small>
+        </div>
+        <div>
+          <label for="sitemap" style="display:block; font-weight:600; margin-bottom:6px;">Sitemap URL (optional)</label>
+          <input id="sitemap" type="url" placeholder="https://example.com/sitemap.xml" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="delay" style="display:block; font-weight:600; margin-bottom:6px;">Crawl-delay (seconds, optional)</label>
+          <input id="delay" type="number" step="1" min="0" placeholder="e.g. 5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:12px;">
+        <div>
+          <label for="allow" style="display:block; font-weight:600; margin-bottom:6px;">Allow paths (one per line)</label>
+          <textarea id="allow" rows="6" placeholder="/\n/allowed/path" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+        </div>
+        <div>
+          <label for="disallow" style="display:block; font-weight:600; margin-bottom:6px;">Disallow paths (one per line)</label>
+          <textarea id="disallow" rows="6" placeholder="/admin\n/private" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="gen" class="tool-button">Generate</button>
+        <button id="copy" class="tool-button" style="background:#555;">Copy</button>
+        <button id="dl" class="tool-button" style="background:#888;">Download</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Preview</div>
+      <textarea id="out" rows="12" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function sanitizeLines(text){
+    return (text||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  }
+  function makeRobots(){
+    const ua = (document.getElementById('ua').value||'*').trim();
+    const allow = sanitizeLines(document.getElementById('allow').value);
+    const disallow = sanitizeLines(document.getElementById('disallow').value);
+    const delay = document.getElementById('delay').value.trim();
+    const sitemap = document.getElementById('sitemap').value.trim();
+    const lines = [];
+    lines.push(`User-agent: ${ua}`);
+    allow.forEach(p => lines.push(`Allow: ${p}`));
+    disallow.forEach(p => lines.push(`Disallow: ${p}`));
+    if (delay) lines.push(`Crawl-delay: ${delay}`);
+    if (sitemap) lines.push(`Sitemap: ${sitemap}`);
+    return lines.join('\n') + '\n';
+  }
+  function generate(){ document.getElementById('out').value = makeRobots(); }
+  document.getElementById('gen').addEventListener('click', generate);
+  document.getElementById('copy').addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText(document.getElementById('out').value); } catch(e){}
+  });
+  document.getElementById('dl').addEventListener('click', ()=>{
+    const blob = new Blob([document.getElementById('out').value || makeRobots()], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'robots.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  // initial
+  generate();
+</script>
+</body></html>
+
+

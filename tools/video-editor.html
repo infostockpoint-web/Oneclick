@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Editor - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px;margin:0 auto; padding:16px;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-cut tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Video Editor</div>
+        <div class="tool-desc">Trim a section of your video in the browser and export as MP4.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:end;">
+          <div>
+            <label style="font-weight:600;">Select video</label>
+            <input id="file" type="file" accept="video/*" class="tool-input" style="width:100%; margin-top:6px;" />
+          </div>
+          <div>
+            <label style="font-weight:600;">Output format</label>
+            <select id="format" class="tool-input" style="width:100%; margin-top:6px;">
+              <option value="mp4" selected>MP4 (H.264/AAC)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <label style="font-weight:600;">Start time</label>
+            <input id="start" class="tool-input" placeholder="e.g., 00:00:05 or 5" style="width:100%; margin-top:6px;" />
+          </div>
+          <div>
+            <label style="font-weight:600;">End time</label>
+            <input id="end" class="tool-input" placeholder="e.g., 00:00:12 or 12" style="width:100%; margin-top:6px;" />
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="trim" class="tool-button">Trim</button>
+          <button id="cancel" class="tool-button" style="background:#6c757d;">Cancel</button>
+        </div>
+
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Progress</div>
+          <div style="height:10px; background:#e5e7eb; border-radius:9999px; overflow:hidden;">
+            <div id="bar" style="height:100%; width:0%; background:#4a6cf7;"></div>
+          </div>
+          <div id="status" style="margin-top:6px; color:#6c757d; font-size:14px;">Idle</div>
+        </div>
+
+        <div id="result" style="display:none;">
+          <label style="font-weight:600;">Output</label>
+          <div id="downloadWrap" style="margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+  <script>
+    const fileEl = document.getElementById('file');
+    const fmtEl = document.getElementById('format');
+    const startEl = document.getElementById('start');
+    const endEl = document.getElementById('end');
+    const trimBtn = document.getElementById('trim');
+    const cancelBtn = document.getElementById('cancel');
+    const bar = document.getElementById('bar');
+    const statusEl = document.getElementById('status');
+    const result = document.getElementById('result');
+    const downloadWrap = document.getElementById('downloadWrap');
+
+    let abort = false;
+    let ffmpeg;
+
+    function toHHMMSS(v){
+      if (!v) return '0';
+      if (/^\d+(?:\.\d+)?$/.test(v)) {
+        const s = Math.max(0, parseFloat(v));
+        const hh = Math.floor(s/3600).toString().padStart(2,'0');
+        const mm = Math.floor((s%3600)/60).toString().padStart(2,'0');
+        const ss = (s%60).toFixed(3).padStart(6,'0');
+        return `${hh}:${mm}:${ss}`;
+      }
+      return v;
+    }
+
+    async function ensureFFmpeg(){
+      if (ffmpeg) return ffmpeg;
+      const { createFFmpeg } = FFmpeg;
+      ffmpeg = createFFmpeg({ log: true, corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js' });
+      ffmpeg.setProgress(({ ratio }) => {
+        if (abort) return;
+        const p = Math.max(0, Math.min(1, ratio || 0));
+        bar.style.width = (p*100).toFixed(0) + '%';
+      });
+      statusEl.textContent = 'Loading FFmpeg (~20–30MB)...';
+      await ffmpeg.load();
+      statusEl.textContent = 'Ready';
+      return ffmpeg;
+    }
+
+    cancelBtn.addEventListener('click', ()=>{ abort = true; statusEl.textContent = 'Cancelled'; });
+
+    trimBtn.addEventListener('click', async ()=>{
+      try {
+        abort = false; bar.style.width = '0%'; result.style.display = 'none'; downloadWrap.innerHTML = ''; statusEl.textContent = 'Preparing...';
+        const file = fileEl.files && fileEl.files[0];
+        if(!file){ alert('Select a video file'); return; }
+        const start = startEl.value.trim();
+        const end = endEl.value.trim();
+        if(!start || !end){ alert('Enter start and end times'); return; }
+        const startF = toHHMMSS(start);
+        const endF = toHHMMSS(end);
+
+        const ff = await ensureFFmpeg();
+        const inName = 'input';
+        const outName = 'trimmed.' + fmtEl.value;
+        ff.FS('writeFile', inName, await FFmpeg.fetchFile(file));
+
+        statusEl.textContent = 'Trimming...';
+        await ff.run('-ss', startF, '-i', inName, '-to', endF, '-movflags', 'faststart', '-preset', 'fast', outName);
+        if (abort) { try { ff.FS('unlink', inName); ff.FS('unlink', outName); } catch {} return; }
+
+        const data = ff.FS('readFile', outName);
+        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = (file.name.replace(/\.[^.]+$/, '') || 'video') + '-trimmed.' + fmtEl.value;
+        a.textContent = 'Download trimmed file';
+        a.className = 'tool-button';
+        downloadWrap.appendChild(a);
+        result.style.display = '';
+        statusEl.textContent = 'Done';
+        try { ff.FS('unlink', inName); ff.FS('unlink', outName); } catch {}
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = 'Error: ' + (e && e.message ? e.message : e);
+      }
+    });
+  </script>
+</body>
+</html>

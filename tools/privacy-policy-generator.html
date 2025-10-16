@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Privacy Policy Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-user-shield tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Privacy Policy Generator</div>
+      <div class="tool-desc">Fill in a few details and generate a simple privacy policy for your site. Copy or download.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="ppSite" style="display:block; font-weight:600; margin-bottom:6px;">Website Name</label>
+          <input id="ppSite" type="text" placeholder="MySite" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ppUrl" style="display:block; font-weight:600; margin-bottom:6px;">Website URL</label>
+          <input id="ppUrl" type="url" placeholder="https://mysite.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ppCompany" style="display:block; font-weight:600; margin-bottom:6px;">Company/Owner</label>
+          <input id="ppCompany" type="text" placeholder="My Company LLC" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ppEmail" style="display:block; font-weight:600; margin-bottom:6px;">Contact Email</label>
+          <input id="ppEmail" type="email" placeholder="hello@mysite.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ppAddress" style="display:block; font-weight:600; margin-bottom:6px;">Business Address</label>
+          <input id="ppAddress" type="text" placeholder="123 Main St, City, Country" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="ppCountry" style="display:block; font-weight:600; margin-bottom:6px;">Jurisdiction/Country</label>
+          <input id="ppCountry" type="text" placeholder="India" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+      </div>
+
+      <hr style="margin:16px 0; border:none; border-top:1px solid #eee;"/>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px;">
+        <div>
+          <div class="tool-name" style="margin-bottom:6px;">Information we collect</div>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppCollect" value="name and contact details"> Name and contact details</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppCollect" value="usage data and analytics"> Usage data and analytics</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppCollect" value="cookies and similar technologies"> Cookies and similar technologies</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppCollect" value="payment information"> Payment information</label>
+        </div>
+        <div>
+          <div class="tool-name" style="margin-bottom:6px;">How we use information</div>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppUse" value="to provide and maintain our services"> Provide and maintain services</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppUse" value="to improve, personalize, and expand our services"> Improve and personalize services</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppUse" value="to communicate with you, including support"> Communicate and support</label>
+          <label style="display:block; margin-bottom:6px;"><input type="checkbox" class="ppUse" value="to send you updates, marketing, and promotional materials"> Marketing updates</label>
+        </div>
+        <div>
+          <div class="tool-name" style="margin-bottom:6px;">Options</div>
+          <label style="display:block; margin-bottom:6px;"><input id="ppCookies" type="checkbox" checked> Include Cookies section</label>
+          <label style="display:block; margin-bottom:6px;"><input id="ppThird" type="checkbox" checked> Include Third-Party Services section</label>
+          <label style="display:block; margin-bottom:6px;"><input id="ppChildren" type="checkbox"> Include Childrenâ€™s Privacy section</label>
+          <label style="display:block; margin-bottom:6px;"><input id="ppDpo" type="checkbox"> Include Data Protection Officer details</label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="ppGen" class="tool-button">Generate</button>
+        <button id="ppCopy" class="tool-button" style="background:#555;">Copy</button>
+        <button id="ppDl" class="tool-button" style="background:#888;">Download</button>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Privacy Policy</div>
+      <textarea id="ppOut" rows="20" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function todayISO(){ const d=new Date(); return d.toISOString().split('T')[0]; }
+  function listSelected(cls){ return Array.from(document.querySelectorAll('.'+cls+':checked')).map(i=>i.value); }
+  function makePolicy(){
+    const site = document.getElementById('ppSite').value.trim();
+    const url = document.getElementById('ppUrl').value.trim();
+    const company = document.getElementById('ppCompany').value.trim();
+    const email = document.getElementById('ppEmail').value.trim();
+    const addr = document.getElementById('ppAddress').value.trim();
+    const country = document.getElementById('ppCountry').value.trim();
+    const collects = listSelected('ppCollect');
+    const uses = listSelected('ppUse');
+    const includeCookies = document.getElementById('ppCookies').checked;
+    const includeThird = document.getElementById('ppThird').checked;
+    const includeChildren = document.getElementById('ppChildren').checked;
+    const includeDpo = document.getElementById('ppDpo').checked;
+
+    const lines = [];
+    lines.push(`${site || 'Our website'} Privacy Policy`);
+    lines.push(`Last updated: ${todayISO()}`);
+    lines.push('');
+    lines.push(`This Privacy Policy describes how ${company||'we'} ("we", "us", or "our") collect, use, and share your information when you use ${site||'our website'} (${url||''}).`);
+    lines.push('');
+    if (collects.length){
+      lines.push('Information we collect:');
+      collects.forEach(c => lines.push(`- ${c}`));
+      lines.push('');
+    }
+    if (uses.length){
+      lines.push('How we use information:');
+      uses.forEach(u => lines.push(`- ${u}`));
+      lines.push('');
+    }
+    if (includeCookies){
+      lines.push('Cookies and similar technologies:');
+      lines.push('We use cookies and similar tracking technologies to monitor and improve your experience. You can control cookies through your browser settings.');
+      lines.push('');
+    }
+    if (includeThird){
+      lines.push('Third-party services:');
+      lines.push('We may share data with trusted third-party providers to operate and improve our services (e.g., analytics, hosting, payment processing). These providers process data on our behalf and are obligated to protect your information.');
+      lines.push('');
+    }
+    lines.push('Data retention:');
+    lines.push('We retain personal information only as long as necessary for the purposes set out in this policy and to comply with legal obligations.');
+    lines.push('');
+    lines.push('Your rights:');
+    lines.push('You may have rights to access, update, or delete your personal information. To exercise these rights, contact us.');
+    lines.push('');
+    if (includeChildren){
+      lines.push('Childrenâ€™s privacy:');
+      lines.push('Our services are not directed to children under 13. We do not knowingly collect personal information from children.');
+      lines.push('');
+    }
+    if (includeDpo){
+      lines.push('Data Protection Officer:');
+      lines.push(`${company||'We'} may be contacted regarding this policy at the details below.`);
+      lines.push('');
+    }
+    lines.push('Contact us:');
+    lines.push(`If you have any questions, contact us at ${email||'your-email@example.com'} or by mail at ${addr||'your address'}, ${country||''}.`);
+    lines.push('');
+    lines.push('Changes to this policy:');
+    lines.push('We may update this policy from time to time. We will post the new policy with an updated date on this page.');
+    return lines.join('\n');
+  }
+  function generate(){ document.getElementById('ppOut').value = makePolicy(); }
+  document.getElementById('ppGen').addEventListener('click', generate);
+  document.getElementById('ppCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('ppOut').value); } catch(e){} });
+  document.getElementById('ppDl').addEventListener('click', ()=>{ const blob=new Blob([document.getElementById('ppOut').value||makePolicy()],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='privacy-policy.txt'; a.click(); URL.revokeObjectURL(a.href); });
+  // initial
+  generate();
+</script>
+</body></html>
+
+

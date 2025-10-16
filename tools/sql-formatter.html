@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SQL Formatter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-database tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">SQL Formatter</div>
+      <div class="tool-desc">Beautify and format SQL queries for better readability.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="sqlInput" style="display:block; font-weight:600; margin-bottom:6px;">SQL Query</label>
+          <textarea id="sqlInput" rows="10" placeholder="SELECT * FROM users WHERE id = 1;" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:monospace;"></textarea>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="formatBtn" class="tool-button">Format SQL</button>
+          <button id="minifyBtn" class="tool-button" style="background:#555;">Minify SQL</button>
+          <button id="copyBtn" class="tool-button" style="background:#888;">Copy</button>
+          <button id="clearBtn" class="tool-button" style="background:#999;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Formatted SQL</div>
+        <div id="output" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:monospace; white-space:pre-wrap;"></div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Options</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="uppercase" checked> Uppercase keywords</label><br>
+          <label><input type="checkbox" id="indent" checked> Indent with spaces</label><br>
+          <label><input type="checkbox" id="linebreaks" checked> Add line breaks</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const sqlInput = document.getElementById('sqlInput');
+  const output = document.getElementById('output');
+  const formatBtn = document.getElementById('formatBtn');
+  const minifyBtn = document.getElementById('minifyBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const uppercase = document.getElementById('uppercase');
+  const indent = document.getElementById('indent');
+  const linebreaks = document.getElementById('linebreaks');
+
+  // SQL keywords for formatting
+  const sqlKeywords = [
+    'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'OUTER',
+    'ON', 'GROUP', 'BY', 'HAVING', 'ORDER', 'INSERT', 'UPDATE', 'DELETE', 'CREATE',
+    'TABLE', 'INDEX', 'DROP', 'ALTER', 'AND', 'OR', 'NOT', 'IN', 'EXISTS', 'BETWEEN',
+    'LIKE', 'IS', 'NULL', 'DISTINCT', 'AS', 'ASC', 'DESC', 'LIMIT', 'OFFSET',
+    'UNION', 'ALL', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'WITH', 'RECURSIVE'
+  ];
+
+  function formatSQL(sql) {
+    if (!sql.trim()) return '';
+
+    let formatted = sql;
+    let indentLevel = 0;
+    const indentSize = indent.checked ? 2 : 0;
+    let result = '';
+    let inString = false;
+    let stringChar = '';
+    let inComment = false;
+    let commentType = '';
+
+    // Remove extra whitespace and normalize
+    formatted = formatted.replace(/\s+/g, ' ').trim();
+
+    // Handle strings
+    let tempFormatted = '';
+    for (let i = 0; i < formatted.length; i++) {
+      const char = formatted[i];
+      const prevChar = i > 0 ? formatted[i-1] : '';
+
+      if (!inComment && (char === "'" || char === '"') && prevChar !== '\\') {
+        if (!inString) {
+          inString = true;
+          stringChar = char;
+        } else if (char === stringChar) {
+          inString = false;
+        }
+      }
+
+      if (!inString && char === '/' && formatted[i+1] === '*') {
+        inComment = true;
+        commentType = '/*';
+      } else if (!inString && char === '*' && formatted[i+1] === '/') {
+        inComment = false;
+        commentType = '';
+      } else if (!inString && char === '-' && formatted[i+1] === '-') {
+        inComment = true;
+        commentType = '--';
+      } else if (!inString && inComment && commentType === '--' && char === '\n') {
+        inComment = false;
+      }
+
+      if (!inComment && !inString) {
+        tempFormatted += char;
+      } else if (inComment || inString) {
+        tempFormatted += char;
+      }
+    }
+
+    formatted = tempFormatted.replace(/\s+/g, ' ').trim();
+
+    // Split by keywords for formatting
+    const words = formatted.split(/(\s+)/);
+    let currentLine = '';
+    let parenthesisLevel = 0;
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i].trim();
+      if (!word) continue;
+
+      const upperWord = word.toUpperCase();
+      const isKeyword = sqlKeywords.includes(upperWord);
+
+      // Handle opening parenthesis
+      if (word === '(') {
+        if (currentLine.trim()) {
+          result += currentLine.trim() + '\n';
+          currentLine = '  '.repeat(indentLevel);
+        }
+        currentLine += word;
+        parenthesisLevel++;
+        indentLevel++;
+        continue;
+      }
+
+      // Handle closing parenthesis
+      if (word === ')') {
+        currentLine += word;
+        parenthesisLevel--;
+        if (parenthesisLevel < 0) parenthesisLevel = 0;
+        if (indentLevel > 0) indentLevel--;
+        continue;
+      }
+
+      // Handle comma
+      if (word === ',') {
+        currentLine += word;
+        if (linebreaks.checked) {
+          result += currentLine.trim() + '\n';
+          currentLine = '  '.repeat(indentLevel);
+        } else {
+          currentLine += ' ';
+        }
+        continue;
+      }
+
+      // Handle keywords
+      if (isKeyword) {
+        if (currentLine.trim()) {
+          result += currentLine.trim() + '\n';
+        }
+        if (uppercase.checked) {
+          result += '  '.repeat(indentLevel) + upperWord;
+        } else {
+          result += '  '.repeat(indentLevel) + word;
+        }
+        currentLine = '\n' + '  '.repeat(indentLevel);
+        continue;
+      }
+
+      // Regular word
+      currentLine += word;
+    }
+
+    if (currentLine.trim()) {
+      result += currentLine.trim();
+    }
+
+    return result.trim();
+  }
+
+  function minifySQL(sql) {
+    if (!sql.trim()) return '';
+    return sql.replace(/\s+/g, ' ').trim();
+  }
+
+  function updateOutput() {
+    const sql = sqlInput.value;
+    if (!sql.trim()) {
+      output.textContent = 'Formatted SQL will appear here...';
+      return;
+    }
+
+    let result = sql;
+    if (formatBtn.classList.contains('active') || (!formatBtn.classList.contains('active') && !minifyBtn.classList.contains('active'))) {
+      result = formatSQL(sql);
+    } else if (minifyBtn.classList.contains('active')) {
+      result = minifySQL(sql);
+    }
+
+    output.textContent = result;
+  }
+
+  // Event listeners
+  formatBtn.addEventListener('click', () => {
+    formatBtn.classList.add('active');
+    minifyBtn.classList.remove('active');
+    updateOutput();
+  });
+
+  minifyBtn.addEventListener('click', () => {
+    minifyBtn.classList.add('active');
+    formatBtn.classList.remove('active');
+    updateOutput();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = output.textContent;
+    if (text && text !== 'Formatted SQL will appear here...') {
+      navigator.clipboard.writeText(text);
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    sqlInput.value = '';
+    output.textContent = 'Formatted SQL will appear here...';
+    formatBtn.classList.remove('active');
+    minifyBtn.classList.remove('active');
+  });
+
+  // Initialize
+  output.textContent = 'Formatted SQL will appear here...';
+  sqlInput.addEventListener('input', updateOutput);
+
+  // Auto-format on load if there's content
+  if (sqlInput.value.trim()) {
+    updateOutput();
+  }
+</script>
+</body></html>
+
+

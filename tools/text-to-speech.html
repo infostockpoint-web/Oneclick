@@ -1,0 +1,299 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Text to Speech - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-volume-up tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Text to Speech Converter</div>
+      <div class="tool-desc">Convert written text into spoken audio using your browser's built-in speech synthesis.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="textInput" style="display:block; font-weight:600; margin-bottom:6px;">Text to Speak</label>
+          <textarea id="textInput" rows="6" placeholder="Enter the text you want to convert to speech..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:Arial;"></textarea>
+        </div>
+        <div>
+          <label for="voiceSelect" style="display:block; font-weight:600; margin-bottom:6px;">Voice</label>
+          <select id="voiceSelect" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="">Loading voices...</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="speakBtn" class="tool-button">Speak</button>
+          <button id="pauseBtn" class="tool-button" style="background:#ffc107; color:#000;">Pause</button>
+          <button id="resumeBtn" class="tool-button" style="background:#28a745;">Resume</button>
+          <button id="stopBtn" class="tool-button" style="background:#dc3545;">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Voice Settings</div>
+        <div style="margin-top:10px;">
+          <div style="margin-bottom:15px;">
+            <label for="speed" style="display:block; margin-bottom:5px;">Speed: <span id="speedValue">1.0</span></label>
+            <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1.0" style="width:100%;">
+          </div>
+          <div style="margin-bottom:15px;">
+            <label for="pitch" style="display:block; margin-bottom:5px;">Pitch: <span id="pitchValue">1.0</span></label>
+            <input type="range" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:100%;">
+          </div>
+          <div style="margin-bottom:15px;">
+            <label for="volume" style="display:block; margin-bottom:5px;">Volume: <span id="volumeValue">1.0</span></label>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="1.0" style="width:100%;">
+          </div>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Speech Status</div>
+        <div id="status" style="margin-top:10px; font-size:1.1rem;">Ready to speak</div>
+        <div style="margin-top:10px;">
+          <button id="copyBtn" class="tool-button" style="width:100%; background:#555;">Copy Text</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const textInput = document.getElementById('textInput');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const speakBtn = document.getElementById('speakBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const status = document.getElementById('status');
+  const speed = document.getElementById('speed');
+  const pitch = document.getElementById('pitch');
+  const volume = document.getElementById('volume');
+  const speedValue = document.getElementById('speedValue');
+  const pitchValue = document.getElementById('pitchValue');
+  const volumeValue = document.getElementById('volumeValue');
+
+  let speechSynthesis = window.speechSynthesis;
+  let currentUtterance = null;
+  let voices = [];
+  let voicesLoaded = false;
+
+  // Load available voices
+  function loadVoices() {
+    voices = speechSynthesis.getVoices();
+    voiceSelect.innerHTML = '';
+
+    if (voices.length === 0) {
+      voiceSelect.innerHTML = '<option value="">No voices available</option>';
+      return;
+    }
+
+    // Add default option
+    voiceSelect.innerHTML = '<option value="">Select a voice</option>';
+
+    // Group voices by language
+    const voicesByLang = {};
+    voices.forEach(voice => {
+      if (!voicesByLang[voice.lang]) {
+        voicesByLang[voice.lang] = [];
+      }
+      voicesByLang[voice.lang].push(voice);
+    });
+
+    // Add voices grouped by language
+    Object.keys(voicesByLang).sort().forEach(lang => {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = lang;
+      voicesByLang[lang].forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (voice.default) {
+          option.textContent += ' - Default';
+        }
+        optgroup.appendChild(option);
+      });
+      voiceSelect.appendChild(optgroup);
+    });
+
+    voicesLoaded = true;
+  }
+
+  // Load voices when they become available
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  // Fallback for browsers that don't support onvoiceschanged
+  setTimeout(loadVoices, 100);
+
+  function speak() {
+    const text = textInput.value.trim();
+    if (!text) {
+      alert('Please enter some text to speak.');
+      return;
+    }
+
+    if (!voicesLoaded) {
+      alert('Voices are still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    // Stop any current speech
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentUtterance.rate = parseFloat(speed.value);
+    currentUtterance.pitch = parseFloat(pitch.value);
+    currentUtterance.volume = parseFloat(volume.value);
+
+    // Set voice if selected
+    if (voiceSelect.value) {
+      const selectedVoice = voices.find(voice => voice.name === voiceSelect.value);
+      if (selectedVoice) {
+        currentUtterance.voice = selectedVoice;
+      }
+    }
+
+    // Update UI
+    speakBtn.disabled = true;
+    speakBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Speaking...';
+    pauseBtn.disabled = false;
+    resumeBtn.disabled = true;
+    stopBtn.disabled = false;
+    status.textContent = 'Speaking...';
+    status.style.color = '#007bff';
+
+    currentUtterance.onstart = () => {
+      status.textContent = 'Speaking...';
+    };
+
+    currentUtterance.onend = () => {
+      speakBtn.disabled = false;
+      speakBtn.innerHTML = 'Speak';
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+      status.textContent = 'Speech completed';
+      status.style.color = '#28a745';
+      setTimeout(() => {
+        status.textContent = 'Ready to speak';
+        status.style.color = '#000';
+      }, 2000);
+    };
+
+    currentUtterance.onerror = (event) => {
+      speakBtn.disabled = false;
+      speakBtn.innerHTML = 'Speak';
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+      status.textContent = 'Speech error: ' + event.error;
+      status.style.color = '#dc3545';
+    };
+
+    speechSynthesis.speak(currentUtterance);
+  }
+
+  function pauseSpeech() {
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+      speechSynthesis.pause();
+      speakBtn.disabled = true;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+      stopBtn.disabled = false;
+      status.textContent = 'Speech paused';
+      status.style.color = '#ffc107';
+    }
+  }
+
+  function resumeSpeech() {
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+      speakBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = false;
+      status.textContent = 'Speaking...';
+      status.style.color = '#007bff';
+    }
+  }
+
+  function stopSpeech() {
+    speechSynthesis.cancel();
+    speakBtn.disabled = false;
+    speakBtn.innerHTML = 'Speak';
+    pauseBtn.disabled = true;
+    resumeBtn.disabled = true;
+    stopBtn.disabled = true;
+    status.textContent = 'Speech stopped';
+    status.style.color = '#dc3545';
+    setTimeout(() => {
+      status.textContent = 'Ready to speak';
+      status.style.color = '#000';
+    }, 1500);
+  }
+
+  // Event listeners
+  speakBtn.addEventListener('click', speak);
+  pauseBtn.addEventListener('click', pauseSpeech);
+  resumeBtn.addEventListener('click', resumeSpeech);
+  stopBtn.addEventListener('click', stopSpeech);
+
+  copyBtn.addEventListener('click', () => {
+    if (textInput.value.trim()) {
+      navigator.clipboard.writeText(textInput.value);
+    }
+  });
+
+  // Update display values when sliders change
+  speed.addEventListener('input', () => {
+    speedValue.textContent = speed.value;
+  });
+
+  pitch.addEventListener('input', () => {
+    pitchValue.textContent = pitch.value;
+  });
+
+  volume.addEventListener('input', () => {
+    volumeValue.textContent = volume.value;
+  });
+
+  // Initialize button states
+  pauseBtn.disabled = true;
+  resumeBtn.disabled = true;
+  stopBtn.disabled = true;
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      switch(e.key) {
+        case 'Enter':
+          e.preventDefault();
+          speak();
+          break;
+        case ' ':
+          e.preventDefault();
+          if (speechSynthesis.speaking && !speechSynthesis.paused) {
+            pauseSpeech();
+          } else if (speechSynthesis.paused) {
+            resumeSpeech();
+          }
+          break;
+      }
+    }
+  });
+</script>
+</body></html>
+
+

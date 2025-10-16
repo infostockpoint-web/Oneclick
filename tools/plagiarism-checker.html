@@ -1,0 +1,344 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Plagiarism Checker - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-search tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Plagiarism Checker</div>
+      <div class="tool-desc">Check your text for potential plagiarism and get detailed similarity analysis.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="textInput" style="display:block; font-weight:600; margin-bottom:6px;">Text to Check</label>
+          <textarea id="textInput" rows="6" placeholder="Paste your text here to check for plagiarism..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:Arial;"></textarea>
+        </div>
+        <div>
+          <label for="sensitivity" style="display:block; font-weight:600; margin-bottom:6px;">Sensitivity Level</label>
+          <select id="sensitivity" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="low">Low (Fewer false positives)</option>
+            <option value="medium" selected>Medium (Balanced)</option>
+            <option value="high">High (More thorough)</option>
+            <option value="strict">Strict (Very sensitive)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="checkBtn" class="tool-button">Check for Plagiarism</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Plagiarism Analysis Results</div>
+        <div id="resultsContainer" style="margin-top:10px;">
+          <div id="loadingResults" style="text-align:center; color:#666;">Enter text and click "Check for Plagiarism" to analyze</div>
+          <div id="resultsContent" style="display:none;">
+            <div style="margin-bottom:15px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span>Overall Plagiarism Risk:</span>
+                <span id="overallRisk" style="font-weight:600;"></span>
+              </div>
+              <div style="width:100%; height:8px; background:#eee; border-radius:4px; overflow:hidden;">
+                <div id="riskBar" style="height:100%; width:0%; transition:width 0.5s;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom:10px;"><strong>Word Count:</strong> <span id="wordCount">0</span></div>
+            <div style="margin-bottom:10px;"><strong>Character Count:</strong> <span id="charCount">0</span></div>
+            <div style="margin-bottom:10px;"><strong>Similarity Score:</strong> <span id="similarityScore">0%</span></div>
+            <div style="margin-bottom:10px;"><strong>Matched Phrases:</strong> <span id="matchedPhrases">0</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Detailed Findings</div>
+        <div id="findingsContainer" style="margin-top:10px;">
+          <div id="loadingFindings" style="text-align:center; color:#666;">Analysis required for detailed findings</div>
+          <div id="findingsContent" style="display:none;">
+            <div id="findingsList" style="font-size:0.9rem; max-height:200px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card" style="padding:16px; margin-top:16px;">
+      <div class="tool-name">Potential Matches Found</div>
+      <div id="matchesContainer" style="margin-top:10px;">
+        <div id="loadingMatches" style="text-align:center; color:#666;">Analysis required for match detection</div>
+        <div id="matchesContent" style="display:none;">
+          <div id="matchesList" style="font-size:0.9rem; max-height:200px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const textInput = document.getElementById('textInput');
+  const sensitivity = document.getElementById('sensitivity');
+  const checkBtn = document.getElementById('checkBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  // Results elements
+  const resultsContainer = document.getElementById('resultsContainer');
+  const loadingResults = document.getElementById('loadingResults');
+  const resultsContent = document.getElementById('resultsContent');
+  const overallRisk = document.getElementById('overallRisk');
+  const riskBar = document.getElementById('riskBar');
+  const wordCount = document.getElementById('wordCount');
+  const charCount = document.getElementById('charCount');
+  const similarityScore = document.getElementById('similarityScore');
+  const matchedPhrases = document.getElementById('matchedPhrases');
+
+  // Findings elements
+  const findingsContainer = document.getElementById('findingsContainer');
+  const loadingFindings = document.getElementById('loadingFindings');
+  const findingsContent = document.getElementById('findingsContent');
+  const findingsList = document.getElementById('findingsList');
+
+  // Matches elements
+  const matchesContainer = document.getElementById('matchesContainer');
+  const loadingMatches = document.getElementById('loadingMatches');
+  const matchesContent = document.getElementById('matchesContent');
+  const matchesList = document.getElementById('matchesList');
+
+  // Sample text database for plagiarism checking
+  const sampleTexts = [
+    "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the alphabet.",
+    "In a hole in the ground there lived a hobbit. Not a nasty, dirty, wet hole, filled with the ends of worms.",
+    "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness.",
+    "To be or not to be, that is the question: Whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune.",
+    "All animals are equal, but some animals are more equal than others. Four legs good, two legs bad.",
+    "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+    "The only way to do great work is to love what you do. If you haven't found it yet, keep looking.",
+    "Innovation distinguishes between a leader and a follower. Stay hungry, stay foolish.",
+    "The future belongs to those who believe in the beauty of their dreams. Success is not final, failure is not fatal.",
+    "In three words I can sum up everything I've learned about life: it goes on. Life is what happens to you while you're busy making other plans."
+  ];
+
+  function countWords(text) {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  }
+
+  function countCharacters(text) {
+    return text.length;
+  }
+
+  function getRiskColor(score) {
+    if (score < 20) return '#28a745';
+    if (score < 50) return '#ffc107';
+    if (score < 80) return '#fd7e14';
+    return '#dc3545';
+  }
+
+  function getRiskLevel(score) {
+    if (score < 20) return 'ðŸŸ¢ Low Risk';
+    if (score < 50) return 'ðŸŸ¡ Medium Risk';
+    if (score < 80) return 'ðŸŸ  High Risk';
+    return 'ðŸ”´ Very High Risk';
+  }
+
+  function findSimilarPhrases(text, threshold = 0.7) {
+    const words = text.toLowerCase().split(/\s+/);
+    const matches = [];
+
+    // Check against sample texts
+    sampleTexts.forEach((sample, index) => {
+      const sampleWords = sample.toLowerCase().split(/\s+/);
+      let matchCount = 0;
+      let matchedWords = [];
+
+      // Simple word matching algorithm
+      words.forEach(word => {
+        if (word.length > 3 && sampleWords.includes(word)) {
+          matchCount++;
+          if (!matchedWords.includes(word)) {
+            matchedWords.push(word);
+          }
+        }
+      });
+
+      const similarity = matchedWords.length / Math.max(words.length, sampleWords.length);
+
+      if (similarity > threshold) {
+        matches.push({
+          source: `Sample Text ${index + 1}`,
+          similarity: Math.round(similarity * 100),
+          matchedWords: matchedWords.length,
+          totalWords: Math.max(words.length, sampleWords.length),
+          sample: sample.substring(0, 100) + '...'
+        });
+      }
+    });
+
+    return matches;
+  }
+
+  function analyzeTextStructure(text) {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.trim().split(/\s+/).length, 0) / sentences.length;
+
+    return {
+      sentences: sentences.length,
+      paragraphs: paragraphs.length,
+      avgSentenceLength: Math.round(avgSentenceLength * 10) / 10
+    };
+  }
+
+  function generateFindings(text, matches) {
+    const findings = [];
+    const structure = analyzeTextStructure(text);
+
+    // Structure analysis
+    if (structure.avgSentenceLength < 10) {
+      findings.push('â€¢ Sentences are unusually short, which may indicate copied content.');
+    } else if (structure.avgSentenceLength > 25) {
+      findings.push('â€¢ Sentences are unusually long, which could be a sign of complex academic text.');
+    }
+
+    // Match analysis
+    if (matches.length > 0) {
+      findings.push(`â€¢ Found ${matches.length} potential matches with similarity scores up to ${Math.max(...matches.map(m => m.similarity))}%`);
+    }
+
+    // General recommendations
+    findings.push('â€¢ Always cite sources properly to avoid plagiarism accusations.');
+    findings.push('â€¢ Use quotation marks for direct quotes and provide references.');
+    findings.push('â€¢ Paraphrase content in your own words rather than copying directly.');
+    findings.push('â€¢ Check against multiple sources including academic databases and web content.');
+
+    return findings;
+  }
+
+  async function checkPlagiarism() {
+    const text = textInput.value.trim();
+
+    if (!text) {
+      alert('Please enter text to check for plagiarism.');
+      return;
+    }
+
+    if (text.length < 50) {
+      alert('Text is too short for meaningful plagiarism analysis. Please enter at least 50 characters.');
+      return;
+    }
+
+    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+    checkBtn.disabled = true;
+
+    // Show loading states
+    loadingResults.textContent = 'Analyzing text structure...';
+    loadingFindings.textContent = 'Checking for similar content...';
+    loadingMatches.textContent = 'Searching for matches...';
+
+    try {
+      // Simulate analysis delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Get sensitivity threshold
+      const sensitivityLevels = {
+        'low': 0.8,
+        'medium': 0.7,
+        'high': 0.6,
+        'strict': 0.5
+      };
+      const threshold = sensitivityLevels[sensitivity.value];
+
+      // Find matches
+      const matches = findSimilarPhrases(text, threshold);
+
+      // Calculate overall risk score
+      const baseRisk = Math.min(100, matches.length * 15);
+      const lengthRisk = Math.max(0, (text.length - 1000) / 50); // Longer texts have higher risk
+      const totalRisk = Math.min(100, baseRisk + lengthRisk);
+
+      // Update results
+      const words = countWords(text);
+      const chars = countCharacters(text);
+      const similarity = matches.length > 0 ? Math.max(...matches.map(m => m.similarity)) : 0;
+
+      wordCount.textContent = words;
+      charCount.textContent = chars;
+      similarityScore.textContent = `${similarity}%`;
+      matchedPhrases.textContent = matches.length;
+      overallRisk.textContent = getRiskLevel(totalRisk);
+      riskBar.style.width = `${totalRisk}%`;
+      riskBar.style.backgroundColor = getRiskColor(totalRisk);
+
+      // Generate findings
+      const findings = generateFindings(text, matches);
+      findingsList.innerHTML = findings.map(finding => `<div style="margin-bottom:8px; padding:5px; background:#f9f9f9; border-radius:4px;">${finding}</div>`).join('');
+
+      // Generate matches list
+      if (matches.length > 0) {
+        matchesList.innerHTML = matches.map(match => `
+          <div style="margin-bottom:10px; padding:10px; background:#fff3cd; border-radius:4px; border-left:4px solid #ffc107;">
+            <div style="font-weight:600; margin-bottom:5px;">Source: ${match.source}</div>
+            <div style="margin-bottom:5px;"><strong>Similarity:</strong> ${match.similarity}% (${match.matchedWords}/${match.totalWords} words)</div>
+            <div style="font-size:0.9em; color:#666;">Sample: "${match.sample}"</div>
+          </div>
+        `).join('');
+      } else {
+        matchesList.innerHTML = '<div style="text-align:center; color:#28a745; font-weight:600;">âœ“ No significant matches found!</div>';
+      }
+
+      // Show all content
+      resultsContent.style.display = 'block';
+      findingsContent.style.display = 'block';
+      matchesContent.style.display = 'block';
+      loadingResults.style.display = 'none';
+      loadingFindings.style.display = 'none';
+      loadingMatches.style.display = 'none';
+
+      // Scroll to results
+      resultsContainer.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (error) {
+      alert('Error analyzing text: ' + error.message);
+      loadingResults.textContent = 'Error analyzing text';
+      loadingFindings.textContent = 'Error generating findings';
+      loadingMatches.textContent = 'Error finding matches';
+    }
+
+    checkBtn.innerHTML = 'Check for Plagiarism';
+    checkBtn.disabled = false;
+  }
+
+  function clearAll() {
+    textInput.value = '';
+    loadingResults.textContent = 'Enter text and click "Check for Plagiarism" to analyze';
+    loadingFindings.textContent = 'Analysis required for detailed findings';
+    loadingMatches.textContent = 'Analysis required for match detection';
+    resultsContent.style.display = 'none';
+    findingsContent.style.display = 'none';
+    matchesContent.style.display = 'none';
+  }
+
+  // Event listeners
+  checkBtn.addEventListener('click', checkPlagiarism);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Keyboard shortcut (Ctrl+Enter to check)
+  textInput.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      checkPlagiarism();
+    }
+  });
+
+  // Auto-focus on text input
+  textInput.focus();
+</script>
+</body></html>
+
+

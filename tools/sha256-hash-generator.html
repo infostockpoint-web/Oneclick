@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SHA256 Hash Generator - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-lock tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">SHA256 Hash Generator</div>
+      <div class="tool-desc">Generate SHA-256 hashes from text or files. Cryptographically secure and reliable.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="inputType" style="display:block; font-weight:600; margin-bottom:6px;">Input Type</label>
+          <select id="inputType" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="text">Text</option>
+            <option value="file">File</option>
+          </select>
+        </div>
+        <div id="textInputContainer">
+          <label for="textInput" style="display:block; font-weight:600; margin-bottom:6px;">Text to Hash</label>
+          <textarea id="textInput" rows="4" placeholder="Enter text to generate SHA256 hash..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-family:monospace;"></textarea>
+        </div>
+        <div id="fileInputContainer" style="display:none;">
+          <label for="fileInput" style="display:block; font-weight:600; margin-bottom:6px;">Select File</label>
+          <input type="file" id="fileInput" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="generateBtn" class="tool-button">Generate SHA256</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">SHA256 Hash Result</div>
+        <div id="hashResult" style="border:1px solid #ddd; padding:10px; min-height:60px; background:#f9f9f9; font-family:monospace; word-break:break-all; margin-top:10px;">
+          SHA256 hash will appear here...
+        </div>
+        <div style="margin-top:10px;">
+          <button id="copyHashBtn" class="tool-button" style="width:100%; background:#28a745;">Copy Hash</button>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Hash Information</div>
+        <div id="hashInfo" style="margin-top:10px; font-size:0.9rem;">
+          <div><strong>Algorithm:</strong> SHA-256 (Secure Hash Algorithm 256-bit)</div>
+          <div><strong>Output Size:</strong> 64 hexadecimal characters (256 bits)</div>
+          <div><strong>Use Cases:</strong> Digital signatures, certificates, blockchain</div>
+          <div><strong>Security:</strong> <span style="color:#28a745;">Cryptographically secure</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const inputType = document.getElementById('inputType');
+  const textInputContainer = document.getElementById('textInputContainer');
+  const fileInputContainer = document.getElementById('fileInputContainer');
+  const textInput = document.getElementById('textInput');
+  const fileInput = document.getElementById('fileInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyHashBtn = document.getElementById('copyHashBtn');
+  const hashResult = document.getElementById('hashResult');
+
+  // Toggle between text and file input
+  inputType.addEventListener('change', () => {
+    if (inputType.value === 'text') {
+      textInputContainer.style.display = 'block';
+      fileInputContainer.style.display = 'none';
+      fileInput.value = '';
+    } else {
+      textInputContainer.style.display = 'none';
+      fileInputContainer.style.display = 'block';
+      textInput.value = '';
+    }
+    hashResult.textContent = 'SHA256 hash will appear here...';
+    copyHashBtn.disabled = true;
+  });
+
+  // Generate SHA256 hash for text
+  async function generateTextHash() {
+    const text = textInput.value.trim();
+    if (!text) {
+      alert('Please enter text to hash.');
+      return;
+    }
+
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    generateBtn.disabled = true;
+
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      hashResult.textContent = hashHex.toUpperCase();
+      copyHashBtn.disabled = false;
+    } catch (error) {
+      alert('Error generating hash: ' + error.message);
+      hashResult.textContent = 'Error generating hash';
+    }
+
+    generateBtn.innerHTML = 'Generate SHA256';
+    generateBtn.disabled = false;
+  }
+
+  // Generate SHA256 hash for file
+  async function generateFileHash(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = e.target.result;
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          resolve(hashHex.toUpperCase());
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  async function handleFileHash() {
+    if (!fileInput.files[0]) {
+      alert('Please select a file to hash.');
+      return;
+    }
+
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    generateBtn.disabled = true;
+
+    try {
+      const hash = await generateFileHash(fileInput.files[0]);
+      hashResult.textContent = hash;
+      copyHashBtn.disabled = false;
+    } catch (error) {
+      alert('Error processing file: ' + error.message);
+      hashResult.textContent = 'Error processing file';
+    }
+
+    generateBtn.innerHTML = 'Generate SHA256';
+    generateBtn.disabled = false;
+  }
+
+  function clearAll() {
+    textInput.value = '';
+    fileInput.value = '';
+    hashResult.textContent = 'SHA256 hash will appear here...';
+    copyHashBtn.disabled = true;
+  }
+
+  function copyHash() {
+    const hash = hashResult.textContent;
+    if (hash && hash !== 'SHA256 hash will appear here...' && hash !== 'Error generating hash' && hash !== 'Error processing file') {
+      navigator.clipboard.writeText(hash).then(() => {
+        const originalText = copyHashBtn.textContent;
+        copyHashBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyHashBtn.style.background = '#28a745';
+        setTimeout(() => {
+          copyHashBtn.textContent = originalText;
+          copyHashBtn.style.background = '#28a745';
+        }, 2000);
+      });
+    }
+  }
+
+  // Event listeners
+  generateBtn.addEventListener('click', () => {
+    if (inputType.value === 'text') {
+      generateTextHash();
+    } else {
+      handleFileHash();
+    }
+  });
+
+  copyHashBtn.addEventListener('click', copyHash);
+  clearBtn.addEventListener('click', clearAll);
+
+  // Keyboard shortcut (Ctrl+Enter to generate)
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      generateBtn.click();
+    }
+  });
+
+  // Initialize
+  copyHashBtn.disabled = true;
+  textInput.focus();
+</script>
+</body></html>
+
+

@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Speed Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-tachometer-alt tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Speed Converter</div>
+      <div class="tool-desc">Convert between kilometers per hour, miles per hour, meters per second, and knots.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="sVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="sVal" type="number" step="any" placeholder="e.g. 120" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="sFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="sFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div>
+          <label for="sTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="sTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="sConvert" class="tool-button">Convert</button>
+          <button id="sSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="sCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="sResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="sTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const SUNITS = [
+    { k:'kmh', name:'Kilometers/hour', to_ms: 1000/3600 },
+    { k:'mph', name:'Miles/hour',      to_ms: 1609.344/3600 },
+    { k:'ms',  name:'Meters/second',   to_ms: 1 },
+    { k:'kn',  name:'Knots',           to_ms: 1852/3600 }
+  ];
+  function sPopulate(sel){ SUNITS.forEach(u=>{ const o=document.createElement('option'); o.value=u.k; o.textContent=`${u.name} (${u.k})`; sel.appendChild(o); }); }
+  function toMS(v,u){ const it=SUNITS.find(x=>x.k===u); return it? v*it.to_ms : NaN; }
+  function fromMS(ms,u){ const it=SUNITS.find(x=>x.k===u); return it? ms/it.to_ms : NaN; }
+  function fmtS(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:6}); }
+  function buildSTable(ms){ return SUNITS.map(u=>`${u.k.padEnd(3,' ')} : ${fmtS(fromMS(ms,u.k))}`).join('\n'); }
+  document.addEventListener('DOMContentLoaded', ()=>{ const a=document.getElementById('sFrom'); const b=document.getElementById('sTo'); sPopulate(a); sPopulate(b); a.value='kmh'; b.value='mph'; });
+  document.getElementById('sSwap').addEventListener('click', ()=>{ const a=document.getElementById('sFrom'); const b=document.getElementById('sTo'); const t=a.value; a.value=b.value; b.value=t; });
+  document.getElementById('sConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('sVal').value);
+    const from = document.getElementById('sFrom').value;
+    const to = document.getElementById('sTo').value;
+    const out = document.getElementById('sResult');
+    const tbl = document.getElementById('sTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const ms = toMS(val, from);
+    const conv = fromMS(ms, to);
+    out.textContent = `${fmtS(val)} ${from} = ${fmtS(conv)} ${to}`;
+    tbl.textContent = buildSTable(ms);
+  });
+  document.getElementById('sCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('sResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+

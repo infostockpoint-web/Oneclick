@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Encoder & Decoder - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-link tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">URL Encoder & Decoder</div>
+        <div class="tool-desc">Encode text for URLs or decode percent-encoded strings.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div>
+            <label for="udInput" style="display:block; font-weight:600; margin-bottom:6px;">Input</label>
+            <textarea id="udInput" rows="5" placeholder="Paste text or URL here" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="btnEncode" class="tool-button">Encode</button>
+            <button id="btnDecode" class="tool-button">Decode</button>
+            <button id="btnClear" class="tool-button" style="background:#888;">Clear</button>
+            <button id="btnCopy" class="tool-button" style="background:#555;">Copy Output</button>
+          </div>
+          <div id="udError" style="color:#b00020; display:none;">Invalid encoding sequence while decoding.</div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Output</label>
+            <textarea id="udOutput" rows="5" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const input = document.getElementById('udInput');
+    const output = document.getElementById('udOutput');
+    const err = document.getElementById('udError');
+
+    document.getElementById('btnEncode').addEventListener('click', () => {
+      try {
+        err.style.display='none';
+        output.value = encodeURIComponent(input.value || '');
+      } catch(e){ err.style.display='block'; output.value=''; }
+    });
+    document.getElementById('btnDecode').addEventListener('click', () => {
+      try {
+        err.style.display='none';
+        output.value = decodeURIComponent(input.value || '');
+      } catch(e){ err.style.display='block'; output.value=''; }
+    });
+    document.getElementById('btnClear').addEventListener('click', () => { input.value=''; output.value=''; err.style.display='none'; });
+    document.getElementById('btnCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(output.value); } catch(e){} });
+  </script>
+</body>
+</html>
+
+

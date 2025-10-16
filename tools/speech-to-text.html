@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Speech to Text - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-microphone tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Speech to Text Converter</div>
+      <div class="tool-desc">Convert your speech to text using your browser's built-in speech recognition.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="language" style="display:block; font-weight:600; margin-bottom:6px;">Recognition Language</label>
+          <select id="language" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+            <option value="it-IT">Italian</option>
+            <option value="pt-BR">Portuguese</option>
+            <option value="ru-RU">Russian</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="zh-CN">Chinese (Simplified)</option>
+            <option value="hi-IN">Hindi</option>
+          </select>
+        </div>
+        <div>
+          <label for="continuous" style="display:block; font-weight:600; margin-bottom:6px;">Mode</label>
+          <select id="continuous" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="false">Single Recognition</option>
+            <option value="true">Continuous Recognition</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="startBtn" class="tool-button">Start Listening</button>
+          <button id="stopBtn" class="tool-button" style="background:#dc3545;" disabled>Stop</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Transcribed Text</div>
+        <div id="result" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:Arial; text-align:left; margin-top:10px; white-space:pre-wrap; overflow:auto;" contenteditable="true">
+          Your speech will be transcribed here...
+        </div>
+        <div style="margin-top:10px;">
+          <button id="copyBtn" class="tool-button" style="width:100%; background:#28a745;">Copy Text</button>
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Recognition Settings</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="interim" checked> Show interim results</label><br>
+          <label><input type="checkbox" id="autoScroll" checked> Auto-scroll to bottom</label>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Recognition Status</div>
+        <div id="status" style="margin-top:5px; font-size:1.1rem; color:#666;">Ready to listen</div>
+        <div id="confidence" style="margin-top:10px; display:none;">
+          <strong>Confidence:</strong> <span id="confidenceValue">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  const language = document.getElementById('language');
+  const continuous = document.getElementById('continuous');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const result = document.getElementById('result');
+  const status = document.getElementById('status');
+  const confidence = document.getElementById('confidence');
+  const confidenceValue = document.getElementById('confidenceValue');
+  const interim = document.getElementById('interim');
+  const autoScroll = document.getElementById('autoScroll');
+
+  let recognition = null;
+  let isListening = false;
+  let finalTranscript = '';
+  let interimTranscript = '';
+
+  // Check for browser support
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari for the best experience.');
+    startBtn.disabled = true;
+    status.textContent = 'Not supported in this browser';
+    status.style.color = '#dc3545';
+  }
+
+  // Initialize speech recognition
+  function initRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+
+    recognition.continuous = continuous.value === 'true';
+    recognition.interimResults = interim.checked;
+    recognition.lang = language.value;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isListening = true;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      status.textContent = 'Listening...';
+      status.style.color = '#007bff';
+      finalTranscript = '';
+      interimTranscript = '';
+      updateResult();
+    };
+
+    recognition.onresult = (event) => {
+      interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        const confidenceScore = event.results[i][0].confidence || 0;
+
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+          if (confidenceScore > 0) {
+            confidenceValue.textContent = Math.round(confidenceScore * 100) + '%';
+            confidence.style.display = 'block';
+          }
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      updateResult();
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      status.textContent = 'Error: ' + event.error;
+      status.style.color = '#dc3545';
+      isListening = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      status.textContent = 'Stopped listening';
+      status.style.color = '#dc3545';
+
+      if (continuous.value === 'false') {
+        setTimeout(() => {
+          status.textContent = 'Ready to listen';
+          status.style.color = '#666';
+        }, 1500);
+      }
+    };
+
+    recognition.onnomatch = () => {
+      status.textContent = 'No speech detected';
+      status.style.color = '#ffc107';
+    };
+  }
+
+  function updateResult() {
+    let displayText = finalTranscript;
+
+    if (interimTranscript && interim.checked) {
+      displayText += '<span style="color: #999; opacity: 0.7;">' + interimTranscript + '</span>';
+    }
+
+    result.innerHTML = displayText || 'Your speech will be transcribed here...';
+
+    if (autoScroll.checked && displayText) {
+      result.scrollTop = result.scrollHeight;
+    }
+  }
+
+  function startListening() {
+    if (!recognition) {
+      initRecognition();
+    }
+
+    recognition.continuous = continuous.value === 'true';
+    recognition.interimResults = interim.checked;
+    recognition.lang = language.value;
+
+    try {
+      recognition.start();
+    } catch (error) {
+      alert('Error starting recognition: ' + error.message);
+    }
+  }
+
+  function stopListening() {
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+  }
+
+  function clearAll() {
+    finalTranscript = '';
+    interimTranscript = '';
+    result.innerHTML = 'Your speech will be transcribed here...';
+    confidence.style.display = 'none';
+    status.textContent = 'Ready to listen';
+    status.style.color = '#666';
+  }
+
+  function copyText() {
+    const textToCopy = result.textContent.trim();
+    if (textToCopy && textToCopy !== 'Your speech will be transcribed here...') {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.background = '#28a745';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+          copyBtn.style.background = '#28a745';
+        }, 2000);
+      });
+    }
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startListening);
+  stopBtn.addEventListener('click', stopListening);
+  clearBtn.addEventListener('click', clearAll);
+  copyBtn.addEventListener('click', copyText);
+
+  // Settings change handlers
+  continuous.addEventListener('change', () => {
+    if (recognition) {
+      recognition.continuous = continuous.value === 'true';
+    }
+  });
+
+  interim.addEventListener('change', () => {
+    if (recognition) {
+      recognition.interimResults = interim.checked;
+    }
+  });
+
+  language.addEventListener('change', () => {
+    if (recognition) {
+      recognition.lang = language.value;
+    }
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+      e.preventDefault();
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    }
+  });
+
+  // Initialize
+  initRecognition();
+  status.textContent = 'Ready to listen';
+</script>
+</body></html>
+
+

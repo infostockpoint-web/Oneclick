@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scientific Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:960px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-calculator tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Scientific Calculator</div>
+        <div class="tool-desc">Evaluate expressions with Math functions: sin, cos, tan, log, ln, sqrt, pow, pi, e, etc.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
+          <div>
+            <input id="expr" type="text" placeholder="e.g. sin(pi/2) + log10(100)" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"/>
+            <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+              <button class="tool-button" id="btnEval">Evaluate</button>
+              <button class="tool-button" id="btnClear" style="background:#888;">Clear</button>
+            </div>
+            <div class="tool-card" style="margin-top:12px; padding:12px;">
+              <div class="tool-name">Result</div>
+              <div id="result" style="font-size:1.6rem; word-break:break-all;">â€”</div>
+            </div>
+          </div>
+          <div>
+            <div class="tool-card" style="padding:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+              <button class="tool-button" data-ins="pi">Ï€</button>
+              <button class="tool-button" data-ins="e">e</button>
+              <button class="tool-button" data-ins="sqrt()">âˆš</button>
+              <button class="tool-button" data-ins="^">^</button>
+
+              <button class="tool-button" data-ins="sin()">sin</button>
+              <button class="tool-button" data-ins="cos()">cos</button>
+              <button class="tool-button" data-ins="tan()">tan</button>
+              <button class="tool-button" data-ins="asin()">asin</button>
+
+              <button class="tool-button" data-ins="acos()">acos</button>
+              <button class="tool-button" data-ins="atan()">atan</button>
+              <button class="tool-button" data-ins="log10()">log10</button>
+              <button class="tool-button" data-ins="ln()">ln</button>
+
+              <button class="tool-button" data-ins="abs()">abs</button>
+              <button class="tool-button" data-ins="floor()">floor</button>
+              <button class="tool-button" data-ins="ceil()">ceil</button>
+              <button class="tool-button" data-ins="round()">round</button>
+            </div>
+            <div class="tool-card" style="padding:12px; margin-top:8px;">
+              <div class="tool-name">History</div>
+              <div id="history" style="max-height:200px; overflow:auto; font-family:monospace; font-size:0.95rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    // Map friendly tokens to Math
+    const exprInput = document.getElementById('expr');
+    const resultEl = document.getElementById('result');
+    const histEl = document.getElementById('history');
+
+    function prepareExpression(s){
+      return s
+        .replace(/\^/g, '**')
+        .replace(/(?<![\w.])pi(?![\w.])/gi, 'Math.PI')
+        .replace(/(?<![\w.])e(?![\w.])/g, 'Math.E')
+        .replace(/(?<![\w.])sin\s*\(/gi, 'Math.sin(')
+        .replace(/(?<![\w.])cos\s*\(/gi, 'Math.cos(')
+        .replace(/(?<![\w.])tan\s*\(/gi, 'Math.tan(')
+        .replace(/(?<![\w.])asin\s*\(/gi, 'Math.asin(')
+        .replace(/(?<![\w.])acos\s*\(/gi, 'Math.acos(')
+        .replace(/(?<![\w.])atan\s*\(/gi, 'Math.atan(')
+        .replace(/(?<![\w.])sqrt\s*\(/gi, 'Math.sqrt(')
+        .replace(/(?<![\w.])abs\s*\(/gi, 'Math.abs(')
+        .replace(/(?<![\w.])floor\s*\(/gi, 'Math.floor(')
+        .replace(/(?<![\w.])ceil\s*\(/gi, 'Math.ceil(')
+        .replace(/(?<![\w.])round\s*\(/gi, 'Math.round(')
+        .replace(/(?<![\w.])log10\s*\(/gi, 'Math.log10(')
+        .replace(/(?<![\w.])ln\s*\(/gi, 'Math.log(');
+    }
+    function evaluateExpression(raw){
+      const js = prepareExpression(raw);
+      // Safe-ish evaluation with Math only via Function
+      try {
+        const fn = Function('return (' + js + ')');
+        const res = fn();
+        if (typeof res === 'number' && !Number.isNaN(res) && Number.isFinite(res)) return res;
+        return res;
+      } catch(e){
+        throw new Error('Invalid expression');
+      }
+    }
+    function addToHistory(expr, res){
+      const div = document.createElement('div');
+      div.textContent = expr + ' = ' + res;
+      histEl.prepend(div);
+    }
+    document.getElementById('btnEval').addEventListener('click', ()=>{
+      const expr = exprInput.value.trim();
+      if (!expr){ resultEl.textContent='â€”'; return; }
+      try{ const res = evaluateExpression(expr); resultEl.textContent = String(res); addToHistory(expr,res); }
+      catch(e){ resultEl.textContent = 'Error'; }
+    });
+    document.getElementById('btnClear').addEventListener('click', ()=>{ exprInput.value=''; resultEl.textContent='â€”'; });
+    document.querySelectorAll('[data-ins]').forEach(btn => btn.addEventListener('click', () => {
+      const ins = btn.getAttribute('data-ins');
+      const selStart = exprInput.selectionStart || exprInput.value.length;
+      const selEnd = exprInput.selectionEnd || exprInput.value.length;
+      const before = exprInput.value.slice(0, selStart);
+      const after = exprInput.value.slice(selEnd);
+      const place = ins.endsWith('()') ? ins.slice(0,-1) + ')' : ins;
+      exprInput.value = before + place + after;
+      const caret = before.length + (ins.endsWith('()') ? place.length-1 : place.length);
+      exprInput.focus();
+      exprInput.setSelectionRange(caret, caret);
+    }));
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,671 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lottery Number Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .lottery-container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .lottery-sidebar {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    .lottery-main {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      min-height: 500px;
+      padding: 20px;
+    }
+    .lottery-type-selector {
+      margin-bottom: 20px;
+    }
+    .lottery-preset {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .preset-btn {
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .preset-btn:hover {
+      border-color: #007bff;
+      background: #e7f0ff;
+    }
+    .preset-btn.selected {
+      border-color: #007bff;
+      background: #007bff;
+      color: white;
+    }
+    .preset-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .preset-desc {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    .preset-btn.selected .preset-desc {
+      opacity: 1;
+      color: white;
+    }
+    .custom-controls {
+      background: #e7f0ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border: 1px solid #b8daff;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .control-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .number-display {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+      justify-items: center;
+    }
+    .lottery-number {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+      animation: popIn 0.3s ease-out;
+    }
+    .lottery-number.powerball {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+    }
+    .lottery-number.megaball {
+      background: linear-gradient(135deg, #ffc107, #e0a800);
+      color: #000;
+      box-shadow: 0 4px 8px rgba(255,193,7,0.3);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .generation-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .control-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-generate {
+      background: #28a745;
+      color: white;
+    }
+    .btn-generate:hover {
+      background: #218838;
+    }
+    .btn-clear {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-clear:hover {
+      background: #545b62;
+    }
+    .btn-export {
+      background: #17a2b8;
+      color: white;
+    }
+    .btn-export:hover {
+      background: #138496;
+    }
+    .history-section {
+      margin-top: 30px;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    .history-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .history-item {
+      padding: 8px 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-numbers {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .history-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #007bff;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .history-number.powerball {
+      background: #dc3545;
+    }
+    .history-number.megaball {
+      background: #ffc107;
+      color: #000;
+    }
+    .history-count {
+      background: #007bff;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+    .stats-panel {
+      background: #d1ecf1;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 1px solid #bee5eb;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .stat-item {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+    }
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #007bff;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .validation-error {
+      color: #dc3545;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-ticket-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Lottery Number Generator</div>
+        <div class="tool-desc">Generate random lottery numbers for popular games. Choose from presets or customize your own ranges.</div>
+      </div>
+
+      <div class="lottery-container">
+        <div class="lottery-sidebar">
+          <div class="lottery-type-selector">
+            <h4>Choose Lottery Type</h4>
+            <div class="lottery-preset">
+              <div class="preset-btn selected" data-type="powerball">
+                <div class="preset-name">Powerball</div>
+                <div class="preset-desc">5 numbers (1-69) + Powerball (1-26)</div>
+              </div>
+              <div class="preset-btn" data-type="megamillions">
+                <div class="preset-name">Mega Millions</div>
+                <div class="preset-desc">5 numbers (1-70) + Mega Ball (1-25)</div>
+              </div>
+              <div class="preset-btn" data-type="euromillions">
+                <div class="preset-name">EuroMillions</div>
+                <div class="preset-desc">5 numbers (1-50) + 2 stars (1-12)</div>
+              </div>
+              <div class="preset-btn" data-type="custom">
+                <div class="preset-name">Custom</div>
+                <div class="preset-desc">Set your own ranges</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="customControls" style="display:none;">
+            <div class="custom-controls">
+              <h4>Custom Settings</h4>
+              <div class="control-group">
+                <label>Main Numbers Range</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="number" id="minNumber" value="1" min="1" max="100" style="width: 80px;">
+                  <span>to</span>
+                  <input type="number" id="maxNumber" value="49" min="1" max="100" style="width: 80px;">
+                </div>
+              </div>
+              <div class="control-group">
+                <label>Number of Main Balls</label>
+                <input type="number" id="mainCount" value="6" min="1" max="10">
+              </div>
+              <div class="control-group">
+                <label>Bonus Ball Range</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="number" id="bonusMin" value="1" min="1" max="100" style="width: 80px;">
+                  <span>to</span>
+                  <input type="number" id="bonusMax" value="10" min="1" max="100" style="width: 80px;">
+                </div>
+              </div>
+              <div class="control-group">
+                <label>Number of Bonus Balls</label>
+                <input type="number" id="bonusCount" value="1" min="0" max="5">
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-panel">
+            <h4>Statistics</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-number" id="totalGenerations">0</span>
+                <span class="stat-label">Total Generations</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number" id="uniqueNumbers">0</span>
+                <span class="stat-label">Unique Numbers</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number" id="mostFrequent">N/A</span>
+                <span class="stat-label">Most Frequent</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number" id="leastFrequent">N/A</span>
+                <span class="stat-label">Least Frequent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lottery-main">
+          <div style="text-align:center; margin-bottom:20px;">
+            <h3 id="lotteryTitle">Powerball Numbers</h3>
+            <p id="lotteryDescription">5 numbers from 1-69 + 1 Powerball from 1-26</p>
+          </div>
+
+          <div id="numberDisplay" class="number-display">
+            <!-- Numbers will be displayed here -->
+          </div>
+
+          <div class="generation-controls">
+            <button class="control-btn btn-generate">Generate Numbers</button>
+            <button class="control-btn btn-clear">Clear</button>
+            <button class="control-btn btn-export">Export as Image</button>
+          </div>
+
+          <div class="history-section">
+            <h4>Generation History</h4>
+            <div class="history-list" id="historyList">
+              <!-- History items will be added here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const presetBtns = document.querySelectorAll('.preset-btn');
+    const customControls = document.getElementById('customControls');
+    const lotteryTitle = document.getElementById('lotteryTitle');
+    const lotteryDescription = document.getElementById('lotteryDescription');
+    const numberDisplay = document.getElementById('numberDisplay');
+    const generateBtn = document.querySelector('.btn-generate');
+    const clearBtn = document.querySelector('.btn-clear');
+    const exportBtn = document.querySelector('.btn-export');
+    const historyList = document.getElementById('historyList');
+    const totalGenerations = document.getElementById('totalGenerations');
+    const uniqueNumbers = document.getElementById('uniqueNumbers');
+    const mostFrequent = document.getElementById('mostFrequent');
+    const leastFrequent = document.getElementById('leastFrequent');
+
+    // Input elements
+    const minNumber = document.getElementById('minNumber');
+    const maxNumber = document.getElementById('maxNumber');
+    const mainCount = document.getElementById('mainCount');
+    const bonusMin = document.getElementById('bonusMin');
+    const bonusMax = document.getElementById('bonusMax');
+    const bonusCount = document.getElementById('bonusCount');
+
+    let currentType = 'powerball';
+    let history = [];
+    let numberStats = {};
+
+    const lotteryConfigs = {
+      powerball: {
+        name: 'Powerball',
+        description: '5 numbers from 1-69 + 1 Powerball from 1-26',
+        mainMin: 1, mainMax: 69, mainCount: 5,
+        bonusMin: 1, bonusMax: 26, bonusCount: 1,
+        bonusName: 'Powerball'
+      },
+      megamillions: {
+        name: 'Mega Millions',
+        description: '5 numbers from 1-70 + 1 Mega Ball from 1-25',
+        mainMin: 1, mainMax: 70, mainCount: 5,
+        bonusMin: 1, bonusMax: 25, bonusCount: 1,
+        bonusName: 'Mega Ball'
+      },
+      euromillions: {
+        name: 'EuroMillions',
+        description: '5 numbers from 1-50 + 2 Lucky Stars from 1-12',
+        mainMin: 1, mainMax: 50, mainCount: 5,
+        bonusMin: 1, bonusMax: 12, bonusCount: 2,
+        bonusName: 'Lucky Stars'
+      },
+      custom: {
+        name: 'Custom Lottery',
+        description: 'Custom number ranges and counts',
+        mainMin: 1, mainMax: 49, mainCount: 6,
+        bonusMin: 1, bonusMax: 10, bonusCount: 1,
+        bonusName: 'Bonus Ball'
+      }
+    };
+
+    function updateStats() {
+      totalGenerations.textContent = history.length;
+
+      if (history.length > 0) {
+        const allNumbers = history.flatMap(h => h.numbers);
+        const numberCounts = {};
+
+        allNumbers.forEach(num => {
+          numberCounts[num] = (numberCounts[num] || 0) + 1;
+        });
+
+        const sorted = Object.entries(numberCounts).sort((a, b) => b[1] - a[1]);
+        uniqueNumbers.textContent = Object.keys(numberCounts).length;
+        mostFrequent.textContent = sorted[0] ? `${sorted[0][0]} (${sorted[0][1]})` : 'N/A';
+        leastFrequent.textContent = sorted[sorted.length - 1] ? `${sorted[sorted.length - 1][0]} (${sorted[sorted.length - 1][1]})` : 'N/A';
+      } else {
+        uniqueNumbers.textContent = '0';
+        mostFrequent.textContent = 'N/A';
+        leastFrequent.textContent = 'N/A';
+      }
+    }
+
+    function generateRandomNumbers(min, max, count, exclude = []) {
+      const numbers = [];
+      const available = Array.from({length: max - min + 1}, (_, i) => i + min);
+
+      for (let i = 0; i < count; i++) {
+        const validNumbers = available.filter(num => !exclude.includes(num));
+        if (validNumbers.length === 0) break;
+
+        const randomIndex = Math.floor(Math.random() * validNumbers.length);
+        const selected = validNumbers[randomIndex];
+        numbers.push(selected);
+        available.splice(available.indexOf(selected), 1);
+      }
+
+      return numbers.sort((a, b) => a - b);
+    }
+
+    function generateNumbers() {
+      const config = currentType === 'custom' ? {
+        mainMin: parseInt(minNumber.value),
+        mainMax: parseInt(maxNumber.value),
+        mainCount: parseInt(mainCount.value),
+        bonusMin: parseInt(bonusMin.value),
+        bonusMax: parseInt(bonusMax.value),
+        bonusCount: parseInt(bonusCount.value)
+      } : lotteryConfigs[currentType];
+
+      // Validate ranges
+      if (config.mainMin >= config.mainMax) {
+        alert('Main number range is invalid');
+        return;
+      }
+      if (config.bonusMin >= config.bonusMax) {
+        alert('Bonus number range is invalid');
+        return;
+      }
+      if (config.mainCount > (config.mainMax - config.mainMin + 1)) {
+        alert('Too many main numbers for the range');
+        return;
+      }
+      if (config.bonusCount > (config.bonusMax - config.bonusMin + 1)) {
+        alert('Too many bonus numbers for the range');
+        return;
+      }
+
+      const mainNumbers = generateRandomNumbers(config.mainMin, config.mainMax, config.mainCount);
+      const bonusNumbers = config.bonusCount > 0 ?
+        generateRandomNumbers(config.bonusMin, config.bonusMax, config.bonusCount, mainNumbers) : [];
+
+      displayNumbers(mainNumbers, bonusNumbers, config);
+      addToHistory(mainNumbers, bonusNumbers, config);
+    }
+
+    function displayNumbers(mainNumbers, bonusNumbers, config) {
+      numberDisplay.innerHTML = '';
+
+      mainNumbers.forEach((num, index) => {
+        const numberDiv = document.createElement('div');
+        numberDiv.className = 'lottery-number';
+        numberDiv.textContent = num;
+        numberDisplay.appendChild(numberDiv);
+      });
+
+      if (bonusNumbers.length > 0) {
+        bonusNumbers.forEach((num, index) => {
+          const numberDiv = document.createElement('div');
+          numberDiv.className = `lottery-number ${currentType === 'powerball' ? 'powerball' : 'megaball'}`;
+          numberDiv.textContent = num;
+          numberDisplay.appendChild(numberDiv);
+        });
+      }
+    }
+
+    function addToHistory(mainNumbers, bonusNumbers, config) {
+      const historyItem = {
+        id: Date.now(),
+        type: currentType,
+        numbers: [...mainNumbers, ...bonusNumbers],
+        mainNumbers,
+        bonusNumbers,
+        timestamp: new Date().toLocaleTimeString(),
+        config
+      };
+
+      history.unshift(historyItem);
+      if (history.length > 50) history = history.slice(0, 50);
+
+      updateHistoryDisplay();
+      updateStats();
+    }
+
+    function updateHistoryDisplay() {
+      historyList.innerHTML = history.map(item => `
+        <div class="history-item">
+          <div class="history-numbers">
+            ${item.mainNumbers.map(num => `<span class="history-number">${num}</span>`).join('')}
+            ${item.bonusNumbers.map(num => `<span class="history-number ${item.type === 'powerball' ? 'powerball' : 'megaball'}">${num}</span>`).join('')}
+          </div>
+          <span class="history-count">${item.timestamp}</span>
+        </div>
+      `).join('');
+    }
+
+    function clearAll() {
+      numberDisplay.innerHTML = '';
+      history = [];
+      updateHistoryDisplay();
+      updateStats();
+    }
+
+    function exportAsImage() {
+      if (numberDisplay.children.length === 0) {
+        alert('Generate numbers first');
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 600;
+      canvas.height = 300;
+
+      // Set background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add title
+      ctx.fillStyle = '#000000';
+      ctx.font = '24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${lotteryTitle.textContent} Numbers`, canvas.width / 2, 40);
+
+      // Add numbers
+      const numbers = Array.from(numberDisplay.children);
+      const startY = 100;
+      const spacing = 80;
+
+      numbers.forEach((numDiv, index) => {
+        const x = 100 + (index * spacing);
+        const y = startY;
+
+        // Draw circle
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, 2 * Math.PI);
+        ctx.fillStyle = numDiv.classList.contains('powerball') ? '#dc3545' :
+                       numDiv.classList.contains('megaball') ? '#ffc107' : '#007bff';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Add number text
+        ctx.fillStyle = numDiv.classList.contains('megaball') ? '#000000' : '#ffffff';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(numDiv.textContent, x, y);
+      });
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `lottery-numbers-${Date.now()}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function switchLotteryType(type) {
+      currentType = type;
+
+      // Update UI
+      presetBtns.forEach(btn => btn.classList.remove('selected'));
+      document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+
+      const config = lotteryConfigs[type];
+      lotteryTitle.textContent = config.name + ' Numbers';
+      lotteryDescription.textContent = config.description;
+
+      if (type === 'custom') {
+        customControls.style.display = 'block';
+        // Update inputs
+        minNumber.value = config.mainMin;
+        maxNumber.value = config.mainMax;
+        mainCount.value = config.mainCount;
+        bonusMin.value = config.bonusMin;
+        bonusMax.value = config.bonusMax;
+        bonusCount.value = config.bonusCount;
+      } else {
+        customControls.style.display = 'none';
+      }
+    }
+
+    // Event listeners
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchLotteryType(btn.dataset.type));
+    });
+
+    generateBtn.addEventListener('click', generateNumbers);
+    clearBtn.addEventListener('click', clearAll);
+    exportBtn.addEventListener('click', exportAsImage);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'Enter':
+            e.preventDefault();
+            generateNumbers();
+            break;
+          case 'k':
+            e.preventDefault();
+            clearAll();
+            break;
+        }
+      }
+    });
+
+    // Initialize
+    switchLotteryType('powerball');
+  </script>
+</body>
+</html>
+
+

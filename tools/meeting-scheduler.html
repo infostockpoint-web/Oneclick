@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meeting Scheduler - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-calendar-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Meeting Scheduler</div>
+        <div class="tool-desc">Create meetings with participants, agenda, and date/time. Local reminders (alerts) available.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Title</label>
+            <input id="title" type="text" placeholder="e.g., Sprint Planning" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Date & Time</label>
+            <input id="datetime" type="datetime-local" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Participants (comma-separated emails)</label>
+            <input id="participants" type="text" placeholder="a@b.com, c@d.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Agenda / Notes</label>
+            <textarea id="agenda" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" placeholder="Topics, goals, links..."></textarea>
+          </div>
+          <button id="add" class="tool-button">Add Meeting</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="search" type="search" placeholder="Search..." style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+          <select id="filter" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+            <option value="all">All</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="past">Past</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="list" style="display:grid;gap:10px;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_meetings_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY))||[] } catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function add(){
+      const title=document.getElementById('title').value.trim();
+      const dt=document.getElementById('datetime').value;
+      const parts=document.getElementById('participants').value.trim();
+      const agenda=document.getElementById('agenda').value.trim();
+      if (!title || !dt){ alert('Enter title and date/time.'); return; }
+      const d=load(); d.push({id:crypto.randomUUID(), title, dt, parts, agenda}); save(d);
+      ['title','datetime','participants','agenda'].forEach(id=>document.getElementById(id).value='');
+      render();
+    }
+
+    function render(){
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const f=document.getElementById('filter').value;
+      const now=Date.now();
+      const items=load().filter(m=> !q || m.title.toLowerCase().includes(q) || m.parts.toLowerCase().includes(q) || m.agenda.toLowerCase().includes(q))
+        .filter(m=> f==='all' || (f==='upcoming' ? new Date(m.dt).getTime()>=now : new Date(m.dt).getTime()<now))
+        .sort((a,b)=> new Date(a.dt)-new Date(b.dt));
+      const list=document.getElementById('list'); list.innerHTML='';
+      if (!items.length){ list.innerHTML='<div class="tool-card" style="padding:16px;">No meetings.</div>'; return; }
+      for (const m of items){
+        const el=document.createElement('div'); el.className='tool-card'; el.style.padding='12px';
+        el.innerHTML=`
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(m.title)} <small class="tool-desc">${new Date(m.dt).toLocaleString()}</small></div>
+              <div class="tool-desc">${escapeHtml(m.parts||'')}</div>
+              ${m.agenda? `<div class='tool-desc'>${escapeHtml(m.agenda)}</div>`:''}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="tool-button" data-act="remind" data-id="${m.id}"><i class="far fa-bell"></i></button>
+              <button class="tool-button" data-act="edit" data-id="${m.id}"><i class="fas fa-pen"></i></button>
+              <button class="tool-button" data-act="del" data-id="${m.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(el);
+      }
+    }
+
+    function remind(m){
+      const when=new Date(m.dt).getTime();
+      const diff=when - Date.now();
+      if (diff<=0){ alert('Meeting time already passed.'); return; }
+      alert('Reminder set. You will get a browser notification at meeting time. Keep this tab open.');
+      setTimeout(()=>{
+        try { if (Notification.permission==='granted') new Notification('Meeting: '+m.title); else if (Notification.permission!=='denied') Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('Meeting: '+m.title); }); } catch(e){}
+        alert('Meeting: '+m.title+' now!');
+      }, diff);
+    }
+
+    document.getElementById('add').addEventListener('click', add);
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('filter').addEventListener('change', render);
+
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const btn=e.target.closest('button[data-id]'); if(!btn) return; const id=btn.getAttribute('data-id'); const act=btn.getAttribute('data-act');
+      const d=load(); const idx=d.findIndex(x=>x.id===id); if(idx===-1) return;
+      if (act==='del'){ if(confirm('Delete this meeting?')){ d.splice(idx,1); save(d); render(); } }
+      if (act==='edit'){
+        const m=d[idx];
+        const t=prompt('Title', m.title); if(t===null) return;
+        const dt=prompt('Date time (YYYY-MM-DDTHH:mm)', m.dt); if(dt===null) return;
+        const p=prompt('Participants', m.parts||''); if(p===null) return;
+        const a=prompt('Agenda', m.agenda||''); if(a===null) return;
+        d[idx]={...m, title:t.trim(), dt:dt.trim(), parts:p.trim(), agenda:a.trim()}; save(d); render();
+      }
+      if (act==='remind'){ remind(d[idx]); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

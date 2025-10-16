@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tip Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-hand-holding-usd tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Tip Calculator</div>
+        <div class="tool-desc">Calculate tip and split the bill among people.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="bill" style="display:block; font-weight:600; margin-bottom:6px;">Bill Amount</label>
+            <input id="bill" type="number" step="any" placeholder="e.g. 1200" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="tip" style="display:block; font-weight:600; margin-bottom:6px;">Tip %</label>
+            <input id="tip" type="number" step="any" placeholder="e.g. 10" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div>
+            <label for="people" style="display:block; font-weight:600; margin-bottom:6px;">People</label>
+            <input id="people" type="number" step="1" placeholder="e.g. 2" value="1" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <button id="calcTip" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Tip Amount</div>
+          <div id="tipAmount" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total (Bill + Tip)</div>
+          <div id="totalAmount" style="font-size:1.2rem;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Per Person</div>
+          <div id="perPerson" style="font-size:1.4rem;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
+    document.getElementById('calcTip').addEventListener('click', () => {
+      const bill = Number(document.getElementById('bill').value);
+      const tipPct = Number(document.getElementById('tip').value);
+      let people = Number(document.getElementById('people').value);
+      const tipEl = document.getElementById('tipAmount');
+      const totalEl = document.getElementById('totalAmount');
+      const perEl = document.getElementById('perPerson');
+      if (!isFinite(bill) || !isFinite(tipPct) || !isFinite(people) || bill < 0 || tipPct < 0 || people <= 0){
+        tipEl.textContent='Invalid input'; totalEl.textContent='â€”'; perEl.textContent='â€”'; return;
+      }
+      const tip = bill * (tipPct/100);
+      const total = bill + tip;
+      const per = total / people;
+      tipEl.textContent = fmt(tip);
+      totalEl.textContent = fmt(total);
+      perEl.textContent = fmt(per);
+    });
+  </script>
+</body>
+</html>
+
+

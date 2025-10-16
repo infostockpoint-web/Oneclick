@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Text Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-random tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Random Text Generator</div>
+        <div class="tool-desc">Generate lorem ipsum text by paragraphs or total words.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="mode" style="display:block; font-weight:600; margin-bottom:6px;">Mode</label>
+            <select id="mode" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="paras" selected>Paragraphs</option>
+              <option value="words">Words</option>
+            </select>
+          </div>
+          <div>
+            <label for="count" style="display:block; font-weight:600; margin-bottom:6px;">Count</label>
+            <input id="count" type="number" min="1" max="1000" value="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div id="ppWrap">
+            <label for="ppw" style="display:block; font-weight:600; margin-bottom:6px;">Words per paragraph</label>
+            <input id="ppw" type="number" min="5" max="200" value="40" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="genTxt" class="tool-button">Generate</button>
+            <button id="copyTxt" class="tool-button" style="background:#555;">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Output</div>
+        <textarea id="outTxt" rows="10" readonly style="width:100%; padding:12px; border:1px dashed #ddd; border-radius:8px; background:#fafafa;"></textarea>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const LOREM = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum".split(' ');
+    function randomWord(){ return LOREM[Math.floor(Math.random()*LOREM.length)]; }
+    function makeSentence(wordCount){
+      const words = [];
+      for (let i=0;i<wordCount;i++) words.push(randomWord());
+      let s = words.join(' ');
+      s = s.charAt(0).toUpperCase() + s.slice(1) + '.';
+      return s;
+    }
+    function makeParagraph(wordsPerPara){
+      // Make 2-5 sentences per paragraph
+      const sCount = Math.max(2, Math.min(5, Math.round(wordsPerPara/12)));
+      const sentences = [];
+      for (let i=0;i<sCount;i++){
+        const wc = Math.max(6, Math.round(wordsPerPara / sCount) + (Math.random()*6-3));
+        sentences.push(makeSentence(wc));
+      }
+      return sentences.join(' ');
+    }
+    function generate(){
+      const mode = document.getElementById('mode').value;
+      const count = Math.max(1, Math.min(1000, Number(document.getElementById('count').value)||1));
+      const ppw = Math.max(5, Math.min(200, Number(document.getElementById('ppw').value)||40));
+      const out = document.getElementById('outTxt');
+      if (mode === 'paras'){
+        const paras = [];
+        for (let i=0;i<count;i++) paras.push(makeParagraph(ppw));
+        out.value = paras.join('\n\n');
+      } else {
+        const words = [];
+        for (let i=0;i<count;i++) words.push(randomWord());
+        // Capitalize the first
+        if (words.length){ words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1); }
+        out.value = words.join(' ') + '.';
+      }
+    }
+    document.getElementById('mode').addEventListener('change', () => {
+      document.getElementById('ppWrap').style.display = (document.getElementById('mode').value === 'paras') ? '' : 'none';
+    });
+    document.getElementById('genTxt').addEventListener('click', generate);
+    document.getElementById('copyTxt').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('outTxt').value); } catch(e){} });
+    // initial
+    generate();
+  </script>
+</body>
+</html>
+
+

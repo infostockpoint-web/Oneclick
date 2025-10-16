@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Sorter - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    textarea{width:100%;height:280px;padding:10px;border:1px solid #ddd;border-radius:8px}
+    .opts{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+    label{display:flex;align-items:center;gap:6px}
+    select{padding:8px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">Text Sorter</div>
+        <div class="tool-desc">Sort lines alphabetically or numerically, Aâ€“Z/Zâ€“A, optionally unique.</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <textarea id="inp" placeholder="Paste your text here..."></textarea>
+        <div class="opts">
+          <label>Mode
+            <select id="mode">
+              <option value="text-asc">Text Aâ€“Z</option>
+              <option value="text-desc">Text Zâ€“A</option>
+              <option value="num-asc">Numeric â†‘</option>
+              <option value="num-desc">Numeric â†“</option>
+            </select>
+          </label>
+          <label><input id="unique" type="checkbox"/> Unique lines</label>
+          <label><input id="trim" type="checkbox" checked/> Trim whitespace</label>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="run" class="tool-button">Sort</button>
+          <button id="copy" class="tool-button">Copy</button>
+        </div>
+        <textarea id="out" placeholder="Output will appear here..."></textarea>
+      </div>
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function sortLines(text,mode,unique,trim){
+      let lines=text.split(/\r?\n/);
+      if(trim) lines=lines.map(l=>l.trim());
+      let cmp=(a,b)=>a.localeCompare(b);
+      if(mode==='text-desc') cmp=(a,b)=>b.localeCompare(a);
+      if(mode==='num-asc') cmp=(a,b)=>parseFloat(a)-parseFloat(b);
+      if(mode==='num-desc') cmp=(a,b)=>parseFloat(b)-parseFloat(a);
+      lines.sort(cmp);
+      if(unique){ const s=new Set(); lines=lines.filter(l=>{ if(s.has(l)) return false; s.add(l); return true; }); }
+      return lines.join('\n');
+    }
+    document.getElementById('run').addEventListener('click',()=>{
+      const text=document.getElementById('inp').value;
+      const mode=document.getElementById('mode').value;
+      const unique=document.getElementById('unique').checked;
+      const trim=document.getElementById('trim').checked;
+      document.getElementById('out').value=sortLines(text,mode,unique,trim);
+    });
+    document.getElementById('copy').addEventListener('click',()=>{
+      const el=document.getElementById('out'); el.select(); document.execCommand('copy');
+    });
+  </script>
+</body></html>
+
+

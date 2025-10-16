@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wedding Invitation Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    .preview{display:flex;align-items:center;justify-content:center;border:1px solid #eee;border-radius:12px;background:#fff;min-height:420px}
+    canvas{max-width:100%;border-radius:12px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-heart tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Wedding Invitation Generator</div>
+        <div class="tool-desc">Create a simple invitation card and download as PNG.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Name 1</label><input id="n1" type="text" value="Aarav" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Name 2</label><input id="n2" type="text" value="Anaya" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Date</label><input id="date" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Time</label><input id="time" type="time" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-weight:600;margin-bottom:6px;">Venue</label><input id="venue" type="text" value="The Grand Lawn, City" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Theme Color</label><input id="color" type="color" value="#b56576" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Template</label><select id="tpl" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"><option value="classic">Classic</option><option value="modern">Modern</option><option value="floral">Floral</option></select></div>
+          <button id="download" class="tool-button">Download PNG</button>
+        </div>
+      </div>
+
+      <div class="preview"><canvas id="card" width="1000" height="1400"></canvas></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function draw(){
+      const c=document.getElementById('card'); const ctx=c.getContext('2d');
+      const n1=document.getElementById('n1').value.trim();
+      const n2=document.getElementById('n2').value.trim();
+      const date=document.getElementById('date').value; const time=document.getElementById('time').value;
+      const venue=document.getElementById('venue').value.trim();
+      const color=document.getElementById('color').value; const tpl=document.getElementById('tpl').value;
+      // background
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      // border/style
+      if (tpl==='classic'){ ctx.strokeStyle=color; ctx.lineWidth=12; ctx.strokeRect(30,30,c.width-60,c.height-60); }
+      if (tpl==='modern'){ ctx.fillStyle=color+'20'; ctx.fillRect(0,0,c.width,260); ctx.fillRect(0,c.height-260,c.width,260); }
+      if (tpl==='floral'){ ctx.fillStyle=color+'20'; for(let i=0;i<80;i++){ const x=Math.random()*c.width, y=Math.random()*c.height, r=2+Math.random()*6; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); } }
+      // heading
+      ctx.fillStyle=color; ctx.textAlign='center'; ctx.font='bold 64px Georgia'; ctx.fillText('Wedding Invitation', c.width/2, 220);
+      // names
+      ctx.fillStyle='#111'; ctx.font='bold 96px Georgia'; ctx.fillText(n1 + ' & ' + n2, c.width/2, 420);
+      ctx.font='28px Arial';
+      // date/time
+      const dstr = date? new Date(date).toDateString(): '';
+      ctx.fillText(dstr + (time? (' â€¢ ' + time): ''), c.width/2, 520);
+      // venue
+      wrapText(ctx, venue, c.width/2, 600, 820, 36);
+      // footer
+      ctx.fillStyle=color; ctx.font='bold 28px Arial'; ctx.fillText('With love and joy', c.width/2, c.height-180);
+    }
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+      ctx.textAlign='center'; ctx.fillStyle='#333'; ctx.font='28px Arial';
+      const words=text.split(' '); let line=''; let yy=y;
+      for (let i=0;i<words.length;i++){
+        const test=line + (line? ' ':'') + words[i];
+        if (ctx.measureText(test).width > maxWidth){ ctx.fillText(line, x, yy); line=words[i]; yy+=lineHeight; }
+        else line=test;
+      }
+      if (line) ctx.fillText(line, x, yy);
+    }
+    ['n1','n2','date','time','venue','color','tpl'].forEach(id=>document.getElementById(id).addEventListener('input', draw));
+    document.getElementById('download').addEventListener('click',()=>{ draw(); const a=document.createElement('a'); a.download='wedding-invitation.png'; a.href=document.getElementById('card').toDataURL('image/png'); a.click(); });
+    draw();
+  </script>
+</body>
+</html>
+
+

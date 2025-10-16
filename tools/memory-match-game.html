@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Match Game - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .board{display:grid;gap:8px;justify-content:center}
+    .card{width:70px;height:70px;border-radius:10px;background:#1f7ae0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;user-select:none;transition:transform .15s}
+    .card.face{background:#fff;color:#1f7ae0;border:2px solid #1f7ae0}
+    .disabled{opacity:.5;pointer-events:none}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-brain tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Memory Match Game</div>
+        <div class="tool-desc">Flip cards to find pairs. Track moves and best time.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="top">
+          <label>Size
+            <select id="size" style="padding:8px;border:1px solid #ddd;border-radius:8px">
+              <option value="4">4x4</option>
+              <option value="6">6x6</option>
+            </select>
+          </label>
+          <button id="new" class="tool-button">New Game</button>
+          <div>Moves: <strong id="moves">0</strong></div>
+          <div>Time: <strong id="time">0s</strong></div>
+          <div>Best: <strong id="best">â€”</strong></div>
+        </div>
+      </div>
+
+      <div id="board" class="board"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_memory_best';
+    let grid=4, values=[], state=[], open=[], moves=0, timer=null, secs=0;
+    function bestGet(){ try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}} }
+    function bestSet(b){ localStorage.setItem(KEY, JSON.stringify(b)); }
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+    function makeValues(n){ const pairs=(n*n)/2; const arr=[]; for(let i=1;i<=pairs;i++){ arr.push(i,i); } return shuffle(arr); }
+    function start(){ grid=+document.getElementById('size').value; values=makeValues(grid); state=Array(grid*grid).fill(0); open=[]; moves=0; secs=0; updateHUD();
+      const board=document.getElementById('board'); board.style.gridTemplateColumns=`repeat(${grid},70px)`; board.innerHTML='';
+      values.forEach((v,i)=>{ const d=document.createElement('div'); d.className='card'; d.textContent='?'; d.dataset.i=i; d.onclick=onFlip; board.appendChild(d); });
+      if(timer) clearInterval(timer); timer=setInterval(()=>{ secs++; document.getElementById('time').textContent=secs+'s'; },1000);
+    }
+    function updateHUD(){ document.getElementById('moves').textContent=moves; document.getElementById('time').textContent=secs+'s'; const b=bestGet()[grid]; document.getElementById('best').textContent=b? (b.time+'s / '+b.moves+'m'):'â€”'; }
+    function onFlip(e){ const i=+e.currentTarget.dataset.i; if(state[i]||open.includes(i)) return; flipFace(i,true); open.push(i); if(open.length===2){ moves++; updateHUD(); setTimeout(checkMatch,350); } }
+    function flipFace(i,face){ const el=document.querySelector(`.card[data-i="${i}"]`); if(!el) return; if(face){ el.classList.add('face'); el.textContent=values[i]; } else { el.classList.remove('face'); el.textContent='?'; } }
+    function checkMatch(){ const [a,b]=open; if(values[a]===values[b]){ state[a]=state[b]=1; document.querySelector(`.card[data-i="${a}"]`).classList.add('disabled'); document.querySelector(`.card[data-i="${b}"]`).classList.add('disabled'); }
+      else { flipFace(a,false); flipFace(b,false); }
+      open=[]; if(state.every(x=>x)){ clearInterval(timer); const b=bestGet(); const prev=b[grid]; if(!prev || secs<prev.time || (secs===prev.time && moves<prev.moves)){ b[grid]={time:secs,moves}; bestSet(b); } alert('Completed in '+secs+'s with '+moves+' moves.'); updateHUD(); }
+    }
+    document.getElementById('new').addEventListener('click', start);
+    document.getElementById('size').addEventListener('change', start);
+    start();
+  </script>
+</body>
+</html>
+
+

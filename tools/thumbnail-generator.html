@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Thumbnail Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fab fa-youtube tool-icon-small" style="font-size:3rem; color:#FF0000;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">YouTube Thumbnail Generator</div>
+        <div class="tool-desc">Enter a YouTube URL or Video ID to fetch downloadable thumbnail images in multiple resolutions.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end;">
+          <div>
+            <label for="ytInput" style="display:block; font-weight:600; margin-bottom:6px;">YouTube URL or Video ID</label>
+            <input id="ytInput" type="text" placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ or dQw4w9WgXcQ" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+          </div>
+          <button id="fetchThumbs" class="tool-button" style="height:42px;">Fetch Thumbnails</button>
+        </div>
+      </div>
+
+      <div id="results" style="display:grid; gap:12px; margin-top:16px;"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function extractVideoId(input){
+      if (!input) return '';
+      input = input.trim();
+      // If it's already an 11-char ID
+      if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+      try {
+        const url = new URL(input);
+        if (url.hostname.includes('youtu.be')){
+          const id = url.pathname.split('/').filter(Boolean)[0];
+          if (id && id.length === 11) return id;
+        }
+        if (url.hostname.includes('youtube.com')){
+          const id = url.searchParams.get('v');
+          if (id && id.length === 11) return id;
+          // Shorts URL pattern
+          const parts = url.pathname.split('/').filter(Boolean);
+          const shortIdx = parts.indexOf('shorts');
+          if (shortIdx !== -1 && parts[shortIdx+1] && parts[shortIdx+1].length === 11){
+            return parts[shortIdx+1];
+          }
+        }
+      } catch(e) {
+        // not a URL, ignore
+      }
+      return '';
+    }
+
+    const SIZES = [
+      { key: 'maxresdefault', label: 'Max Resolution (1280x720)' },
+      { key: 'sddefault',     label: 'SD (640x480)' },
+      { key: 'hqdefault',     label: 'HQ (480x360)' },
+      { key: 'mqdefault',     label: 'MQ (320x180)' },
+      { key: 'default',       label: 'Default (120x90)' }
+    ];
+
+    document.getElementById('fetchThumbs').addEventListener('click', () => {
+      const input = document.getElementById('ytInput').value;
+      const id = extractVideoId(input);
+      const res = document.getElementById('results');
+      res.innerHTML = '';
+      if (!id){
+        const box = document.createElement('div');
+        box.className = 'tool-card';
+        box.style.padding = '12px';
+        box.innerHTML = '<div class="tool-desc">Please enter a valid YouTube URL or 11-character video ID.</div>';
+        res.appendChild(box);
+        return;
+      }
+      SIZES.forEach(s => {
+        const url = `https://img.youtube.com/vi/${id}/${s.key}.jpg`;
+        const card = document.createElement('div');
+        card.className = 'tool-card';
+        card.style.padding = '12px';
+        card.innerHTML = `
+          <div style="display:grid; grid-template-columns:120px 1fr auto; gap:12px; align-items:center;">
+            <img src="${url}" alt="${s.label}" style="width:120px; height:auto; border-radius:8px; border:1px solid #eee;" onerror="this.closest('.tool-card').style.display='none'"/>
+            <div>
+              <div style="font-weight:600;">${s.label}</div>
+              <div class="tool-desc">${url}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <a class="tool-button" href="${url}" target="_blank" rel="noopener">Open</a>
+              <a class="tool-button" href="${url}" download>Download</a>
+            </div>
+          </div>`;
+        res.appendChild(card);
+      });
+    });
+  </script>
+</body>
+</html>
+
+

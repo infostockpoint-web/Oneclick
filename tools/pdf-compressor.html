@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF Compressor - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    input[type=file], select{padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff}
+  </style>
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:950px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">PDF Compressor</div>
+        <div class="tool-desc">Compress by rasterizing pages. This reduces file size but turns text into images.</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <input id="pdfFile" type="file" accept="application/pdf"/>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label>Quality
+              <select id="quality">
+                <option value="0.4">Low (smallest)</option>
+                <option value="0.6" selected>Medium</option>
+                <option value="0.85">High</option>
+              </select>
+            </label>
+            <label>Resolution
+              <select id="dpi">
+                <option value="96">96 DPI</option>
+                <option value="144" selected>144 DPI</option>
+                <option value="200">200 DPI</option>
+              </select>
+            </label>
+          </div>
+          <div style="text-align:right"><button id="run" class="tool-button">Compress</button></div>
+          <div id="status" class="tool-desc">1) Choose a PDF. 2) Click Compress.</div>
+        </div>
+      </div>
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const { jsPDF } = window.jspdf;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js';
+
+    function pxFromDpi(dpi){ return dpi/96; }
+
+    async function compress(){
+      const file = document.getElementById('pdfFile').files[0];
+      if(!file){ alert('Choose a PDF'); return; }
+      const qual = parseFloat(document.getElementById('quality').value);
+      const dpi = parseInt(document.getElementById('dpi').value,10);
+      const scaleFactor = pxFromDpi(dpi);
+      const status = document.getElementById('status');
+      status.textContent = 'Loading PDFâ€¦';
+
+      const data = new Uint8Array(await file.arrayBuffer());
+      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const firstPage = await pdf.getPage(1);
+      const vp = firstPage.getViewport({ scale: scaleFactor });
+      const pdfOut = new jsPDF({ unit:'pt', format:[vp.width, vp.height] });
+
+      for(let i=1;i<=pdf.numPages;i++){
+        status.textContent = `Rendering page ${i}/${pdf.numPages}â€¦`;
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: scaleFactor });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const img = canvas.toDataURL('image/jpeg', qual);
+        if(i>1) pdfOut.addPage([viewport.width, viewport.height]);
+        pdfOut.addImage(img, 'JPEG', 0, 0, viewport.width, viewport.height);
+      }
+      status.textContent = 'Savingâ€¦';
+      pdfOut.save((file.name.replace(/\.pdf$/i,'')||'document')+"-compressed.pdf");
+      status.textContent = 'Done!';
+    }
+    document.getElementById('run').addEventListener('click', compress);
+  </script>
+</body></html>
+
+

@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Travel Budget Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f3f3f3;text-align:left}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-wallet tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Travel Budget Calculator</div>
+        <div class="tool-desc">Estimate total trip cost: accommodation, transport, food, activities, and misc. Saved locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Currency</label><input id="cur" type="text" value="â‚¹" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">Days</label><input id="days" type="number" min="1" value="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <div><label style="display:block;font-weight:600;margin-bottom:6px;">People</label><input id="ppl" type="number" min="1" value="2" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></div>
+          <button id="save" class="tool-button">Save</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Costs</div>
+        <table>
+          <thead><tr><th>Category</th><th>Per Day (per person)</th><th>Fixed</th><th></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="addCat" class="tool-button"><i class="fas fa-plus"></i> Add Category</button>
+          <button id="calc" class="tool-button"><i class="fas fa-calculator"></i> Calculate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Total Estimate</div>
+        <div id="out" class="tool-desc" style="font-size:1.3rem;color:#000;">â€”</div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_travel_budget_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{cur:'â‚¹', days:5, ppl:2, cats:[{name:'Accommodation', per:1500, fixed:0},{name:'Transport', per:400, fixed:2000},{name:'Food', per:800, fixed:0},{name:'Activities', per:500, fixed:0},{name:'Misc', per:200, fixed:0}]} }catch(e){ return {cur:'â‚¹', days:5, ppl:2, cats:[]} } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function fmt(cur,n){ return `${cur} ${Number(n).toLocaleString(undefined,{maximumFractionDigits:2})}`; }
+
+    function render(){
+      const d=load(); document.getElementById('cur').value=d.cur; document.getElementById('days').value=d.days; document.getElementById('ppl').value=d.ppl;
+      const tb=document.getElementById('tbody'); tb.innerHTML='';
+      d.cats.forEach((c,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><input data-k="name" data-i="${i}" value="${c.name}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:8px;"></td>
+          <td><input data-k="per" data-i="${i}" type="number" min="0" step="0.01" value="${c.per}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:8px;"></td>
+          <td><input data-k="fixed" data-i="${i}" type="number" min="0" step="0.01" value="${c.fixed}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:8px;"></td>
+          <td><button class="tool-button" data-del="${i}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    function updateField(e){ const inp=e.target.closest('input[data-k]'); if(!inp) return; const d=load(); const i=+inp.getAttribute('data-i'); const k=inp.getAttribute('data-k'); d.cats[i][k]= k==='name'? inp.value: (+inp.value||0); save(d); }
+    function addCat(){ const d=load(); d.cats.push({name:'New', per:0, fixed:0}); save(d); render(); }
+    function delCat(i){ const d=load(); d.cats.splice(i,1); save(d); render(); }
+    function saveTop(){ const d=load(); d.cur=document.getElementById('cur').value||'â‚¹'; d.days=+document.getElementById('days').value||1; d.ppl=+document.getElementById('ppl').value||1; save(d); }
+    function calc(){ const d=load(); const perDay = d.cats.reduce((a,c)=>a+(+c.per||0),0); const fixed = d.cats.reduce((a,c)=>a+(+c.fixed||0),0); const total = perDay*d.days*d.ppl + fixed; document.getElementById('out').textContent = `${fmt(d.cur,total)} (Per day/person sum: ${fmt(d.cur,perDay)})`; }
+
+    document.getElementById('tbody').addEventListener('input', updateField);
+    document.getElementById('tbody').addEventListener('click', (e)=>{ const b=e.target.closest('button[data-del]'); if(!b) return; delCat(+b.getAttribute('data-del')); });
+    document.getElementById('addCat').addEventListener('click', addCat);
+    document.getElementById('save').addEventListener('click', saveTop);
+    document.getElementById('calc').addEventListener('click', calc);
+
+    render();
+  </script>
+</body>
+</html>
+
+

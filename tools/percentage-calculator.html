@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Percentage Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-percentage tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Percentage Calculator</div>
+        <div class="tool-desc">Solve common percentage problems instantly.</div>
+      </div>
+
+      <div style="display:grid; gap:16px;">
+        <!-- X% of Y -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">X% of Y</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; align-items:end;">
+            <div>
+              <label for="xPercent" style="display:block; font-weight:600; margin-bottom:6px;">X (%)</label>
+              <input id="xPercent" type="number" step="any" placeholder="e.g. 15" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <div>
+              <label for="yBase" style="display:block; font-weight:600; margin-bottom:6px;">Y</label>
+              <input id="yBase" type="number" step="any" placeholder="e.g. 200" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <button id="calcXY" class="tool-button" style="height:42px;">Calculate</button>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Result</label>
+              <output id="resXY" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+          </div>
+        </div>
+
+        <!-- What percent is A of B -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">What percent is A of B?</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; align-items:end;">
+            <div>
+              <label for="aVal" style="display:block; font-weight:600; margin-bottom:6px;">A</label>
+              <input id="aVal" type="number" step="any" placeholder="e.g. 30" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <div>
+              <label for="bVal" style="display:block; font-weight:600; margin-bottom:6px;">B</label>
+              <input id="bVal" type="number" step="any" placeholder="e.g. 120" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <button id="calcAB" class="tool-button" style="height:42px;">Calculate</button>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Result</label>
+              <output id="resAB" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+          </div>
+        </div>
+
+        <!-- Percentage change -->
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:8px;">Percentage change (increase/decrease)</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; align-items:end;">
+            <div>
+              <label for="oldVal" style="display:block; font-weight:600; margin-bottom:6px;">Old value</label>
+              <input id="oldVal" type="number" step="any" placeholder="e.g. 80" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <div>
+              <label for="newVal" style="display:block; font-weight:600; margin-bottom:6px;">New value</label>
+              <input id="newVal" type="number" step="any" placeholder="e.g. 100" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <button id="calcChange" class="tool-button" style="height:42px;">Calculate</button>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:6px;">Result</label>
+              <output id="resChange" style="display:block; padding:10px; border:1px dashed #ddd; border-radius:8px;">â€”</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="banner-ad" aria-label="Advertisement">Ad Placeholder (728x90)</div>
+        <div style="text-align:center;">
+          <a class="tool-button" href="../index.html">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function toNumber(val){ const n = Number(val); return isFinite(n) ? n : NaN; }
+    function round2(n){ return (Math.round(n * 100) / 100).toString(); }
+
+    // X% of Y
+    document.getElementById('calcXY').addEventListener('click', () => {
+      const x = toNumber(document.getElementById('xPercent').value);
+      const y = toNumber(document.getElementById('yBase').value);
+      const out = document.getElementById('resXY');
+      if (!isFinite(x) || !isFinite(y)) { out.textContent = 'Please enter valid numbers'; return; }
+      out.textContent = round2((x / 100) * y);
+    });
+
+    // What percent is A of B?
+    document.getElementById('calcAB').addEventListener('click', () => {
+      const a = toNumber(document.getElementById('aVal').value);
+      const b = toNumber(document.getElementById('bVal').value);
+      const out = document.getElementById('resAB');
+      if (!isFinite(a) || !isFinite(b) || b === 0) { out.textContent = 'Please enter valid numbers (B â‰  0)'; return; }
+      out.textContent = round2((a / b) * 100) + '%';
+    });
+
+    // Percentage change
+    document.getElementById('calcChange').addEventListener('click', () => {
+      const oldV = toNumber(document.getElementById('oldVal').value);
+      const newV = toNumber(document.getElementById('newVal').value);
+      const out = document.getElementById('resChange');
+      if (!isFinite(oldV) || !isFinite(newV) || oldV === 0) { out.textContent = 'Please enter valid numbers (Old â‰  0)'; return; }
+      const diff = newV - oldV;
+      const pct = (diff / oldV) * 100;
+      const dir = pct > 0 ? 'increase' : (pct < 0 ? 'decrease' : 'no change');
+      out.textContent = `${round2(Math.abs(pct))}% ${dir}`;
+    });
+  </script>
+</body>
+</html>
+
+

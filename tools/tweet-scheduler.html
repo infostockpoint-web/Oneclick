@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tweet Scheduler - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fab fa-twitter tool-icon-small" style="font-size:3rem; color:#1DA1F2;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Tweet Scheduler</div>
+        <div class="tool-desc">Compose tweets and schedule them locally. This is a client-side demo and does not post to Twitter.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div>
+            <label for="tweetText" style="display:block; font-weight:600; margin-bottom:6px;">Tweet Text</label>
+            <textarea id="tweetText" rows="4" maxlength="280" placeholder="What's happening?" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"></textarea>
+            <div style="display:flex; justify-content:space-between; margin-top:6px;">
+              <small id="charCount">0/280</small>
+              <small>Hashtags tip: keep it relevant and minimal.</small>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+              <label for="scheduleTime" style="display:block; font-weight:600; margin-bottom:6px;">Schedule Time</label>
+              <input type="datetime-local" id="scheduleTime" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <div>
+              <label for="tweetNote" style="display:block; font-weight:600; margin-bottom:6px;">Note (optional)</label>
+              <input type="text" id="tweetNote" placeholder="Campaign name, etc." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+            </div>
+            <button id="saveTweet" class="tool-button" style="height:42px;">Save Schedule</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div class="tool-name" style="margin-bottom:8px;">Scheduled Tweets</div>
+        <div id="listEmpty" class="tool-desc">No scheduled tweets yet.</div>
+        <div id="tweetList" style="display:grid; gap:10px;"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY = 'oneclick_tweet_schedules_v1';
+
+    const tweetText = document.getElementById('tweetText');
+    const charCount = document.getElementById('charCount');
+    tweetText.addEventListener('input', () => {
+      charCount.textContent = `${tweetText.value.length}/280`;
+    });
+
+    function loadAll(){
+      try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+      catch(e){ return []; }
+    }
+    function saveAll(items){ localStorage.setItem(KEY, JSON.stringify(items)); }
+
+    function render(){
+      const items = loadAll().sort((a,b) => new Date(a.time) - new Date(b.time));
+      const list = document.getElementById('tweetList');
+      const empty = document.getElementById('listEmpty');
+      list.innerHTML = '';
+      if (!items.length){ empty.style.display='block'; return; }
+      empty.style.display='none';
+      for (const it of items){
+        const box = document.createElement('div');
+        box.className = 'tool-card';
+        box.style.padding = '12px';
+        box.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:start;">
+            <div>
+              <div style="font-weight:600;">${escapeHtml(it.text).replace(/\n/g,'<br>')}</div>
+              <div class="tool-desc" style="margin-top:6px;">
+                <i class="far fa-clock"></i> ${new Date(it.time).toLocaleString()} ${it.note?`â€¢ ${escapeHtml(it.note)}`:''}
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="tool-button" data-act="copy" data-id="${it.id}"><i class="far fa-copy"></i></button>
+              <button class="tool-button" data-act="simulate" data-id="${it.id}"><i class="fas fa-paper-plane"></i></button>
+              <button class="tool-button" data-act="delete" data-id="${it.id}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        list.appendChild(box);
+      }
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    document.getElementById('saveTweet').addEventListener('click', () => {
+      const text = tweetText.value.trim();
+      const time = document.getElementById('scheduleTime').value;
+      const note = document.getElementById('tweetNote').value.trim();
+      if (!text){ alert('Please enter tweet text.'); return; }
+      if (!time){ alert('Please set a schedule time.'); return; }
+      const when = new Date(time);
+      if (!isFinite(when)) { alert('Invalid schedule time.'); return; }
+      const items = loadAll();
+      items.push({ id: crypto.randomUUID(), text, time: when.toISOString(), note });
+      saveAll(items);
+      tweetText.value=''; charCount.textContent='0/280';
+      document.getElementById('scheduleTime').value='';
+      document.getElementById('tweetNote').value='';
+      render();
+    });
+
+    document.getElementById('tweetList').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const act = btn.getAttribute('data-act');
+      const items = loadAll();
+      const idx = items.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      if (act === 'delete'){
+        if (confirm('Delete this scheduled tweet?')){ items.splice(idx,1); saveAll(items); render(); }
+      } else if (act === 'copy') {
+        navigator.clipboard.writeText(items[idx].text).then(()=>{
+          alert('Tweet text copied to clipboard.');
+        });
+      } else if (act === 'simulate') {
+        alert('Simulated posting:\n\n' + items[idx].text + '\n\n(Use copy to paste into Twitter at the scheduled time)');
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
+

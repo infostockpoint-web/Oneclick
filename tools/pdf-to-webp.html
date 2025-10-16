@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to WebP - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end; }
+    .preview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .thumb { border:1px solid #e5e7eb; border-radius:8px; padding:8px; background:#fff; }
+    .progress { height:10px; background:#eef2ff; border-radius:6px; overflow:hidden; }
+    .bar { height:100%; width:0%; background:#4a6cf7; transition:width .2s ease; }
+    .hint { font-size:.9rem; color:#6b7280; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-image tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">PDF to WebP</div>
+        <div class="tool-desc">Convert each PDF page to WebP images with adjustable quality.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="pdfInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PDF File</label>
+            <input type="file" id="pdfInput" accept="application/pdf,.pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="scale" style="display:block; font-weight:600; margin-bottom:6px;">Render Scale</label>
+            <input type="range" id="scale" min="1" max="3" step="0.25" value="1.5" style="width:100%;">
+            <div class="hint">Higher scale = larger output</div>
+          </div>
+          <div>
+            <label for="quality" style="display:block; font-weight:600; margin-bottom:6px;">WebP Quality</label>
+            <input type="range" id="quality" min="0.2" max="1" step="0.05" value="0.9" style="width:100%;">
+            <div class="hint">Balance size and clarity</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="renderBtn" class="tool-button"><i class="fas fa-image"></i> Render Pages</button>
+            <button id="downloadZipBtn" class="tool-button" style="display:none;"><i class="fas fa-file-archive"></i> Download WebPs (ZIP)</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;" class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Preview</div>
+          <div id="preview" class="preview-grid" style="margin-top:10px; min-height:120px; background:#f8fafc; padding:10px; border-radius:8px;"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Details</div>
+          <div id="details" style="margin-top:8px; color:#374151; font-size:.95rem;">Select a PDF and click Render Pages.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdfInput = document.getElementById('pdfInput');
+    const renderBtn = document.getElementById('renderBtn');
+    const downloadZipBtn = document.getElementById('downloadZipBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const preview = document.getElementById('preview');
+    const details = document.getElementById('details');
+    const scaleInput = document.getElementById('scale');
+    const qualityInput = document.getElementById('quality');
+    const progressBar = document.getElementById('progressBar');
+
+    let renderedBlobs = [];
+    let pageCount = 0;
+
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    function reset(){ renderedBlobs=[]; pageCount=0; preview.innerHTML=''; details.textContent='Select a PDF and click Render Pages.'; setProgress(0); downloadZipBtn.style.display='none'; }
+
+    clearBtn.addEventListener('click', () => { pdfInput.value=''; reset(); });
+    pdfInput.addEventListener('change', () => { reset(); if (pdfInput.files[0]) details.textContent = `Selected: ${pdfInput.files[0].name}`; });
+
+    async function renderPDFToWebPs(file){
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      pageCount = pdf.numPages;
+      details.textContent = `Pages detected: ${pageCount}`;
+
+      const scale = parseFloat(scaleInput.value || '1.5');
+      const quality = parseFloat(qualityInput.value || '0.9');
+      renderedBlobs=[]; preview.innerHTML=''; setProgress(0);
+
+      for (let i=1;i<=pageCount;i++){
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/webp', quality));
+        renderedBlobs.push({ index:i, blob });
+
+        const url = URL.createObjectURL(blob);
+        const card = document.createElement('div');
+        card.className = 'thumb';
+        card.innerHTML = `<div style="font-weight:600; margin-bottom:6px;">Page ${i}</div><img src="${url}" alt="Page ${i}" style="width:100%; height:auto; border-radius:6px;">`;
+        preview.appendChild(card);
+
+        setProgress(Math.round((i/pageCount)*100));
+      }
+      details.textContent = `Rendered ${renderedBlobs.length} WebP image(s).`;
+      downloadZipBtn.style.display = renderedBlobs.length ? 'inline-block' : 'none';
+    }
+
+    renderBtn.addEventListener('click', async () => {
+      if (!pdfInput.files[0]) { alert('Please select a PDF file.'); return; }
+      try {
+        renderBtn.disabled = true; renderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering...';
+        await renderPDFToWebPs(pdfInput.files[0]);
+      } catch(e){
+        alert('Failed to render PDF: ' + e.message);
+      } finally {
+        renderBtn.disabled = false; renderBtn.innerHTML = '<i class="fas fa-image"></i> Render Pages';
+      }
+    });
+
+    downloadZipBtn.addEventListener('click', async () => {
+      if (!renderedBlobs.length) return;
+      const zip = new JSZip();
+      const base = (pdfInput.files[0]?.name || 'document').replace(/\.pdf$/i,'');
+      renderedBlobs.forEach(({index, blob}) => zip.file(`${base}-page-${String(index).padStart(3,'0')}.webp`, blob));
+      const content = await zip.generateAsync({type:'blob'});
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a'); a.href = url; a.download = `${base}-webps.zip`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+
+

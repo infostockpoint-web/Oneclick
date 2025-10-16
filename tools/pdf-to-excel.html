@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PDF to Excel - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-excel tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">PDF to Excel Converter</div>
+      <div class="tool-desc">Extract tabular data from PDF files and convert to Excel format.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="pdfInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PDF File</label>
+          <input type="file" id="pdfInput" accept=".pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="pageRange" style="display:block; font-weight:600; margin-bottom:6px;">Page Range (Optional)</label>
+          <input type="text" id="pageRange" placeholder="e.g., 1-5 or 1,3,5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="convertBtn" class="tool-button">Convert to Excel</button>
+          <button id="previewBtn" class="tool-button" style="background:#28a745;">Preview Data</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Extracted Data Preview</div>
+        <div id="dataPreview" style="border:1px solid #ddd; padding:10px; min-height:200px; background:#f9f9f9; font-family:monospace; white-space:pre; overflow:auto; margin-top:10px;">
+          Select a PDF file to preview extracted data...
+        </div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Conversion Options</div>
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="detectTables" checked> Auto-detect tables</label><br>
+          <label><input type="checkbox" id="includeHeaders" checked> Include column headers</label><br>
+          <label><input type="checkbox" id="skipEmptyRows" checked> Skip empty rows</label>
+          <label><input type="checkbox" id="createMultipleSheets"> Create multiple sheets</label>
+        </div>
+        <div class="tool-name" style="margin-top:15px;">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none; background:#007bff;">Download Excel</button>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const pdfInput = document.getElementById('pdfInput');
+  const pageRange = document.getElementById('pageRange');
+  const convertBtn = document.getElementById('convertBtn');
+  const previewBtn = document.getElementById('previewBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const dataPreview = document.getElementById('dataPreview');
+  const detectTables = document.getElementById('detectTables');
+  const includeHeaders = document.getElementById('includeHeaders');
+  const skipEmptyRows = document.getElementById('skipEmptyRows');
+  const createMultipleSheets = document.getElementById('createMultipleSheets');
+
+  let currentPdfData = null;
+  let extractedTables = [];
+
+  function parsePageRange(rangeStr, totalPages) {
+    if (!rangeStr.trim()) {
+      return Array.from({length: totalPages}, (_, i) => i + 1);
+    }
+
+    const pages = [];
+    const ranges = rangeStr.split(',');
+
+    ranges.forEach(range => {
+      const trimmed = range.trim();
+      if (trimmed.includes('-')) {
+        const [start, end] = trimmed.split('-').map(Number);
+        const startPage = Math.max(1, start);
+        const endPage = Math.min(totalPages, end || totalPages);
+
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(i);
+        }
+      } else {
+        const pageNum = parseInt(trimmed);
+        if (pageNum >= 1 && pageNum <= totalPages) {
+          pages.push(pageNum);
+        }
+      }
+    });
+
+    return [...new Set(pages)]; // Remove duplicates
+  }
+
+  async function extractTextFromPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+
+    const pagesToExtract = parsePageRange(pageRange.value, pdf.numPages);
+    const extractedData = [];
+
+    for (const pageNum of pagesToExtract) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      extractedData.push({
+        page: pageNum,
+        text: pageText,
+        items: textContent.items
+      });
+    }
+
+    return extractedData;
+  }
+
+  function detectTablesInText(textData) {
+    const tables = [];
+
+    textData.forEach(pageData => {
+      const lines = pageData.text.split('\n').filter(line => line.trim());
+      const pageTables = [];
+
+      // Simple table detection based on patterns
+      let currentTable = [];
+      let inTable = false;
+
+      lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          if (inTable && currentTable.length > 0) {
+            pageTables.push(currentTable);
+            currentTable = [];
+            inTable = false;
+          }
+          return;
+        }
+
+        // Detect table patterns
+        const hasMultipleSpaces = /\s{2,}/.test(trimmed);
+        const hasTabs = /\t/.test(trimmed);
+        const hasPipes = /\|/.test(trimmed);
+        const hasCommas = /,/.test(trimmed) && trimmed.split(',').length > 3;
+
+        if (hasMultipleSpaces || hasTabs || hasPipes || hasCommas) {
+          inTable = true;
+          currentTable.push(trimmed);
+        } else if (inTable) {
+          // Check if this might be a header or separator line
+          if (trimmed.includes('---') || trimmed.includes('===') || trimmed.includes('___')) {
+            // This is likely a separator line, keep building table
+          } else if (currentTable.length > 0) {
+            pageTables.push(currentTable);
+            currentTable = [];
+            inTable = false;
+          }
+        }
+      });
+
+      // Don't forget the last table
+      if (inTable && currentTable.length > 0) {
+        pageTables.push(currentTable);
+      }
+
+      if (pageTables.length > 0) {
+        tables.push({
+          page: pageData.page,
+          tables: pageTables
+        });
+      }
+    });
+
+    return tables;
+  }
+
+  function tablesToCSV(tablesData) {
+    const csvSheets = [];
+
+    tablesData.forEach(pageData => {
+      pageData.tables.forEach((table, tableIndex) => {
+        const rows = [];
+
+        table.forEach((line, index) => {
+          if (skipEmptyRows.checked && !line.trim()) return;
+
+          let cells;
+          if (line.includes('\t')) {
+            cells = line.split('\t');
+          } else if (line.includes('|')) {
+            cells = line.split('|').map(cell => cell.trim());
+          } else if (line.includes(',')) {
+            // Handle CSV-like data
+            cells = line.split(',').map(cell => cell.trim());
+          } else {
+            // Split by multiple spaces
+            cells = line.split(/\s{2,}/).map(cell => cell.trim());
+          }
+
+          // Clean up cells
+          cells = cells.map(cell => {
+            let cleanCell = cell.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+            return cleanCell;
+          });
+
+          rows.push(cells.join(','));
+        });
+
+        if (includeHeaders.checked && rows.length > 0) {
+          const headerRow = rows.shift();
+          rows.unshift(headerRow);
+        }
+
+        csvSheets.push(rows.join('\n'));
+      });
+    });
+
+    return csvSheets;
+  }
+
+  function createExcelFile(csvSheets) {
+    const wb = XLSX.utils.book_new();
+
+    csvSheets.forEach((sheet, index) => {
+      const ws = XLSX.utils.aoa_to_sheet(sheet.split('\n').map(row => row.split(',')));
+      XLSX.utils.book_append_sheet(wb, ws, `Sheet${index + 1}`);
+    });
+
+    const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
+    const blob = new Blob([wbout], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url = URL.createObjectURL(blob);
+
+    downloadBtn.href = url;
+    downloadBtn.download = 'output.xlsx';
+    downloadBtn.style.display = 'block';
+  }
+
+  pdfInput.addEventListener('change', async () => {
+    if (pdfInput.files.length === 0) return;
+
+    const file = pdfInput.files[0];
+    const textData = await extractTextFromPDF(file);
+
+    if (detectTables.checked) {
+      extractedTables = detectTablesInText(textData);
+      const csvSheets = tablesToCSV(extractedTables);
+      createExcelFile(csvSheets);
+    } else {
+      const csvSheets = tablesToCSV([{tables: textData.map(data => [data.text])}]);
+      createExcelFile(csvSheets);
+    }
+
+    dataPreview.innerText = textData.map(data => data.text).join('\n');
+  });
+
+  previewBtn.addEventListener('click', () => {
+    if (pdfInput.files.length === 0) return;
+
+    const file = pdfInput.files[0];
+    extractTextFromPDF(file).then(textData => {
+      dataPreview.innerText = textData.map(data => data.text).join('\n');
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    pdfInput.value = '';
+    dataPreview.innerText = 'Select a PDF file to preview extracted data...';
+    downloadBtn.style.display = 'none';
+  });
+</script>
+</body></html>
+
+

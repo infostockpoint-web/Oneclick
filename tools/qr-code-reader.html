@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QR Code Reader - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    video{width:100%;max-width:500px;border-radius:12px;border:1px solid #eee}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .result{font-size:1.1rem;word-break:break-word}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-qrcode tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">QR Code Reader</div>
+        <div class="tool-desc">Scan QR codes using your camera (if supported) or upload an image. All processing is local.</div>
+      </div>
+
+      <div class="grid">
+        <div class="tool-card" style="padding:16px; text-align:center;">
+          <div class="tool-name">Live Camera</div>
+          <video id="video" playsinline muted></video>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+            <button id="start" class="tool-button"><i class="fas fa-play"></i> Start</button>
+            <button id="stop" class="tool-button" style="background:#e74c3c;"><i class="fas fa-stop"></i> Stop</button>
+          </div>
+          <div id="camNote" class="tool-desc" style="margin-top:6px;">Requires a browser with BarcodeDetector support.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Upload Image</div>
+          <input id="file" type="file" accept="image/*"/>
+          <div class="tool-desc" style="margin-top:6px;">Note: Decoding from images may require browser support. If not supported, try live camera or a different browser.</div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;margin-top:16px;">
+        <div class="tool-name">Result</div>
+        <div id="result" class="result">â€”</div>
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="copy" class="tool-button"><i class="far fa-copy"></i> Copy</button>
+          <a id="open" class="tool-button" href="#" target="_blank" rel="noopener">Open as URL</a>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let stream=null, detector=null, raf=null;
+    async function initDetector(){
+      if ('BarcodeDetector' in window){
+        try { detector = new BarcodeDetector({formats:['qr_code']}); }
+        catch(e){ detector=null; }
+      }
+    }
+    async function startCam(){
+      if (!detector){ document.getElementById('camNote').textContent='BarcodeDetector not supported in this browser.'; return; }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        const v=document.getElementById('video'); v.srcObject=stream; await v.play();
+        scanLoop();
+      } catch(e){ alert('Camera access failed: '+e.message); }
+    }
+    function stopCam(){ if (raf) cancelAnimationFrame(raf); raf=null; if (stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
+    async function scanLoop(){
+      const v=document.getElementById('video');
+      if (!detector || v.readyState<2){ raf=requestAnimationFrame(scanLoop); return; }
+      try{
+        const codes = await detector.detect(v);
+        if (codes && codes[0]){ showResult(codes[0].rawValue); }
+      }catch(e){}
+      raf=requestAnimationFrame(scanLoop);
+    }
+
+    function showResult(text){
+      const r=document.getElementById('result'); r.textContent=text||'â€”';
+      const a=document.getElementById('open'); a.href = text && /^https?:\/\//i.test(text) ? text : '#';
+    }
+
+    document.getElementById('start').addEventListener('click', startCam);
+    document.getElementById('stop').addEventListener('click', stopCam);
+    document.getElementById('copy').addEventListener('click', ()=>{ const t=document.getElementById('result').textContent; if(t&&t!=='â€”') navigator.clipboard.writeText(t).then(()=>alert('Copied.')); });
+
+    document.getElementById('file').addEventListener('change', async (e)=>{
+      const f=e.target.files[0]; if (!f) return;
+      if (!detector){ alert('BarcodeDetector not supported for image decode in this browser. Please use camera mode or try a Chromium-based browser.'); return; }
+      const img=new Image(); img.onload=async()=>{
+        const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0);
+        try { const codes=await detector.detect(c); if(codes && codes[0]) showResult(codes[0].rawValue); else alert('No QR code detected in image.'); } catch(err){ alert('Failed to decode image.'); }
+      }; img.src=URL.createObjectURL(f);
+    });
+
+    initDetector();
+  </script>
+</body>
+</html>
+
+

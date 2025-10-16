@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UUID Generator - One Click Tools</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:1fr auto;gap:8px}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:800px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div class="tool-name">UUID Generator</div>
+        <div class="tool-desc">Generate RFC 4122 version 4 UUIDs securely in your browser.</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <input id="uuid" readonly placeholder="Click Generate"/>
+          <button id="gen" class="tool-button">Generate</button>
+        </div>
+        <div style="margin-top:8px;text-align:right;">
+          <button id="copy" class="tool-button"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+      </div>
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function uuidv4(){
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      a[6] = (a[6] & 0x0f) | 0x40; // version 4
+      a[8] = (a[8] & 0x3f) | 0x80; // variant
+      const hex = [...a].map(b=>b.toString(16).padStart(2,'0'));
+      return `${hex[0]}${hex[1]}${hex[2]}${hex[3]}-${hex[4]}${hex[5]}-${hex[6]}${hex[7]}-${hex[8]}${hex[9]}-${hex[10]}${hex[11]}${hex[12]}${hex[13]}${hex[14]}${hex[15]}`;
+    }
+    document.getElementById('gen').addEventListener('click',()=>{
+      document.getElementById('uuid').value = uuidv4();
+    });
+    document.getElementById('copy').addEventListener('click',()=>{
+      const el=document.getElementById('uuid'); el.select(); document.execCommand('copy');
+    });
+  </script>
+</body></html>
+
+

@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logo Maker - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link id="gfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Lobster&display=swap">
+  <style>
+    .preview{display:flex;align-items:center;justify-content:center;height:220px;border:1px solid #eee;border-radius:10px;background:#fff}
+    .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-paint-brush tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Logo Maker</div>
+        <div class="tool-desc">Create simple text logos. Choose font, color, shadow, and download as PNG.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="row">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Text</label>
+            <input id="text" type="text" value="One Click" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Font</label>
+            <select id="font" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>Poppins</option>
+              <option>Montserrat</option>
+              <option>Lobster</option>
+              <option>Georgia</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Weight</label>
+            <select id="weight" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option>400</option><option selected>700</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Size (px)</label>
+            <input id="size" type="number" value="72" min="12" step="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Text Color</label>
+            <input id="color" type="color" value="#1f7ae0" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Shadow</label>
+            <input id="shadow" type="text" value="2px 2px 0 #00000020" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Background</label>
+            <input id="bg" type="color" value="#ffffff" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <button id="download" class="tool-button">Download PNG</button>
+        </div>
+      </div>
+
+      <div class="preview"><div id="logo" style="font-size:72px;font-weight:700;color:#1f7ae0;text-shadow:2px 2px 0 #00000020;font-family:'Poppins',sans-serif;">One Click</div></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function update(){
+      const t=document.getElementById('text').value||'';
+      const f=document.getElementById('font').value;
+      const w=document.getElementById('weight').value;
+      const s=+document.getElementById('size').value||72;
+      const c=document.getElementById('color').value;
+      const sh=document.getElementById('shadow').value;
+      const bg=document.getElementById('bg').value;
+      const el=document.getElementById('logo');
+      el.textContent=t; el.style.fontFamily=`'${f}', ${f==='Georgia'?'serif':'sans-serif'}`;
+      el.style.fontWeight=w; el.style.fontSize=s+'px'; el.style.color=c; el.style.textShadow=sh;
+      el.parentElement.style.background=bg;
+    }
+    ['text','font','weight','size','color','shadow','bg'].forEach(id=>document.getElementById(id).addEventListener('input', update));
+
+    document.getElementById('download').addEventListener('click',()=>{
+      const el=document.getElementById('logo');
+      const bg=document.getElementById('bg').value;
+      const r=el.getBoundingClientRect();
+      const c=document.createElement('canvas'); c.width=Math.ceil(r.width+40); c.height=Math.ceil(r.height+40);
+      const ctx=c.getContext('2d');
+      ctx.fillStyle=bg; ctx.fillRect(0,0,c.width,c.height);
+      // apply font
+      ctx.fillStyle=getComputedStyle(el).color;
+      ctx.font = `${getComputedStyle(el).fontWeight} ${parseFloat(getComputedStyle(el).fontSize)}px ${getComputedStyle(el).fontFamily}`;
+      // shadow
+      const sh=getComputedStyle(el).textShadow; // format like: x y blur color
+      if (sh){ try {
+        const m=sh.match(/(-?\d+px)\s+(-?\d+px)\s+(-?\d+px)?\s+(.*)/);
+        if (m){ ctx.shadowOffsetX=parseInt(m[1]); ctx.shadowOffsetY=parseInt(m[2]); ctx.shadowBlur=parseInt(m[3]||'0'); ctx.shadowColor=m[4]; }
+      } catch(e){} }
+      ctx.textBaseline='top';
+      ctx.fillText(el.textContent, 20, 20);
+      const a=document.createElement('a'); a.download='logo.png'; a.href=c.toDataURL('image/png'); a.click();
+    });
+
+    update();
+  </script>
+</body>
+</html>
+
+

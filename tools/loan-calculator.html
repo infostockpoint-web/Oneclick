@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-calculator tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Loan Calculator</div>
+        <div class="tool-desc">Compute EMI/monthly payment, total interest and total payment.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Principal</label>
+            <input id="principal" type="number" min="0" step="0.01" placeholder="e.g., 500000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Annual Interest (%)</label>
+            <input id="rate" type="number" min="0" step="0.01" placeholder="e.g., 8.5" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Tenure</label>
+            <div style="display:flex; gap:8px;">
+              <input id="tenure" type="number" min="1" step="1" placeholder="e.g., 20" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <select id="tenureUnit" style="padding:10px; border:1px solid #ddd; border-radius:8px;">
+                <option value="years">Years</option>
+                <option value="months">Months</option>
+              </select>
+            </div>
+          </div>
+          <button id="calc" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Monthly EMI</div>
+          <div id="emi" class="tool-desc" style="font-size:1.3rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Interest</div>
+          <div id="interest" class="tool-desc" style="font-size:1.3rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Total Payment</div>
+          <div id="total" class="tool-desc" style="font-size:1.3rem; color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px; overflow:auto;">
+        <div class="tool-name" style="margin-bottom:6px;">Amortization (first 12 months)</div>
+        <table id="amort" style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">Month</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Interest</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Principal</th>
+              <th style="text-align:right; border-bottom:1px solid #eee; padding:8px;">Balance</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
+    function calc(){
+      const P = Number(document.getElementById('principal').value);
+      const r = Number(document.getElementById('rate').value);
+      let t = Number(document.getElementById('tenure').value);
+      const unit = document.getElementById('tenureUnit').value;
+      if (!P || !r || !t){ alert('Please fill all fields.'); return; }
+      const n = unit==='years' ? t*12 : t; // months
+      const i = r/12/100; // monthly rate
+      const emi = (P*i*Math.pow(1+i,n)) / (Math.pow(1+i,n)-1);
+      const total = emi*n;
+      const interest = total - P;
+      document.getElementById('emi').textContent = fmt(emi);
+      document.getElementById('interest').textContent = fmt(interest);
+      document.getElementById('total').textContent = fmt(total);
+
+      // amortization first 12 months
+      let bal = P; const tb = document.querySelector('#amort tbody'); tb.innerHTML='';
+      for (let m=1;m<=Math.min(12,n);m++){
+        const int = bal * i;
+        const prin = emi - int;
+        bal = Math.max(0, bal - prin);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;">${m}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${fmt(int)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${fmt(prin)}</td>
+          <td style="padding:8px; text-align:right; border-bottom:1px solid #f3f3f3;">${fmt(bal)}</td>`;
+        tb.appendChild(tr);
+      }
+    }
+    document.getElementById('calc').addEventListener('click', calc);
+  </script>
+</body>
+</html>
+
+

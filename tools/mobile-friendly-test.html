@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile-Friendly Test - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-mobile-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Mobile-Friendly Test</div>
+        <div class="tool-desc">Analyze a page for mobile-friendly basics. Paste HTML or fetch a URL (CORS may block remote fetches).</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; align-items:end;">
+          <div>
+            <label for="url" style="display:block; font-weight:600; margin-bottom:6px;">Page URL (optional)</label>
+            <input id="url" type="url" placeholder="https://example.com" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="fetchBtn" class="tool-button"><i class="fas fa-cloud-download-alt"></i> Fetch</button>
+            <button id="analyzeBtn" class="tool-button" style="background:#28a745;"><i class="fas fa-search"></i> Analyze</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Page HTML</div>
+        <textarea id="htmlInput" rows="10" placeholder="Paste the HTML of the page here (recommended if remote fetch is blocked by CORS)" style="margin-top:10px; width:100%; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Summary</div>
+          <div id="summary" style="margin-top:10px; color:#2c3e50; font-size:0.95rem;">Paste HTML or enter a URL, then click Analyze.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Checks</div>
+          <ul id="checks" style="margin-top:10px; color:#34495e; font-size:0.95rem; padding-left:20px;"></ul>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const urlInput = document.getElementById('url');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const htmlInput = document.getElementById('htmlInput');
+    const summary = document.getElementById('summary');
+    const checks = document.getElementById('checks');
+
+    function setSummary(html){ summary.innerHTML = html; }
+    function addCheck(ok, text){ const li = document.createElement('li'); li.innerHTML = (ok? 'âœ… ' : 'âš ï¸ ') + text; checks.appendChild(li); }
+    function reset(){ checks.innerHTML=''; setSummary('Paste HTML or enter a URL, then click Analyze.'); }
+
+    async function tryFetch(u){
+      reset();
+      setSummary('Fetching...');
+      try{
+        const r = await fetch(u, { mode:'cors' });
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const t = await r.text();
+        htmlInput.value = t;
+        setSummary('Fetched. Click Analyze.');
+      }catch(e){
+        setSummary(`<span style=\"color:#e74c3c;\">Fetch blocked (CORS) or failed: ${e.message}. Paste HTML manually and click Analyze.</span>`);
+      }
+    }
+
+    function analyze(){
+      checks.innerHTML='';
+      const html = htmlInput.value.trim();
+      if(!html){ setSummary('<span style="color:#e67e22;">No HTML provided.</span>'); return; }
+      setSummary('Analyzing...');
+      let doc;
+      try{ doc = new DOMParser().parseFromString(html, 'text/html'); }
+      catch(_){ setSummary('<span style="color:#e74c3c;">Invalid HTML.</span>'); return; }
+
+      // 1) Viewport meta
+      const viewport = doc.querySelector('meta[name="viewport"]');
+      const viewportOk = !!viewport && /width\s*=\s*device-width/i.test(viewport.getAttribute('content')||'');
+      addCheck(viewportOk, 'Viewport meta with width=device-width');
+
+      // 2) Content width hints: find large fixed widths in style/attributes
+      const largeFixed = [];
+      Array.from(doc.querySelectorAll('[width], [style]')).forEach(el=>{
+        const wAttr = el.getAttribute('width');
+        const style = el.getAttribute('style')||'';
+        const m = style.match(/\bwidth:\s*(\d+)px/i);
+        const w = Number(wAttr)|| (m? Number(m[1]) : 0);
+        if(w && w > 480){ largeFixed.push(w); }
+      });
+      addCheck(largeFixed.length===0, 'No large fixed-width elements (>480px)');
+
+      // 3) Tap target spacing (heuristic): many inline links without spacing
+      const links = Array.from(doc.querySelectorAll('a'));
+      const denseLinks = links.filter(a=> (a.textContent||'').trim().length<=2).length;
+      addCheck(denseLinks < 10, 'Tap targets not too dense (heuristic)');
+
+      // 4) Font-size hints (heuristic): look for tiny inline styles
+      const smallFonts = (html.match(/font-size:\s*(\d+)px/gi)||[]).map(s=> Number((/\d+/.exec(s)||['0'])[0])).filter(n=> n>0 && n < 12);
+      addCheck(smallFonts.length===0, 'No tiny fixed font sizes (<12px) (heuristic)');
+
+      // 5) Images without responsive attributes
+      const imgs = Array.from(doc.querySelectorAll('img'));
+      const nonResponsive = imgs.filter(img=>{
+        const s = (img.getAttribute('style')||'').toLowerCase();
+        const w = img.getAttribute('width');
+        return (w && Number(w)>480) || /width:\s*\d+px/.test(s);
+      });
+      addCheck(nonResponsive.length===0, 'Images are responsive (no large fixed widths)');
+
+      // Summary
+      const oks = checks.querySelectorAll('li').length - checks.querySelectorAll('li:contains("âš ï¸")').length;
+      const total = checks.querySelectorAll('li').length;
+      setSummary(`Completed checks. See results on the right.`);
+    }
+
+    fetchBtn.addEventListener('click', ()=>{ const u = urlInput.value.trim(); if(u) tryFetch(u); });
+    analyzeBtn.addEventListener('click', analyze);
+    clearBtn.addEventListener('click', ()=>{ urlInput.value=''; htmlInput.value=''; reset(); });
+
+    reset();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PNG to PDF - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-file-pdf tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">PNG to PDF Converter</div>
+      <div class="tool-desc">Convert PNG images into a single PDF file.</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="imageInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PNG Images</label>
+          <input type="file" id="imageInput" accept="image/png" multiple style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" />
+        </div>
+        <div>
+          <label for="pageSize" style="display:block; font-weight:600; margin-bottom:6px;">Page Size</label>
+          <select id="pageSize" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="a4">A4</option>
+            <option value="a3">A3</option>
+            <option value="letter">Letter</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="convertBtn" class="tool-button">Convert to PDF</button>
+          <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Selected Images</div>
+        <div id="imageList" style="max-height:300px; overflow-y:auto;">No images selected</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Actions</div>
+        <button id="downloadBtn" class="tool-button" style="width:100%; margin-top:10px; display:none;">Download PDF</button>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const imageList = document.getElementById('imageList');
+  const convertBtn = document.getElementById('convertBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const pageSize = document.getElementById('pageSize');
+
+  let selectedFiles = [];
+  let pdfBlob = null;
+
+  function updateImageList() {
+    if (selectedFiles.length === 0) {
+      imageList.innerHTML = 'No images selected';
+      return;
+    }
+
+    let html = `<div style="font-weight:600; margin-bottom:10px;">${selectedFiles.length} image(s) selected:</div>`;
+    selectedFiles.forEach((file, index) => {
+      html += `<div style="padding:5px; border-bottom:1px solid #eee; margin-bottom:5px;">
+        <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
+      </div>`;
+    });
+    imageList.innerHTML = html;
+  }
+
+  function convertToPDF() {
+    if (selectedFiles.length === 0) {
+      alert('Please select PNG images to convert.');
+      return;
+    }
+
+    // Show loading
+    convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+    convertBtn.disabled = true;
+
+    const size = pageSize.value;
+    const format = size === 'a3' ? 'a3' : size === 'letter' ? 'letter' : 'a4';
+    const pdf = new jspdf.jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: format
+    });
+
+    let processed = 0;
+    const total = selectedFiles.length;
+
+    selectedFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imgData = canvas.toDataURL('image/png');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgAspectRatio = img.width / img.height;
+          const pdfAspectRatio = pdfWidth / pdfHeight;
+
+          let imgWidth, imgHeight, x, y;
+
+          if (imgAspectRatio > pdfAspectRatio) {
+            // Image is wider
+            imgWidth = pdfWidth;
+            imgHeight = pdfWidth / imgAspectRatio;
+            x = 0;
+            y = (pdfHeight - imgHeight) / 2;
+          } else {
+            // Image is taller
+            imgHeight = pdfHeight;
+            imgWidth = pdfHeight * imgAspectRatio;
+            x = (pdfWidth - imgWidth) / 2;
+            y = 0;
+          }
+
+          if (index > 0) {
+            pdf.addPage();
+          }
+          pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+          processed++;
+          if (processed === total) {
+            pdfBlob = pdf.output('blob');
+            convertBtn.innerHTML = 'Convert to PDF';
+            convertBtn.disabled = false;
+            downloadBtn.style.display = 'block';
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function downloadPDF() {
+    if (pdfBlob) {
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'png-to-pdf.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // Event listeners
+  imageInput.addEventListener('change', (e) => {
+    selectedFiles = Array.from(e.target.files);
+    updateImageList();
+  });
+
+  convertBtn.addEventListener('click', convertToPDF);
+  downloadBtn.addEventListener('click', downloadPDF);
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    selectedFiles = [];
+    imageInput.value = '';
+    updateImageList();
+    downloadBtn.style.display = 'none';
+    pdfBlob = null;
+  });
+</script>
+</body></html>
+
+

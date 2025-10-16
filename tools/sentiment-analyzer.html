@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentiment Analyzer - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .sa { max-width: 960px; margin: 0 auto; padding: 28px 18px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .ai-header { text-align:center; margin-bottom: 20px; }
+    .ai-header h1 { display:flex; gap:10px; align-items:center; justify-content:center; color:#2c3e50; font-size:2rem; margin:0 0 8px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.08); overflow:hidden; }
+    .section { padding:18px 20px; border-bottom:1px solid #eee; }
+    .section:last-child { border-bottom:0; }
+    .section-title { font-weight:600; color:#2c3e50; display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    textarea { width:100%; min-height:140px; border:1px solid #ddd; border-radius:8px; padding:12px; resize:vertical; font-size:1rem; }
+    .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    .btn { background:#4a6cf7; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; }
+    .btn:disabled { background:#bdc3c7; cursor:not-allowed; }
+    .score { display:flex; align-items:center; gap:10px; font-size:1.1rem; }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:600; }
+    .pos { background:#e8f8f5; color:#16a085; }
+    .neu { background:#f1f2f6; color:#636e72; }
+    .neg { background:#fdeaea; color:#e74c3c; }
+    .meter { height:10px; background:#f1f2f6; border-radius:999px; overflow:hidden; }
+    .meter > div { height:10px; background:#4a6cf7; width:0; transition:width .4s ease; }
+    .placeholder { color:#95a5a6; font-style:italic; }
+    .note { margin-top:12px; color:#6c757d; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="sa">
+    <div class="ai-header">
+      <h1><i class="fas fa-smile"></i> Sentiment Analyzer</h1>
+      <p>Analyze the sentiment of your text. Demo version with heuristic scoring.</p>
+    </div>
+    <div class="card">
+      <div class="section">
+        <div class="section-title"><i class="fas fa-keyboard"></i> Enter Text</div>
+        <textarea id="textInput" placeholder="Paste a tweet, review, or paragraph..."></textarea>
+        <div class="controls">
+          <button id="analyzeBtn" class="btn"><i class="fas fa-chart-line"></i> Analyze</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title"><i class="fas fa-lightbulb"></i> Result</div>
+        <div id="result" class="placeholder">Sentiment score will appear here.</div>
+        <div class="meter" style="margin-top:10px;"><div id="meterFill"></div></div>
+        <div class="note">Scores: Negative (-1) to Positive (+1). Heuristic only, full AI coming soon.</div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('textInput');
+      const btn = document.getElementById('analyzeBtn');
+      const res = document.getElementById('result');
+      const meter = document.getElementById('meterFill');
+
+      const positive = ['good','great','awesome','love','excellent','happy','fantastic','amazing','nice','like'];
+      const negative = ['bad','terrible','awful','hate','poor','sad','angry','worse','worst','dislike'];
+
+      function scoreText(text){
+        const t = text.toLowerCase();
+        let score = 0;
+        positive.forEach(w=>{ if(t.includes(w)) score += 0.15; });
+        negative.forEach(w=>{ if(t.includes(w)) score -= 0.15; });
+        // Normalize
+        if (score > 1) score = 1; if (score < -1) score = -1;
+        return Number(score.toFixed(2));
+      }
+
+      function label(score){
+        if (score > 0.2) return {cls:'pos', txt:'Positive ðŸ˜€'};
+        if (score < -0.2) return {cls:'neg', txt:'Negative ðŸ˜ '};
+        return {cls:'neu', txt:'Neutral ðŸ˜'};
+      }
+
+      btn.addEventListener('click', () => {
+        const text = input.value.trim();
+        if (!text){
+          res.textContent = 'Please enter some text to analyze.';
+          res.classList.remove('placeholder');
+          return;
+        }
+        const s = scoreText(text);
+        const l = label(s);
+        res.innerHTML = `<span class="badge ${l.cls}">${l.txt}</span> <span class="score">Score: <strong>${s}</strong></span>`;
+        res.classList.remove('placeholder');
+        meter.style.width = `${(s+1)*50}%`;
+      });
+    });
+  </script>
+</body>
+</html>
+
+

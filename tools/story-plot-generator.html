@@ -1,0 +1,893 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Plot Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .plot-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .option-group {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .option-group h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .plot-result {
+      background: #fff;
+      border-left: 4px solid #4a6cf7;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      text-align: left;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .plot-title {
+      color: #2c3e50;
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    .plot-text {
+      line-height: 1.6;
+      color: #34495e;
+    }
+    .plot-meta {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-top: 15px;
+      font-style: italic;
+    }
+    .btn-generate {
+      background: #4a6cf7;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+    }
+    .btn-generate:hover {
+      background: #3a5bd9;
+      transform: translateY(-2px);
+    }
+    .btn-copy {
+      background: #2ecc71;
+    }
+    .btn-copy:hover {
+      background: #27ae60;
+    }
+    .btn-clear {
+      background: #e74c3c;
+    }
+    .btn-clear:hover {
+      background: #c0392b;
+    }
+    .history-item {
+      background: #f8f9fa;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid #4a6cf7;
+    }
+    .history-item:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+    .history-title {
+      font-weight: bold;
+      margin: 0 0 5px 0;
+      color: #2c3e50;
+    }
+    .history-preview {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #7f8c8d;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    .tab-btn.active {
+      color: #4a6cf7;
+      border-bottom-color: #4a6cf7;
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .character-card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 3px solid #4a6cf7;
+    }
+    .character-name {
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0 0 5px 0;
+    }
+    .character-desc {
+      margin: 0;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:30px 0 60px;">
+    <div class="tool-card" style="max-width:900px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-book tool-icon-small" style="font-size:3rem; color:#4a6cf7;"></i>
+        <h1 class="tool-name" style="font-size:1.8rem; margin:10px 0 5px;">Story Plot Generator</h1>
+        <div class="tool-desc" style="max-width:700px; margin:0 auto 20px;">
+          Generate creative story ideas with customizable characters, settings, and plot twists. Perfect for writers, role-players, and creative minds!
+        </div>
+      </div>
+
+      <div class="plot-options">
+        <div class="option-group">
+          <h3><i class="fas fa-tag"></i> Genre</h3>
+          <select id="genre">
+            <option value="any">Any Genre</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="scifi">Science Fiction</option>
+            <option value="mystery">Mystery</option>
+            <option value="romance">Romance</option>
+            <option value="horror">Horror</option>
+            <option value="adventure">Adventure</option>
+            <option value="historical">Historical</option>
+            <option value="dystopian">Dystopian</option>
+          </select>
+        </div>
+
+        <div class="option-group">
+          <h3><i class="fas fa-map-marker-alt"></i> Setting</h3>
+          <select id="setting">
+            <option value="any">Any Setting</option>
+            <option value="medieval">Medieval Kingdom</option>
+            <option value="futuristic">Futuristic City</option>
+            <option value="smalltown">Small Town</option>
+            <option value="postapoc">Post-Apocalyptic</option>
+            <option value="space">Outer Space</option>
+            <option value="academy">Magical Academy</option>
+            <option value="island">Mysterious Island</option>
+            <option value="cyberpunk">Cyberpunk Metropolis</option>
+          </select>
+        </div>
+
+        <div class="option-group">
+          <h3><i class="fas fa-user"></i> Main Character</h3>
+          <select id="character">
+            <option value="any">Any Character</option>
+            <option value="detective">Detective</option>
+            <option value="mage">Mage</option>
+            <option value="soldier">Soldier</option>
+            <option value="thief">Thief</option>
+            <option value="noble">Noble</option>
+            <option value="scientist">Scientist</option>
+            <option value="merchant">Merchant</option>
+            <option value="peasant">Ordinary Person</option>
+          </select>
+        </div>
+
+        <div class="option-group">
+          <h3><i class="fas fa-bolt"></i> Conflict</h3>
+          <select id="conflict">
+            <option value="any">Any Conflict</option>
+            <option value="betrayal">Betrayal</option>
+            <option value="revenge">Revenge</option>
+            <option value="discovery">Discovery</option>
+            <option value="survival">Survival</option>
+            <option value="forbidden">Forbidden Love</option>
+            <option value="conspiracy">Conspiracy</option>
+            <option value="war">War</option>
+            <option value="race">Race Against Time</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin: 25px 0 15px;">
+        <button id="generateBtn" class="btn-generate">
+          <i class="fas fa-magic"></i> Generate Plot
+        </button>
+        <button id="advancedBtn" class="btn-generate" style="background:#9b59b6;">
+          <i class="fas fa-cog"></i> Advanced Options
+        </button>
+      </div>
+
+      <div id="advancedOptions" style="display:none; margin:20px 0; padding:15px; background:#f5f7ff; border-radius:8px;">
+        <h3 style="margin-top:0; color:#4a6cf7;">Advanced Options</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+          <div>
+            <label for="tone" style="display:block; margin-bottom:5px; font-weight:500;">Tone</label>
+            <select id="tone" style="width:100%;">
+              <option value="any">Any Tone</option>
+              <option value="dark">Dark/Gritty</option>
+              <option value="light">Lighthearted</option>
+              <option value="epic">Epic/Grand</option>
+              <option value="humorous">Humorous</option>
+              <option value="noir">Noir/Mysterious</option>
+            </select>
+          </div>
+          <div>
+            <label for="length" style="display:block; margin-bottom:5px; font-weight:500;">Length</label>
+            <select id="length" style="width:100%;">
+              <option value="short">Short Story</option>
+              <option value="novella">Novella</option>
+              <option value="novel">Novel</option>
+              <option value="series">Series</option>
+            </select>
+          </div>
+          <div>
+            <label for="characters" style="display:block; margin-bottom:5px; font-weight:500;">Main Characters</label>
+            <input type="number" id="characters" min="1" max="5" value="1" style="width:100%;">
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="plot">Plot</button>
+        <button class="tab-btn" data-tab="characters">Characters</button>
+        <button class="tab-btn" data-tab="world">World</button>
+        <button class="tab-btn" data-tab="history">History</button>
+      </div>
+
+      <div id="plotTab" class="tab-content active">
+        <div id="plotResult" class="plot-result" style="min-height:200px; display:flex; align-items:center; justify-content:center; color:#aaa;">
+          Click "Generate Plot" to create your story idea
+        </div>
+        <div style="margin:20px 0; text-align:center;">
+          <button id="copyBtn" class="btn-generate btn-copy" disabled>
+            <i class="far fa-copy"></i> Copy to Clipboard
+          </button>
+          <button id="clearBtn" class="btn-generate btn-clear">
+            <i class="fas fa-eraser"></i> Clear
+          </button>
+          <button id="saveBtn" class="btn-generate" style="background:#f39c12;">
+            <i class="far fa-bookmark"></i> Save to History
+          </button>
+        </div>
+      </div>
+
+      <div id="charactersTab" class="tab-content">
+        <div id="charactersResult" style="text-align:left;">
+          <p style="color:#7f8c8d; text-align:center;">Generate a plot first to see character details</p>
+        </div>
+      </div>
+
+      <div id="worldTab" class="tab-content">
+        <div id="worldResult" style="text-align:left;">
+          <p style="color:#7f8c8d; text-align:center;">Generate a plot first to see world details</p>
+        </div>
+      </div>
+
+      <div id="historyTab" class="tab-content">
+        <div id="historyList">
+          <p style="color:#7f8c8d; text-align:center;">Your saved plots will appear here</p>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin:30px auto 20px; text-align:center; background:#f5f5f5; padding:15px; border-radius:8px;">
+        <div style="max-width:728px; margin:0 auto; color:#999; font-size:0.9rem;">
+          Advertisement<br>
+          <small>Your ad could be here</small>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:30px;">
+        <a href="../index.html" class="tool-button" style="display:inline-flex; align-items:center; gap:8px;">
+          <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const generateBtn = document.getElementById('generateBtn');
+      const advancedBtn = document.getElementById('advancedBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const plotResult = document.getElementById('plotResult');
+      const advancedOptions = document.getElementById('advancedOptions');
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const historyList = document.getElementById('historyList');
+      const charactersResult = document.getElementById('charactersResult');
+      const worldResult = document.getElementById('worldResult');
+      
+      // Current plot data
+      let currentPlot = null;
+      
+      // Tab switching
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tabId = button.getAttribute('data-tab');
+          
+          // Update active tab button
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          
+          // Show corresponding tab content
+          tabContents.forEach(content => content.classList.remove('active'));
+          document.getElementById(`${tabId}Tab`).classList.add('active');
+          
+          // If history tab is clicked, load saved plots
+          if (tabId === 'history') {
+            loadSavedPlots();
+          }
+        });
+      });
+      
+      // Toggle advanced options
+      advancedBtn.addEventListener('click', () => {
+        advancedOptions.style.display = advancedOptions.style.display === 'none' ? 'block' : 'none';
+      });
+      
+      // Generate plot button click handler
+      generateBtn.addEventListener('click', generatePlot);
+      
+      // Copy to clipboard
+      copyBtn.addEventListener('click', copyToClipboard);
+      
+      // Clear results
+      clearBtn.addEventListener('click', clearResults);
+      
+      // Save to history
+      saveBtn.addEventListener('click', saveToHistory);
+      
+      // Data for plot generation
+      const plotData = {
+        // Genres
+        genres: {
+          fantasy: 'Fantasy',
+          scifi: 'Science Fiction',
+          mystery: 'Mystery',
+          romance: 'Romance',
+          horror: 'Horror',
+          adventure: 'Adventure',
+          historical: 'Historical',
+          dystopian: 'Dystopian'
+        },
+        
+        // Settings
+        settings: {
+          medieval: 'a medieval kingdom',
+          futuristic: 'a futuristic city',
+          smalltown: 'a small town',
+          postapoc: 'a post-apocalyptic wasteland',
+          space: 'deep space',
+          academy: 'a magical academy',
+          island: 'a mysterious island',
+          cyberpunk: 'a cyberpunk metropolis'
+        },
+        
+        // Characters
+        characters: {
+          detective: 'a brilliant but troubled detective',
+          mage: 'a young mage with untapped potential',
+          soldier: 'a battle-hardened soldier',
+          thief: 'a charming thief with a heart of gold',
+          noble: 'a disgraced noble',
+          scientist: 'a renegade scientist',
+          merchant: 'a traveling merchant',
+          peasant: 'an ordinary person with an extraordinary destiny'
+        },
+        
+        // Conflicts
+        conflicts: {
+          betrayal: 'a shocking betrayal',
+          revenge: 'a quest for revenge',
+          discovery: 'a world-changing discovery',
+          survival: 'a fight for survival',
+          forbidden: 'a forbidden love',
+          conspiracy: 'a vast conspiracy',
+          war: 'an impending war',
+          race: 'a race against time'
+        },
+        
+        // Tones
+        tones: {
+          dark: 'dark and gritty',
+          light: 'lighthearted and whimsical',
+          epic: 'epic and grand',
+          humorous: 'humorous and satirical',
+          noir: 'noir and mysterious'
+        },
+        
+        // Plot templates
+        templates: [
+          "In {{setting}}, {{character}} discovers {{conflict}} that could change everything.",
+          "When {{character}} stumbles upon {{conflict}} in {{setting}}, they must make an impossible choice.",
+          "{{Character}} never expected to find themselves caught in {{conflict}}, but in {{setting}}, anything can happen.",
+          "The fate of {{setting}} rests in the hands of {{character}} as they face {{conflict}}.",
+          "In a world where {{conflict}}, {{character}} must navigate the dangers of {{setting}} to survive.",
+          "{{Character}}'s ordinary life is turned upside down when they uncover {{conflict}} in the heart of {{setting}}.",
+          "For generations, the people of {{setting}} have lived in fear of {{conflict}}, until {{character}} discovers the truth.",
+          "When {{conflict}} threatens to destroy {{setting}}, only {{character}} stands in its way."
+        ],
+        
+        // Character descriptions
+        characterDetails: {
+          detective: "A sharp-witted investigator with a troubled past and a knack for solving impossible cases.",
+          mage: "A practitioner of ancient arts, struggling to control their growing powers while hiding from those who would exploit them.",
+          soldier: "A veteran of countless battles, now questioning the cause they once fought for.",
+          thief: "A master of stealth and deception, with a strict moral code and a heart of gold.",
+          noble: "Born into privilege but now disgraced, seeking redemption in a world that has turned against them.",
+          scientist: "A brilliant mind whose groundbreaking discoveries have made them a target.",
+          merchant: "A traveler between worlds, carrying rare goods and dangerous secrets.",
+          peasant: "An ordinary person thrust into extraordinary circumstances, discovering their true potential."
+        },
+        
+        // World details
+        worldDetails: {
+          medieval: "A land of castles, knights, and ancient magic, where the old ways are giving way to new ideas.",
+          futuristic: "A sprawling metropolis of towering skyscrapers and advanced technology, where humanity's future hangs in the balance.",
+          smalltown: "A seemingly ordinary town with dark secrets lurking beneath its peaceful surface.",
+          postapoc: "A harsh wasteland where survivors struggle to rebuild civilization from the ashes of the old world.",
+          space: "The final frontier, where humanity has spread to the stars but brought its problems along for the ride.",
+          academy: "An ancient institution of learning and magic, where students uncover dangerous knowledge.",
+          island: "A remote and mysterious land, cut off from the outside world and home to ancient secrets.",
+          cyberpunk: "A neon-lit dystopia where megacorporations rule and the line between man and machine blurs."
+        }
+      };
+      
+      // Generate a random plot
+      function generatePlot() {
+        // Get selected values or randomize if 'any' is selected
+        const genre = document.getElementById('genre').value;
+        const setting = document.getElementById('setting').value;
+        const character = document.getElementById('character').value;
+        const conflict = document.getElementById('conflict').value;
+        const tone = document.getElementById('tone').value;
+        const length = document.getElementById('length').value;
+        const numCharacters = parseInt(document.getElementById('characters').value);
+        
+        // Get random values if 'any' is selected
+        const selectedGenre = genre === 'any' ? getRandomKey(plotData.genres) : genre;
+        const selectedSetting = setting === 'any' ? getRandomKey(plotData.settings) : setting;
+        const selectedCharacter = character === 'any' ? getRandomKey(plotData.characters) : character;
+        const selectedConflict = conflict === 'any' ? getRandomKey(plotData.conflicts) : conflict;
+        const selectedTone = tone === 'any' ? getRandomKey(plotData.tones) : tone;
+        
+        // Get a random template
+        const template = getRandomItem(plotData.templates);
+        
+        // Replace placeholders
+        let plot = template
+          .replace(/\{\{setting\}\}/g, plotData.settings[selectedSetting])
+          .replace(/\{\{character\}\}/g, plotData.characters[selectedCharacter])
+          .replace(/\{\{conflict\}\}/g, plotData.conflicts[selectedConflict])
+          .replace(/\{\{Character\}\}/g, capitalizeFirst(plotData.characters[selectedCharacter]));
+        
+        // Add tone and length
+        plot = `${capitalizeFirst(plot)} This ${plotData.tones[selectedTone]} ${plotData.genres[selectedGenre].toLowerCase()} story is perfect for a ${length}.`;
+        
+        // Generate characters
+        const characters = [];
+        characters.push({
+          name: getCharacterName(selectedCharacter),
+          role: 'Protagonist',
+          description: plotData.characterDetails[selectedCharacter]
+        });
+        
+        // Add supporting characters
+        for (let i = 1; i < numCharacters; i++) {
+          const charType = getRandomKey(plotData.characters);
+          characters.push({
+            name: getCharacterName(charType, i),
+            role: getRandomItem(['Ally', 'Mentor', 'Antagonist', 'Love Interest']),
+            description: plotData.characterDetails[charType]
+          });
+        }
+        
+        // Generate world details
+        const world = plotData.worldDetails[selectedSetting];
+        
+        // Update UI
+        plotResult.innerHTML = `
+          <h3 class="plot-title">${getRandomItem(['The Secret of', 'Beyond the', 'The Last', 'Echoes of', 'Whispers in the', 'The Shadow of'])} ${capitalizeFirst(selectedSetting.replace(/([A-Z])/g, ' $1').trim())}</h3>
+          <p class="plot-text">${plot}</p>
+          <div class="plot-meta">
+            <strong>Genre:</strong> ${plotData.genres[selectedGenre]} | 
+            <strong>Tone:</strong> ${plotData.tones[selectedTone]} | 
+            <strong>Length:</strong> ${length}
+          </div>
+        `;
+        
+        // Update characters tab
+        updateCharactersTab(characters);
+        
+        // Update world tab
+        updateWorldTab(world, selectedSetting);
+        
+        // Enable buttons
+        copyBtn.disabled = false;
+        saveBtn.disabled = false;
+        
+        // Store current plot data
+        currentPlot = {
+          title: `${capitalizeFirst(selectedSetting.replace(/([A-Z])/g, ' $1').trim())} - ${plotData.genres[selectedGenre]}`,
+          plot: plot,
+          genre: plotData.genres[selectedGenre],
+          setting: plotData.settings[selectedSetting],
+          tone: plotData.tones[selectedTone],
+          length: length,
+          characters: characters,
+          world: world,
+          timestamp: new Date().toISOString()
+        };
+      }
+      
+      // Update characters tab
+      function updateCharactersTab(characters) {
+        charactersResult.innerHTML = '';
+        
+        if (!characters || characters.length === 0) {
+          charactersResult.innerHTML = '<p style="color:#7f8c8d; text-align:center;">No character information available</p>';
+          return;
+        }
+        
+        characters.forEach((character, index) => {
+          const characterCard = document.createElement('div');
+          characterCard.className = 'character-card';
+          characterCard.style.borderLeftColor = getRandomColor();
+          
+          characterCard.innerHTML = `
+            <h4 class="character-name">${character.name} <small style="color:#7f8c8d; font-weight:normal;">(${character.role})</small></h4>
+            <p class="character-desc">${character.description}</p>
+          `;
+          
+          charactersResult.appendChild(characterCard);
+        });
+      }
+      
+      // Update world tab
+      function updateWorldTab(world, setting) {
+        worldResult.innerHTML = `
+          <h3 style="color:#2c3e50; margin-top:0;">${capitalizeFirst(setting.replace(/([A-Z])/g, ' $1').trim())}</h3>
+          <p>${world}</p>
+          <h4 style="margin:20px 0 10px; color:#2c3e50;">Key Locations</h4>
+          <ul style="padding-left:20px; color:#34495e;">
+            ${getLocations(setting).map(loc => `<li>${loc}</li>`).join('')}
+          </ul>
+          <h4 style="margin:20px 0 10px; color:#2c3e50;">Factions & Groups</h4>
+          <ul style="padding-left:20px; color:#34495e;">
+            ${getFactions(setting).map(faction => `<li>${faction}</li>`).join('')}
+          </ul>
+        `;
+      }
+      
+      // Get locations based on setting
+      function getLocations(setting) {
+        const locations = {
+          medieval: [
+            'The Royal Palace',
+            'The Dark Forest',
+            'The Merchant Quarter',
+            'The Ancient Ruins',
+            'The Wizards Tower'
+          ],
+          futuristic: [
+            'Neo-Tokyo Central',
+            'The Orbital Ring',
+            'The Underbelly',
+            'Corporate Spire',
+            'The Holographic Gardens'
+          ],
+          smalltown: [
+            'The Abandoned Mill',
+            'Town Square',
+            'The Old Library',
+            'The Lake House',
+            'The Train Station'
+          ],
+          postapoc: [
+            'The Crater',
+            'The Bunker',
+            'The Scrapyard',
+            'The Oasis',
+            'The Ruined City'
+          ],
+          space: [
+            'The Generation Ship',
+            'The Asteroid Colony',
+            'The Wormhole Station',
+            'The Derelict Vessel',
+            'The Research Outpost'
+          ],
+          academy: [
+            'The Forbidden Wing',
+            'The Headmaster\'s Tower',
+            'The Alchemy Labs',
+            'The Ancient Library',
+            'The Dueling Grounds'
+          ],
+          island: [
+            'The Volcano',
+            'The Hidden Cove',
+            'The Jungle Temple',
+            'The Lighthouse',
+            'The Underground Caves'
+          ],
+          cyberpunk: [
+            'The Neon Bazaar',
+            'The Corporate Enclave',
+            'The Hackers Den',
+            'The Augmentation Clinic',
+            'The Rooftop Gardens'
+          ]
+        };
+        
+        return locations[setting] || [];
+      }
+      
+      // Get factions based on setting
+      function getFactions(setting) {
+        const factions = {
+          medieval: [
+            'The Royal Guard',
+            'The Thieves Guild',
+            'The Mages Council',
+            'The Merchants Alliance',
+            'The Cult of the Old Gods'
+          ],
+          futuristic: [
+            'The Corporate Overlords',
+            'The Underground Resistance',
+            'The AI Collective',
+            'The Galactic Federation',
+            'The Smugglers Union'
+          ],
+          smalltown: [
+            'The Town Council',
+            'The Local Business Owners',
+            'The Historical Society',
+            'The Youth Gang',
+            'The Secret Society'
+          ],
+          postapoc: [
+            'The Scavengers',
+            'The Raiders',
+            'The New Government',
+            'The Cult of the End Times',
+            'The Technocrats'
+          ],
+          space: [
+            'The Space Pirates',
+            'The Galactic Empire',
+            'The Rebel Alliance',
+            'The Mining Consortium',
+            'The Xenobiologists'
+          ],
+          academy: [
+            'The Headmaster\'s Faction',
+            'The Rebel Students',
+            'The Secret Society',
+            'The Disgraced Alumni',
+            'The Forbidden Knowledge Seekers'
+          ],
+          island: [
+            'The Natives',
+            'The Shipwrecked',
+            'The Treasure Hunters',
+            'The Research Team',
+            'The Secret Cult'
+          ],
+          cyberpunk: [
+            'The MegaCorp',
+            'The Hacktivists',
+            'The Street Gangs',
+            'The AI Overlords',
+            'The Augmentation Purists'
+          ]
+        };
+        
+        return factions[setting] || [];
+      }
+      
+      // Copy plot to clipboard
+      function copyToClipboard() {
+        if (!currentPlot) return;
+        
+        const textToCopy = `${currentPlot.title}\n\n${currentPlot.plot}`;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy text: ', err);
+          alert('Failed to copy text. Please try again.');
+        });
+      }
+      
+      // Clear results
+      function clearResults() {
+        plotResult.innerHTML = 'Click "Generate Plot" to create your story idea';
+        charactersResult.innerHTML = '<p style="color:#7f8c8d; text-align:center;">Generate a plot first to see character details</p>';
+        worldResult.innerHTML = '<p style="color:#7f8c8d; text-align:center;">Generate a plot first to see world details</p>';
+        copyBtn.disabled = true;
+        saveBtn.disabled = true;
+        currentPlot = null;
+      }
+      
+      // Save plot to history
+      function saveToHistory() {
+        if (!currentPlot) return;
+        
+        // Get existing history or initialize empty array
+        const history = JSON.parse(localStorage.getItem('storyPlots') || '[]');
+        
+        // Add current plot to history
+        history.unshift({
+          title: currentPlot.title,
+          plot: currentPlot.plot,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Keep only the last 20 plots
+        if (history.length > 20) {
+          history.pop();
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('storyPlots', JSON.stringify(history));
+        
+        // Show success message
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+        setTimeout(() => {
+          saveBtn.innerHTML = originalText;
+        }, 2000);
+        
+        // If on history tab, refresh the list
+        if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'history') {
+          loadSavedPlots();
+        }
+      }
+      
+      // Load saved plots
+      function loadSavedPlots() {
+        const history = JSON.parse(localStorage.getItem('storyPlots') || '[]');
+        
+        if (history.length === 0) {
+          historyList.innerHTML = '<p style="color:#7f8c8d; text-align:center;">No saved plots yet. Generate and save a plot to see it here.</p>';
+          return;
+        }
+        
+        historyList.innerHTML = '';
+        
+        history.forEach((item, index) => {
+          const plotItem = document.createElement('div');
+          plotItem.className = 'history-item';
+          plotItem.innerHTML = `
+            <div class="history-title">${item.title}</div>
+            <p class="history-preview">${item.plot.substring(0, 150)}${item.plot.length > 150 ? '...' : ''}</p>
+            <div style="font-size:0.8rem; color:#95a5a6; margin-top:5px;">
+              ${new Date(item.timestamp).toLocaleString()}
+            </div>
+          `;
+          
+          plotItem.addEventListener('click', () => {
+            // Switch to plot tab
+            document.querySelector('[data-tab="plot"]').click();
+            
+            // Display the plot
+            plotResult.innerHTML = `
+              <h3 class="plot-title">${item.title}</h3>
+              <p class="plot-text">${item.plot}</p>
+              <div class="plot-meta">
+                <strong>Saved:</strong> ${new Date(item.timestamp).toLocaleString()}
+              </div>
+            `;
+            
+            // Enable buttons
+            copyBtn.disabled = false;
+            saveBtn.disabled = true; // Disable save to prevent duplicates
+          });
+          
+          historyList.appendChild(plotItem);
+        });
+      }
+      
+      // Helper functions
+      function getRandomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
+      }
+      
+      function getRandomKey(obj) {
+        const keys = Object.keys(obj);
+        return keys[Math.floor(Math.random() * keys.length)];
+      }
+      
+      function capitalizeFirst(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+      
+      function getRandomColor() {
+        const colors = ['#4a6cf7', '#6c5ce7', '#00b894', '#00cec9', '#0984e3', '#6c5ce7', '#e84393', '#d63031'];
+        return colors[Math.floor(Math.random() * colors.length)];
+      }
+      
+      function getCharacterName(type, index = 0) {
+        const prefixes = {
+          detective: ['Detective ', 'Inspector ', 'Agent '],
+          mage: ['Mage ', 'Sorcerer ', 'Wizard '],
+          soldier: ['Captain ', 'Commander ', 'Sergeant '],
+          thief: ['The ', 'Shadow ', 'The Phantom '],
+          noble: ['Lord ', 'Lady ', 'Duke ', 'Duchess '],
+          scientist: ['Dr. ', 'Professor ', 'Scientist '],
+          merchant: ['Merchant ', 'Trader ', 'Smuggler '],
+          peasant: ['', 'Young ', 'Brave ']
+        };
+        
+        const firstNames = ['Alex', 'Jordan', 'Taylor', 'Casey', 'Riley', 'Morgan', 'Avery', 'Peyton', 'Quinn', 'Blake'];
+        const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+        
+        const prefix = getRandomItem(prefixes[type] || ['']);
+        const firstName = getRandomItem(firstNames);
+        const lastName = getRandomItem(lastNames);
+        
+        return `${prefix}${firstName} ${lastName}`;
+      }
+      
+      // Initialize
+      clearResults();
+    });
+  </script>
+</body>
+</html>
+
+

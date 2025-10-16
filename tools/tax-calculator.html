@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tax Calculator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1100px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-receipt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Tax Calculator</div>
+        <div class="tool-desc">Estimate income tax using configurable slabs. This is a simplified calculator (no cess/surcharge). Adjust slabs as needed.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Annual Income</label>
+            <input id="income" type="number" min="0" step="0.01" placeholder="e.g., 1200000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Deductions</label>
+            <input id="deductions" type="number" min="0" step="0.01" placeholder="e.g., 150000" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <button id="calc" class="tool-button" style="height:42px;">Calculate</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px; overflow:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="tool-name">Tax Slabs</div>
+          <button id="addSlab" class="tool-button"><i class="fas fa-plus"></i> Add Slab</button>
+        </div>
+        <table id="slabTable" style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <thead>
+            <tr>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">From</th>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">To</th>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">Rate (%)</th>
+              <th style="text-align:left; border-bottom:1px solid #eee; padding:8px;">Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <small class="tool-desc">Tip: Leave "To" empty for the highest slab (treated as Infinity).</small>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Taxable Income</div>
+          <div id="taxable" class="tool-desc" style="font-size:1.3rem; color:#000;">â€”</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Estimated Tax</div>
+          <div id="tax" class="tool-desc" style="font-size:1.3rem; color:#000;">â€”</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const DEFAULT_SLABS = [
+      {from:0, to:250000, rate:0},
+      {from:250000, to:500000, rate:5},
+      {from:500000, to:1000000, rate:20},
+      {from:1000000, to:undefined, rate:30}
+    ];
+
+    function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
+
+    function readSlabs(){
+      const rows = Array.from(document.querySelectorAll('#slabTable tbody tr'));
+      return rows.map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return {
+          from: Number(tds[0].querySelector('input').value)||0,
+          to: (()=>{ const v = tds[1].querySelector('input').value; return v?Number(v):undefined; })(),
+          rate: Number(tds[2].querySelector('input').value)||0
+        };
+      }).sort((a,b)=>a.from-b.from);
+    }
+
+    function renderSlabs(slabs){
+      const tb = document.querySelector('#slabTable tbody');
+      tb.innerHTML='';
+      slabs.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;"><input type="number" value="${s.from}" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:6px;"></td>
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;"><input type="number" value="${s.to??''}" placeholder="âˆž" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:6px;"></td>
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;"><input type="number" value="${s.rate}" step="0.01" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:6px;"></td>
+          <td style="padding:8px; border-bottom:1px solid #f3f3f3;"><button class="tool-button" data-del="${idx}" style="background:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    function addSlab(){
+      const slabs = readSlabs();
+      slabs.push({from: (slabs.at(-1)?.to??(slabs.at(-1)?.from||0)+1), to: undefined, rate: 0});
+      renderSlabs(slabs);
+    }
+
+    function calculate(){
+      const income = Number(document.getElementById('income').value)||0;
+      const deductions = Number(document.getElementById('deductions').value)||0;
+      const taxable = Math.max(0, income - deductions);
+      const slabs = readSlabs();
+      let tax = 0; let remaining = taxable;
+      for (const s of slabs){
+        if (remaining<=0) break;
+        const lower = s.from;
+        const upper = (s.to==null)? Infinity : s.to;
+        if (taxable <= lower) continue;
+        const amountInSlab = Math.max(0, Math.min(upper, taxable) - lower);
+        tax += amountInSlab * (s.rate/100);
+      }
+      document.getElementById('taxable').textContent = fmt(taxable);
+      document.getElementById('tax').textContent = fmt(tax);
+    }
+
+    document.getElementById('addSlab').addEventListener('click', addSlab);
+    document.getElementById('calc').addEventListener('click', calculate);
+    document.querySelector('#slabTable').addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-del]');
+      if (!btn) return;
+      const idx = Number(btn.getAttribute('data-del'));
+      const slabs = readSlabs();
+      slabs.splice(idx,1);
+      renderSlabs(slabs);
+    });
+
+    // init
+    renderSlabs(DEFAULT_SLABS);
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,361 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PNG to JPG - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:960px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-exchange-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">PNG to JPG Converter</div>
+        <div class="tool-desc">Convert PNG images to JPG format with quality control and background options.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label for="fileInput" style="display:block; font-weight:600; margin-bottom:6px;">Select PNG Images</label>
+            <input type="file" id="fileInput" accept="image/png" multiple style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label for="quality" style="display:block; font-weight:600; margin-bottom:6px;">JPG Quality</label>
+            <select id="quality" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="0.95">Excellent (95%)</option>
+              <option value="0.9" selected>Very Good (90%)</option>
+              <option value="0.85">Good (85%)</option>
+              <option value="0.8">Fair (80%)</option>
+              <option value="0.7">Low (70%)</option>
+            </select>
+          </div>
+          <div>
+            <label for="backgroundColor" style="display:block; font-weight:600; margin-bottom:6px;">Background Color</label>
+            <input type="color" id="backgroundColor" value="#ffffff" style="width:100%; height:42px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="convertBtn" class="tool-button">Convert to JPG</button>
+            <button id="downloadAllBtn" class="tool-button" style="background:#28a745;" disabled>Download All</button>
+            <button id="clearBtn" class="tool-button" style="background:#888;">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Selected Images</div>
+          <div id="imageList" style="margin-top:10px; max-height:300px; overflow-y:auto;">No images selected</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Conversion Options</div>
+          <div style="margin-top:10px;">
+            <label><input type="checkbox" id="maintainSize" checked> Maintain original size</label><br>
+            <label><input type="checkbox" id="addSuffix" checked> Add "_jpg" suffix to filename</label><br>
+            <label><input type="checkbox" id="optimizeForWeb" checked> Optimize for web (strip metadata)</label>
+          </div>
+          <div class="tool-name" style="margin-top:15px;">Advanced Settings</div>
+          <div style="margin-top:10px;">
+            <label for="maxWidth">Max Width (px): <span id="maxWidthValue">1920</span></label>
+            <input type="range" id="maxWidth" min="100" max="4000" value="1920" style="width:100%;">
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div class="tool-name">Conversion Results</div>
+        <div id="results" style="margin-top:10px; display:none;">
+          <div id="resultsList" style="max-height:300px; overflow-y:auto;"></div>
+          <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; font-size:0.9rem;">
+              <div><strong>Total Original:</strong> <span id="totalOriginal">0 KB</span></div>
+              <div><strong>Total Converted:</strong> <span id="totalConverted">0 KB</span></div>
+              <div><strong>Space Saved:</strong> <span id="spaceSaved">0 KB (0%)</span></div>
+              <div><strong>Average Compression:</strong> <span id="avgCompression">0%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const quality = document.getElementById('quality');
+    const backgroundColor = document.getElementById('backgroundColor');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const imageList = document.getElementById('imageList');
+    const results = document.getElementById('results');
+    const resultsList = document.getElementById('resultsList');
+    const totalOriginal = document.getElementById('totalOriginal');
+    const totalConverted = document.getElementById('totalConverted');
+    const spaceSaved = document.getElementById('spaceSaved');
+    const avgCompression = document.getElementById('avgCompression');
+    const maintainSize = document.getElementById('maintainSize');
+    const addSuffix = document.getElementById('addSuffix');
+    const optimizeForWeb = document.getElementById('optimizeForWeb');
+    const maxWidth = document.getElementById('maxWidth');
+    const maxWidthValue = document.getElementById('maxWidthValue');
+
+    let selectedFiles = [];
+    let convertedImages = [];
+
+    function updateImageList() {
+      if (selectedFiles.length === 0) {
+        imageList.innerHTML = 'No images selected';
+        return;
+      }
+
+      let html = `<div style="font-weight:600; margin-bottom:10px;">${selectedFiles.length} PNG image(s) selected:</div>`;
+      let totalSize = 0;
+
+      selectedFiles.forEach((file, index) => {
+        totalSize += file.size;
+        html += `<div style="padding:8px; border-bottom:1px solid #eee; margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>${file.name}</strong><br>
+              <small>${(file.size / 1024).toFixed(1)} KB</small>
+            </div>
+            <button class="remove-btn" data-index="${index}" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Remove</button>
+          </div>
+        </div>`;
+      });
+
+      html += `<div style="margin-top:10px; padding-top:10px; border-top:1px solid #ddd; font-weight:600;">
+        Total Size: ${(totalSize / 1024).toFixed(1)} KB
+      </div>`;
+
+      imageList.innerHTML = html;
+
+      // Add remove button listeners
+      document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          selectedFiles.splice(index, 1);
+          updateImageList();
+        });
+      });
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function convertPngToJpg(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Calculate new dimensions
+            const maxW = parseInt(maxWidth.value);
+            let newWidth = img.width;
+            let newHeight = img.height;
+
+            if (maintainSize.checked && (img.width > maxW || img.height > maxW)) {
+              if (img.width > img.height) {
+                newWidth = maxW;
+                newHeight = Math.round((img.height * maxW) / img.width);
+              } else {
+                newHeight = maxW;
+                newWidth = Math.round((img.width * maxW) / img.height);
+              }
+            }
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Fill background for transparent PNGs
+            const bgColor = hexToRgb(backgroundColor.value);
+            if (bgColor) {
+              ctx.fillStyle = `rgb(${bgColor.r}, ${bgColor.g}, ${bgColor.b})`;
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Draw the image
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            const qualityValue = parseFloat(quality.value);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                let filename = file.name;
+                if (addSuffix.checked) {
+                  filename = filename.replace(/\.png$/i, '_jpg.jpg');
+                } else {
+                  filename = filename.replace(/\.png$/i, '.jpg');
+                }
+
+                resolve({
+                  originalFile: file,
+                  blob: blob,
+                  filename: filename,
+                  originalSize: file.size,
+                  convertedSize: blob.size
+                });
+              } else {
+                reject(new Error('Failed to convert image'));
+              }
+            }, 'image/jpeg', qualityValue);
+          };
+
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = e.target.result;
+        };
+
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function convertImages() {
+      if (selectedFiles.length === 0) {
+        alert('Please select PNG images to convert.');
+        return;
+      }
+
+      convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+      convertBtn.disabled = true;
+
+      try {
+        convertedImages = [];
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          const converted = await convertPngToJpg(file);
+          convertedImages.push(converted);
+        }
+
+        displayResults();
+        convertBtn.innerHTML = 'Convert to JPG';
+        convertBtn.disabled = false;
+
+      } catch (error) {
+        alert('Error converting images: ' + error.message);
+        convertBtn.innerHTML = 'Convert to JPG';
+        convertBtn.disabled = false;
+      }
+    }
+
+    function displayResults() {
+      results.style.display = 'block';
+      resultsList.innerHTML = '';
+
+      let totalOrig = 0;
+      let totalConv = 0;
+
+      convertedImages.forEach((img, index) => {
+        totalOrig += img.originalSize;
+        totalConv += img.convertedSize;
+
+        const compressionPercent = ((img.originalSize - img.convertedSize) / img.originalSize * 100).toFixed(1);
+
+        resultsList.innerHTML += `
+          <div style="padding:10px; border-bottom:1px solid #eee; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong>${img.originalFile.name}</strong> â†’ ${img.filename}<br>
+                <small style="color:#28a745;">âœ“ Converted (${compressionPercent}% size reduction)</small>
+              </div>
+              <button class="download-single" data-index="${index}" style="background:#007bff; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Download</button>
+            </div>
+          </div>
+        `;
+      });
+
+      // Update totals
+      totalOriginal.textContent = (totalOrig / 1024).toFixed(1) + ' KB';
+      totalConverted.textContent = (totalConv / 1024).toFixed(1) + ' KB';
+      const saved = totalOrig - totalConv;
+      const savedPercent = ((saved / totalOrig) * 100).toFixed(1);
+      spaceSaved.textContent = (saved / 1024).toFixed(1) + ' KB (' + savedPercent + '%)';
+      avgCompression.textContent = savedPercent + '%';
+
+      // Add download listeners
+      document.querySelectorAll('.download-single').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          const img = convertedImages[index];
+          const url = URL.createObjectURL(img.blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = img.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      });
+
+      downloadAllBtn.disabled = false;
+    }
+
+    function downloadAllImages() {
+      if (convertedImages.length === 0) {
+        alert('No converted images available for download.');
+        return;
+      }
+
+      convertedImages.forEach((img, index) => {
+        setTimeout(() => {
+          const url = URL.createObjectURL(img.blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = img.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, index * 500); // Stagger downloads
+      });
+    }
+
+    function clearAll() {
+      selectedFiles = [];
+      convertedImages = [];
+      fileInput.value = '';
+      updateImageList();
+      results.style.display = 'none';
+      downloadAllBtn.disabled = true;
+    }
+
+    // Event listeners
+    fileInput.addEventListener('change', (e) => {
+      selectedFiles = Array.from(e.target.files);
+      updateImageList();
+    });
+
+    convertBtn.addEventListener('click', convertImages);
+    downloadAllBtn.addEventListener('click', downloadAllImages);
+    clearBtn.addEventListener('click', clearAll);
+    maxWidth.addEventListener('input', () => {
+      maxWidthValue.textContent = maxWidth.value;
+    });
+
+    // Initialize
+    downloadAllBtn.disabled = true;
+  </script>
+</body>
+</html>
+
+

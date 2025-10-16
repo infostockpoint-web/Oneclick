@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Packing Checklist - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border:1px solid #eee;border-radius:8px;background:#fff;margin-bottom:6px}
+    .muted{color:#888}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-suitcase-rolling tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Packing Checklist</div>
+        <div class="tool-desc">Simple checklist creator. Add items, check them off, and save locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Item</label>
+            <input id="item" type="text" placeholder="Passport" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+          </div>
+          <button id="add" class="tool-button">Add</button>
+        </div>
+      </div>
+
+      <div id="list" class="grid"></div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const KEY='oneclick_packing_checklist_v1';
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ return [] } }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    function render(){ const list=document.getElementById('list'); list.innerHTML=''; const items=load(); if(!items.length){ list.innerHTML='<div class="tool-card" style="padding:16px;">No items yet.</div>'; return; }
+      items.forEach((it,idx)=>{
+        const card=document.createElement('div'); card.className='tool-card'; card.style.padding='12px';
+        card.innerHTML=`<div class='item'>
+          <label style='display:flex;gap:8px;align-items:center;flex:1;'><input type='checkbox' data-i='${idx}' ${it.done?'checked':''}><span ${it.done?'class="muted"':''}>${escapeHtml(it.text)}</span></label>
+          <div style='display:flex;gap:6px;'>
+            <button class='tool-button' data-act='edit' data-i='${idx}'><i class='fas fa-pen'></i></button>
+            <button class='tool-button' data-act='del' data-i='${idx}' style='background:#e74c3c;'><i class='fas fa-trash'></i></button>
+          </div>
+        </div>`; list.appendChild(card);
+      }); }
+
+    function add(){ const v=document.getElementById('item').value.trim(); if(!v) return; const d=load(); d.push({text:v, done:false}); save(d); document.getElementById('item').value=''; render(); }
+
+    document.getElementById('add').addEventListener('click', add);
+    document.getElementById('list').addEventListener('click',(e)=>{
+      const del=e.target.closest('button[data-act="del"]'); const edit=e.target.closest('button[data-act="edit"]'); const chk=e.target.closest('input[type="checkbox"][data-i]'); const d=load();
+      if (chk){ const i=+chk.getAttribute('data-i'); d[i].done=chk.checked; save(d); render(); return; }
+      if (del){ const i=+del.getAttribute('data-i'); d.splice(i,1); save(d); render(); return; }
+      if (edit){ const i=+edit.getAttribute('data-i'); const v=prompt('Edit item', d[i].text); if(v===null) return; d[i].text=v.trim(); save(d); render(); }
+    });
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    render();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pomodoro Timer Pro - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .time{font-size:3rem;font-weight:800;text-align:center;margin:8px 0}
+    .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+    .log{max-height:180px;overflow:auto}
+    .laps{display:grid;gap:4px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <i class="fas fa-hourglass tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Pomodoro Timer Pro</div>
+        <div class="tool-desc">Advanced Pomodoro with custom presets, lap notes, long break auto-scheduling, and desktop notifications.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid" style="align-items:end;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Preset</label>
+            <select id="preset" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+              <option value="25,5,15,4">Default 25/5 (long 15 every 4)</option>
+              <option value="50,10,20,3">50/10 (long 20 every 3)</option>
+              <option value="15,3,10,5">15/3 (long 10 every 5)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;">Custom (F/B/LB/Cycles)</label>
+            <input id="custom" type="text" placeholder="25,5,15,4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+          </div>
+          <button id="apply" class="tool-button">Apply</button>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;text-align:center;">
+        <div id="phase" class="tool-name">Focus</div>
+        <div id="time" class="time">25:00</div>
+        <div class="controls">
+          <button id="start" class="tool-button"><i class="fas fa-play"></i> Start</button>
+          <button id="pause" class="tool-button"><i class="fas fa-pause"></i> Pause</button>
+          <button id="reset" class="tool-button" style="background:#e74c3c;"><i class="fas fa-stop"></i> Reset</button>
+          <button id="skip" class="tool-button"><i class="fas fa-forward"></i> Skip</button>
+          <button id="lap" class="tool-button"><i class="fas fa-flag"></i> Lap</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Lap Notes</div>
+          <div id="laps" class="laps"></div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name" style="margin-bottom:6px;">Session Log (today)</div>
+          <div id="log" class="tool-desc log">No sessions yet.</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center;margin-top:8px;"><a class="tool-button" href="../index.html">Back to Home</a></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    let timer=null, remaining=0, isFocus=true, cycleCount=0; const KEY='oneclick_pomo_pro_log';
+    function today(){return new Date().toISOString().slice(0,10)}
+    function load(){ try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}} }
+    function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+    function addLog(entry){ const d=load(); if(!d[today()]) d[today()]=[]; d[today()].push(entry); save(d); renderLog(); }
+    function renderLog(){ const d=load()[today()]||[]; const box=document.getElementById('log'); if(!d.length){ box.textContent='No sessions yet.'; return;} box.innerHTML=d.slice().reverse().map(x=>`<div>${x.phase} ${x.len} min â€¢ ${new Date(x.ts).toLocaleTimeString()}</div>`).join(''); }
+
+    function notify(msg){ try { if (Notification.permission==='granted') new Notification(msg); else if (Notification.permission!=='denied') Notification.requestPermission(); } catch(e){} }
+
+    function parsePreset(){ const useCustom=(document.getElementById('custom').value||'').trim(); const val=useCustom||document.getElementById('preset').value; const [f,b,lb,c]=val.split(',').map(Number); return {f:f||25,b:b||5,lb:lb||15,c:c||4}; }
+    function setPhase(focus){ isFocus=focus; document.getElementById('phase').textContent = focus? 'Focus':'Break'; const mins = focus? parsePreset().f: parsePreset().b; remaining=mins*60; updateTime(); }
+    function updateTime(){ const m=Math.floor(remaining/60); const s=remaining%60; document.getElementById('time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+    function tick(){ if (remaining<=0){ clearInterval(timer); timer=null; const len=isFocus? parsePreset().f: parsePreset().b; addLog({phase:isFocus?'Focus':'Break', len, ts:Date.now()}); notify((isFocus?'Focus':'Break')+' done'); if (isFocus){ cycleCount++; if (cycleCount % parsePreset().c===0){ remaining=parsePreset().lb*60; document.getElementById('phase').textContent='Long Break'; isFocus=false; } else { setPhase(false); } } else { setPhase(true); } start(); return; } remaining--; updateTime(); }
+    function start(){ if(timer) return; timer=setInterval(tick,1000); }
+    function pause(){ if(timer){ clearInterval(timer); timer=null; } }
+    function reset(){ pause(); cycleCount=0; setPhase(true); document.getElementById('laps').innerHTML=''; }
+    function skip(){ pause(); remaining=0; tick(); }
+
+    document.getElementById('start').addEventListener('click', start);
+    document.getElementById('pause').addEventListener('click', pause);
+    document.getElementById('reset').addEventListener('click', reset);
+    document.getElementById('skip').addEventListener('click', skip);
+    document.getElementById('apply').addEventListener('click', ()=>{ reset(); });
+    document.getElementById('lap').addEventListener('click', ()=>{ const note=prompt('Lap note'); if(note){ const d=document.createElement('div'); d.textContent=new Date().toLocaleTimeString()+': '+note; document.getElementById('laps').appendChild(d); } });
+
+    setPhase(true); renderLog();
+  </script>
+</body>
+</html>
+
+

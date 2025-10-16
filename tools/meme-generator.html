@@ -1,0 +1,460 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Generator - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .meme-container {
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #f5f5f5;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: move;
+    }
+    .meme-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .meme-text {
+      position: absolute;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-weight: bold;
+      color: white;
+      text-shadow: 2px 2px 2px rgba(0,0,0,0.8);
+      user-select: none;
+      cursor: move;
+      padding: 10px;
+      font-family: 'Impact', sans-serif;
+    }
+    .meme-text.top { top: 0; }
+    .meme-text.bottom { bottom: 0; }
+    .text-controls {
+      margin-top: 15px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .control-group {
+      margin-bottom: 10px;
+    }
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .control-group input, .control-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .template-item {
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .template-item:hover, .template-item.selected {
+      border-color: #007bff;
+    }
+    .template-item img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+    }
+    .template-item p {
+      padding: 5px;
+      margin: 0;
+      font-size: 0.8rem;
+      text-align: center;
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center;">
+        <i class="fas fa-laugh tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Meme Generator</div>
+        <div class="tool-desc">Create memes by adding customizable text to images. Upload your own or use templates.</div>
+      </div>
+
+      <div class="tool-card" style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:end;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Upload Image</label>
+            <input id="imageUpload" type="file" accept="image/*" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Or Choose Template</label>
+            <div id="templateSelect" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff;">
+              Select a template
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="downloadBtn" class="tool-button" style="background:#28a745;">Download Meme</button>
+            <button id="resetBtn" class="tool-button" style="background:#888;">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Meme Preview</div>
+          <div id="memeContainer" class="meme-container" style="display:none;">
+            <img id="memeImage" class="meme-image" src="" alt="Meme">
+            <div id="topText" class="meme-text top" contenteditable="true" data-placeholder="TOP TEXT">TOP TEXT</div>
+            <div id="bottomText" class="meme-text bottom" contenteditable="true" data-placeholder="BOTTOM TEXT">BOTTOM TEXT</div>
+          </div>
+          <div id="noImage" style="text-align:center; color:#666; padding:40px;">
+            <i class="fas fa-image" style="font-size:3rem; margin-bottom:10px;"></i>
+            <div>Upload an image or select a template to get started</div>
+          </div>
+        </div>
+
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Text Controls</div>
+          <div id="textControls" style="margin-top:10px;">
+            <div class="control-group">
+              <label>Active Text</label>
+              <select id="activeTextSelect" style="width:100%;">
+                <option value="top">Top Text</option>
+                <option value="bottom">Bottom Text</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Font Size</label>
+              <input id="fontSize" type="range" min="20" max="80" value="36" style="width:100%;">
+              <span id="fontSizeValue" style="font-size:0.9rem; color:#666;">36px</span>
+            </div>
+            <div class="control-group">
+              <label>Font Family</label>
+              <select id="fontFamily" style="width:100%;">
+                <option value="Impact">Impact</option>
+                <option value="Arial Black">Arial Black</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Text Color</label>
+              <input id="textColor" type="color" value="#ffffff" style="width:100%; height:40px;">
+            </div>
+            <div class="control-group">
+              <label>Outline Color</label>
+              <input id="outlineColor" type="color" value="#000000" style="width:100%; height:40px;">
+            </div>
+            <div class="control-group">
+              <label>Outline Width</label>
+              <input id="outlineWidth" type="range" min="0" max="10" value="3" style="width:100%;">
+              <span id="outlineWidthValue" style="font-size:0.9rem; color:#666;">3px</span>
+            </div>
+            <div class="control-group">
+              <label><input id="boldText" type="checkbox"> Bold</label>
+              <label style="margin-left:10px;"><input id="italicText" type="checkbox"> Italic</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Popular Templates</div>
+        <div class="template-grid" id="templateGrid">
+          <div class="template-item" data-template="distracted">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjODg4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRpc3RyYWN0ZWQgQm95ZnJpZW5kPC90ZXh0Pjwvc3ZnPg==" alt="Distracted Boyfriend">
+            <p>Distracted Boyfriend</p>
+          </div>
+          <div class="template-item" data-template="success">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNGE5Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlN1Y2Nlc3MgS2lkPC90ZXh0PjwvdGV4dD48L3N2Zz4=" alt="Success Kid">
+            <p>Success Kid</p>
+          </div>
+          <div class="template-item" data-template="this-is-fine">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjY2Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRoaXMgaXMgRmluZTwvdGV4dD48L3N2Zz4=" alt="This is Fine">
+            <p>This is Fine</p>
+          </div>
+          <div class="template-item" data-template="grumpy-cat">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdydW1weSBDYXI8L3RleHQ+PC9zdmc+" alt="Grumpy Cat">
+            <p>Grumpy Cat</p>
+          </div>
+          <div class="template-item" data-template="one-does-not">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNjY2Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk9uZSBEb2VzIE5vdDwvdGV4dD48L3N2Zz4=" alt="One Does Not Simply">
+            <p>One Does Not Simply</p>
+          </div>
+          <div class="template-item" data-template="fry">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjOTk5Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZyeSBTcXVpbnRpbmc8L3RleHQ+PC9zdmc+" alt="Fry Squinting">
+            <p>Fry Squinting</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const templateSelect = document.getElementById('templateSelect');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const memeContainer = document.getElementById('memeContainer');
+    const memeImage = document.getElementById('memeImage');
+    const topText = document.getElementById('topText');
+    const bottomText = document.getElementById('bottomText');
+    const noImage = document.getElementById('noImage');
+    const textControls = document.getElementById('textControls');
+
+    // Text control elements
+    const activeTextSelect = document.getElementById('activeTextSelect');
+    const fontSize = document.getElementById('fontSize');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const fontFamily = document.getElementById('fontFamily');
+    const textColor = document.getElementById('textColor');
+    const outlineColor = document.getElementById('outlineColor');
+    const outlineWidth = document.getElementById('outlineWidth');
+    const outlineWidthValue = document.getElementById('outlineWidthValue');
+    const boldText = document.getElementById('boldText');
+    const italicText = document.getElementById('italicText');
+
+    let currentImage = null;
+    let currentImageUrl = '';
+    let selectedTemplate = null;
+
+    const templates = {
+      distracted: {
+        name: 'Distracted Boyfriend',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNjY2Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRpc3RyYWN0ZWQgQm95ZnJpZW5kPC90ZXh0PjwvdGV4dD48L3N2Zz4='
+      },
+      success: {
+        name: 'Success Kid',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNGE5Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlN1Y2Nlc3MgS2lkPC90ZXh0PjwvdGV4dD48L3N2Zz4='
+      },
+      'this-is-fine': {
+        name: 'This is Fine',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjY2Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRoaXMgaXMgRmluZTwvdGV4dD48L3N2Zz4='
+      },
+      'grumpy-cat': {
+        name: 'Grumpy Cat',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdydW1weSBDYXI8L3RleHQ+PC9zdmc+'
+      },
+      'one-does-not': {
+        name: 'One Does Not Simply',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNzc3Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk9uZSBEb2VzIE5vdCBTaW1wbHk8L3RleHQ+PC9zdmc+'
+      },
+      fry: {
+        name: 'Fry Squinting',
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjODg4Ii8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZyeSBTcXVpbnRpbmc8L3RleHQ+PC9zdmc+'
+      }
+    };
+
+    function setImage(url, name) {
+      currentImage = url;
+      memeImage.src = url;
+      memeContainer.style.display = 'block';
+      noImage.style.display = 'none';
+      templateSelect.textContent = name || 'Custom Image';
+      downloadBtn.disabled = false;
+      updateTextStyles();
+    }
+
+    function updateTextStyles() {
+      const activeText = document.getElementById(activeTextSelect.value + 'Text');
+      const fontWeight = boldText.checked ? 'bold' : 'normal';
+      const fontStyle = italicText.checked ? 'italic' : 'normal';
+      const outline = outlineWidth.value + 'px ' + outlineColor.value;
+
+      activeText.style.fontSize = fontSize.value + 'px';
+      activeText.style.fontFamily = fontFamily.value;
+      activeText.style.color = textColor.value;
+      activeText.style.fontWeight = fontWeight;
+      activeText.style.fontStyle = fontStyle;
+      activeText.style.textShadow = outline + ' 0 0, -' + outline + ' 0 0, 0 ' + outline + ' 0, 0 -' + outline + ' 0, ' +
+                                   outline + ' ' + outline + ' 0, -' + outline + ' ' + outline + ' 0, ' +
+                                   outline + ' -' + outline + ' 0, -' + outline + ' -' + outline + ' 0';
+    }
+
+    function makeDraggable(element) {
+      let isDragging = false;
+      let startX, startY, startLeft, startTop;
+
+      element.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = parseInt(element.style.left) || 0;
+        startTop = parseInt(element.style.top) || 0;
+        element.style.position = 'absolute';
+        element.style.zIndex = 1000;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        element.style.left = (startLeft + dx) + 'px';
+        element.style.top = (startTop + dy) + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        element.style.zIndex = '';
+      });
+    }
+
+    function downloadMeme() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+
+        // Add top text
+        if (topText.textContent.trim()) {
+          ctx.font = `${boldText.checked ? 'bold ' : ''}${italicText.checked ? 'italic ' : ''}${fontSize.value}px ${fontFamily.value}`;
+          ctx.fillStyle = textColor.value;
+          ctx.strokeStyle = outlineColor.value;
+          ctx.lineWidth = parseInt(outlineWidth.value);
+          ctx.textAlign = 'center';
+          const topTextY = parseInt(fontSize.value) + parseInt(outlineWidth.value);
+          ctx.strokeText(topText.textContent, canvas.width / 2, topTextY);
+          ctx.fillText(topText.textContent, canvas.width / 2, topTextY);
+        }
+
+        // Add bottom text
+        if (bottomText.textContent.trim()) {
+          ctx.font = `${boldText.checked ? 'bold ' : ''}${italicText.checked ? 'italic ' : ''}${fontSize.value}px ${fontFamily.value}`;
+          ctx.fillStyle = textColor.value;
+          ctx.strokeStyle = outlineColor.value;
+          ctx.lineWidth = parseInt(outlineWidth.value);
+          ctx.textAlign = 'center';
+          const bottomTextY = canvas.height - parseInt(outlineWidth.value);
+          ctx.strokeText(bottomText.textContent, canvas.width / 2, bottomTextY);
+          ctx.fillText(bottomText.textContent, canvas.width / 2, bottomTextY);
+        }
+
+        const link = document.createElement('a');
+        link.download = 'meme_' + Date.now() + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      };
+
+      img.src = currentImage;
+    }
+
+    function resetAll() {
+      currentImage = null;
+      currentImageUrl = '';
+      selectedTemplate = null;
+      memeContainer.style.display = 'none';
+      noImage.style.display = 'block';
+      templateSelect.textContent = 'Select a template';
+      downloadBtn.disabled = true;
+      topText.textContent = 'TOP TEXT';
+      bottomText.textContent = 'BOTTOM TEXT';
+      imageUpload.value = '';
+
+      // Reset controls
+      fontSize.value = 36;
+      fontSizeValue.textContent = '36px';
+      fontFamily.value = 'Impact';
+      textColor.value = '#ffffff';
+      outlineColor.value = '#000000';
+      outlineWidth.value = 3;
+      outlineWidthValue.textContent = '3px';
+      boldText.checked = false;
+      italicText.checked = false;
+      activeTextSelect.value = 'top';
+    }
+
+    // Event listeners
+    imageUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImage(e.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Template selection
+    document.querySelectorAll('.template-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected'));
+        item.classList.add('selected');
+        const template = item.dataset.template;
+        setImage(templates[template].url, templates[template].name);
+      });
+    });
+
+    // Text controls
+    fontSize.addEventListener('input', () => {
+      fontSizeValue.textContent = fontSize.value + 'px';
+      updateTextStyles();
+    });
+    fontFamily.addEventListener('change', updateTextStyles);
+    textColor.addEventListener('input', updateTextStyles);
+    outlineColor.addEventListener('input', updateTextStyles);
+    outlineWidth.addEventListener('input', () => {
+      outlineWidthValue.textContent = outlineWidth.value + 'px';
+      updateTextStyles();
+    });
+    boldText.addEventListener('change', updateTextStyles);
+    italicText.addEventListener('change', updateTextStyles);
+    activeTextSelect.addEventListener('change', updateTextStyles);
+
+    // Text editing
+    topText.addEventListener('input', () => {
+      if (topText.textContent === '') {
+        topText.textContent = 'TOP TEXT';
+      }
+      updateTextStyles();
+    });
+    bottomText.addEventListener('input', () => {
+      if (bottomText.textContent === '') {
+        bottomText.textContent = 'BOTTOM TEXT';
+      }
+      updateTextStyles();
+    });
+
+    // Download
+    downloadBtn.addEventListener('click', downloadMeme);
+
+    // Reset
+    resetBtn.addEventListener('click', resetAll);
+
+    // Make text draggable
+    makeDraggable(topText);
+    makeDraggable(bottomText);
+  </script>
+</body>
+</html>
+
+

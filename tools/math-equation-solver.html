@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math Equation Solver - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-square-root-alt tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Math Equation Solver</div>
+        <div class="tool-desc">Solve arithmetic, linear (ax+b=c), quadratic (ax^2+bx+c=0), and 2-variable linear systems. Runs locally.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end;">
+          <div>
+            <label for="expr" style="display:block; font-weight:600; margin-bottom:6px;">Enter Expression / Equation</label>
+            <input id="expr" type="text" placeholder="Examples: 3^2+4^2, 2x+3=11, x^2-5x+6=0, x+y=10; x-y=2" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          </div>
+          <button id="solve" class="tool-button" style="height:42px;">Solve</button>
+        </div>
+        <small class="tool-desc">Tip: For systems, separate equations with a semicolon (;). Variables supported for systems: x and y.</small>
+      </div>
+
+      <div class="tool-card" style="padding:16px; margin-top:16px;">
+        <div class="tool-name" style="margin-bottom:6px;">Result</div>
+        <div id="result" class="tool-desc">Enter an input and click Solve.</div>
+        <div id="steps" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    function safeEvalArithmetic(s){
+      if (!/^[0-9+\-*/(). ^\s]+$/.test(s)) throw new Error('Unsupported characters in arithmetic expression.');
+      s = s.replace(/\^/g, '**');
+      const fn = new Function('return ('+s+')');
+      const val = fn();
+      if (!isFinite(val)) throw new Error('Result is not finite.');
+      return val;
+    }
+
+    function parseLinear(eq){
+      const parts = eq.split('='); if (parts.length !== 2) return null;
+      const L = parts[0].replace(/\s+/g,'');
+      const R = parts[1].replace(/\s+/g,'');
+      const f = (x) => safeEvalArithmetic(L.replace(/x/g, '('+x+')')) - safeEvalArithmetic(R.replace(/x/g, '('+x+')'));
+      try {
+        const b = f(0);
+        const a = f(1) - b;
+        return {a, b};
+      } catch(e){ return null; }
+    }
+
+    function solveQuadratic(eq){
+      const parts = eq.split('='); if (parts.length !== 2) return null;
+      const L = parts[0].replace(/\s+/g,'');
+      const R = parts[1].replace(/\s+/g,'');
+      if (R !== '0') return null;
+      const f = (x) => safeEvalArithmetic(L.replace(/x/g, '('+x+')'));
+      try {
+        const c = f(0);
+        const abcp1 = f(1);
+        const abcp2 = f(2);
+        const a2 = (abcp2 - 2*abcp1 + c); // equals a*2
+        const a = a2/2;
+        const b = abcp1 - a - c;
+        return {a, b, c};
+      } catch(e){ return null; }
+    }
+
+    function parseSystem2(eqStr){
+      // Expect like: ax+by=c; dx+ey=f (variables x and y only)
+      const parts = eqStr.split(';').map(s=>s.trim()).filter(Boolean);
+      if (parts.length !== 2) return null;
+      function toCoeffs(eq){
+        const [L,R] = eq.split('=').map(s=>s?.trim());
+        if (!L || !R) return null;
+        // Replace y with placeholder to evaluate coefficients by sampling
+        try {
+          const f = (x,y) => safeEvalArithmetic(L.replace(/x/g,'('+x+')').replace(/y/g,'('+y+')')) - safeEvalArithmetic(R.replace(/x/g,'('+x+')').replace(/y/g,'('+y+')'));
+          const c = f(0,0);
+          const a = f(1,0) - c; // coeff of x
+          const b = f(0,1) - c; // coeff of y
+          return {a,b,c}; // equation a*x + b*y + c = 0
+        } catch(e){ return null; }
+      }
+      const A = toCoeffs(parts[0]);
+      const B = toCoeffs(parts[1]);
+      if (!A || !B) return null;
+      return {A,B};
+    }
+
+    function solveSystem2(sys){
+      // A: a1 x + b1 y + c1 = 0;  B: a2 x + b2 y + c2 = 0
+      const {A,B} = sys;
+      const a1=A.a, b1=A.b, c1=A.c;
+      const a2=B.a, b2=B.b, c2=B.c;
+      const D = a1*b2 - a2*b1;
+      if (Math.abs(D) < 1e-12) return {type:'degenerate'};
+      const Dx = (-c1)*b2 - (-c2)*b1;
+      const Dy = a1*(-c2) - a2*(-c1);
+      const x = Dx/D, y = Dy/D;
+      return {x,y,D,a1,b1,c1,a2,b2,c2};
+    }
+
+    function solve(){
+      const input = document.getElementById('expr').value.trim();
+      const res = document.getElementById('result');
+      const steps = document.getElementById('steps');
+      res.textContent = ''; steps.innerHTML='';
+      if (!input){ res.textContent = 'Please enter an input.'; return; }
+
+      // Try system (x,y) first if semicolon present
+      if (input.includes(';')){
+        const sys = parseSystem2(input);
+        if (!sys){ res.textContent = 'Malformed system. Use e.g., 2x+3y=13; x-y=1'; return; }
+        const s = solveSystem2(sys);
+        if (s.type==='degenerate'){ res.textContent = 'No unique solution (parallel or identical lines).'; return; }
+        res.textContent = `x = ${s.x}, y = ${s.y}`;
+        steps.innerHTML = `
+          <div>Using Cramer's Rule:</div>
+          <div>D = a1*b2 - a2*b1 = ${s.D}</div>
+          <div>Dx = (-c1)*b2 - (-c2)*b1</div>
+          <div>Dy = a1*(-c2) - a2*(-c1)</div>`;
+        return;
+      }
+
+      if (input.includes('=')){
+        const quad = solveQuadratic(input);
+        if (quad){
+          const {a,b,c} = quad; const D = b*b - 4*a*c;
+          const s=[]; s.push(`<div>Identified a=${a}, b=${b}, c=${c}</div>`); s.push(`<div>D = b^2 - 4ac = ${D}</div>`);
+          if (a === 0){ res.textContent = 'Not a quadratic (a=0).'; steps.innerHTML = s.join(''); return; }
+          if (D > 0){ const x1 = (-b + Math.sqrt(D))/(2*a); const x2 = (-b - Math.sqrt(D))/(2*a); res.textContent=`Two real roots: x1=${x1}, x2=${x2}`; }
+          else if (D === 0){ const x = (-b)/(2*a); res.textContent=`One real root: x=${x}`; }
+          else { const real=(-b)/(2*a), imag=Math.sqrt(-D)/(2*a); res.textContent=`Complex roots: x1=${real}+${imag}i, x2=${real}-${imag}i`; }
+          steps.innerHTML=s.join(''); return;
+        }
+        const lin = parseLinear(input);
+        if (lin){ const {a,b}=lin; const s=[]; s.push(`<div>Reduced to aÂ·x + b = 0 with a=${a}, b=${b}</div>`);
+          if (Math.abs(a)<1e-12){ if (Math.abs(b)<1e-12) res.textContent='Infinite solutions.'; else res.textContent='No solution.'; }
+          else res.textContent=`x = ${(-b/a)}`; steps.innerHTML=s.join(''); return; }
+        res.textContent='Unsupported or malformed equation. Try: 2x+3=11, x^2-5x+6=0, or systems like x+y=5; x-y=1'; return;
+      }
+
+      try { const val = safeEvalArithmetic(input); res.textContent = `Result = ${val}`; steps.innerHTML='<div>Evaluated with standard precedence (^ for exponent).</div>'; }
+      catch(e){ res.textContent = e.message; }
+    }
+
+    document.getElementById('solve').addEventListener('click', solve);
+    document.getElementById('expr').addEventListener('keydown', (e)=>{ if (e.key==='Enter') solve(); });
+  </script>
+</body>
+</html>
+
+

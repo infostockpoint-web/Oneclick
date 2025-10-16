@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech to PDF - One Click Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; align-items:end; }
+    .area { border:1px solid #e5e7eb; background:#f8fafc; padding:10px; border-radius:8px; min-height:220px; overflow:auto; white-space:pre-wrap; }
+    .status { font-size:.95rem; color:#374151; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="container" style="padding:60px 0;">
+    <div class="tool-card" style="max-width:980px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <i class="fas fa-file-audio tool-icon-small" style="font-size:3rem;"></i>
+        <div class="tool-name" style="font-size:1.6rem;">Speech to PDF</div>
+        <div class="tool-desc">Transcribe speech in your browser and export to PDF.</div>
+      </div>
+
+      <div class="tool-card" style="padding:16px;">
+        <div class="grid">
+          <div>
+            <label for="lang" style="display:block; font-weight:600; margin-bottom:6px;">Language</label>
+            <select id="lang" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+              <option value="en-US">English (US)</option>
+              <option value="en-GB">English (UK)</option>
+              <option value="hi-IN">Hindi (India)</option>
+              <option value="bn-IN">Bengali (India)</option>
+              <option value="ta-IN">Tamil (India)</option>
+              <option value="te-IN">Telugu (India)</option>
+              <option value="mr-IN">Marathi (India)</option>
+              <option value="gu-IN">Gujarati (India)</option>
+              <option value="pa-IN">Punjabi (India)</option>
+              <option value="ur-PK">Urdu</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Controls</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="startBtn" class="tool-button"><i class="fas fa-microphone"></i> Start</button>
+              <button id="stopBtn" class="tool-button" style="background:#ef4444;"><i class="fas fa-stop"></i> Stop</button>
+              <button id="clearBtn" class="tool-button" style="background:#888;"><i class="fas fa-eraser"></i> Clear</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Export</label>
+            <button id="downloadBtn" class="tool-button" style="width:100%;"><i class="fas fa-download"></i> Download PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:16px;">
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Transcript</div>
+          <div id="transcript" class="area">Click Start and speak to begin transcription. Keep the tab focused for best results.</div>
+        </div>
+        <div class="tool-card" style="padding:16px;">
+          <div class="tool-name">Status</div>
+          <div id="status" class="status">Idle</div>
+        </div>
+      </div>
+
+      <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+      <div style="text-align:center; margin-top:8px;">
+        <a class="tool-button" href="../index.html">Back to Home</a>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="../js/include.js"></script>
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const transcriptEl = document.getElementById('transcript');
+    const statusEl = document.getElementById('status');
+    const langEl = document.getElementById('lang');
+
+    let recognition = null;
+    let listening = false;
+    let transcript = '';
+
+    function ensureRecognition(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      const r = new SR();
+      r.continuous = true; r.interimResults = true; r.lang = langEl.value || 'en-US';
+      return r;
+    }
+
+    function setStatus(text){ statusEl.textContent = text; }
+    function start(){
+      if (listening) return;
+      recognition = ensureRecognition();
+      if (!recognition){ alert('Speech Recognition is not supported in this browser. Please try Chrome.'); return; }
+      recognition.lang = langEl.value || 'en-US';
+      recognition.onresult = (e) => {
+        let final = '';
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++){
+          const res = e.results[i];
+          (res.isFinal ? final : interim) += res[0].transcript;
+        }
+        if (final){ transcript += (transcript && !/\n$/.test(transcript) ? ' ' : '') + final.trim() + '\n'; }
+        transcriptEl.textContent = transcript + (interim ? (' ' + interim) : '');
+      };
+      recognition.onerror = () => { setStatus('Error'); };
+      recognition.onend = () => { listening = false; setStatus('Stopped'); };
+      recognition.start();
+      listening = true; setStatus('Listening...');
+    }
+    function stop(){ if (recognition){ recognition.stop(); } }
+    function clearAll(){ transcript = ''; transcriptEl.textContent = 'Click Start and speak to begin transcription. Keep the tab focused for best results.'; setStatus('Idle'); }
+
+    startBtn.addEventListener('click', start);
+    stopBtn.addEventListener('click', stop);
+    clearBtn.addEventListener('click', clearAll);
+
+    downloadBtn.addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      const margin = 40; const maxWidth = doc.internal.pageSize.getWidth() - margin*2;
+      const lines = doc.splitTextToSize(transcript || transcriptEl.textContent || '', maxWidth);
+      let y = margin;
+      doc.setFontSize(12);
+      lines.forEach(line => {
+        if (y > doc.internal.pageSize.getHeight() - margin){ doc.addPage(); y = margin; }
+        doc.text(line, margin, y);
+        y += 16;
+      });
+      doc.save('speech-to-pdf.pdf');
+    });
+  </script>
+</body>
+</html>
+
+

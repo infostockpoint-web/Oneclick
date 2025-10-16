@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Temperature Converter - One Click Tools</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../css/style.css"></head><body>
+<div id="site-header"></div>
+<main class="container" style="padding:60px 0;">
+  <div class="tool-card" style="max-width:960px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:10px;">
+      <i class="fas fa-thermometer-half tool-icon-small" style="font-size:3rem;"></i>
+      <div class="tool-name" style="font-size:1.6rem;">Temperature Converter</div>
+      <div class="tool-desc">Convert between Celsius (Â°C), Fahrenheit (Â°F), and Kelvin (K).</div>
+    </div>
+
+    <div class="tool-card" style="padding:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+        <div>
+          <label for="tVal" style="display:block; font-weight:600; margin-bottom:6px;">Value</label>
+          <input id="tVal" type="number" step="any" placeholder="e.g. 37" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;"/>
+        </div>
+        <div>
+          <label for="tFrom" style="display:block; font-weight:600; margin-bottom:6px;">From</label>
+          <select id="tFrom" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="C">Celsius (Â°C)</option>
+            <option value="F">Fahrenheit (Â°F)</option>
+            <option value="K">Kelvin (K)</option>
+          </select>
+        </div>
+        <div>
+          <label for="tTo" style="display:block; font-weight:600; margin-bottom:6px;">To</label>
+          <select id="tTo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <option value="C">Celsius (Â°C)</option>
+            <option value="F">Fahrenheit (Â°F)</option>
+            <option value="K">Kelvin (K)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="tConvert" class="tool-button">Convert</button>
+          <button id="tSwap" class="tool-button" style="background:#888;">Swap</button>
+          <button id="tCopy" class="tool-button" style="background:#555;">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px;">
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Result</div>
+        <div id="tResult" style="font-size:1.4rem; word-break:break-all;">â€”</div>
+      </div>
+      <div class="tool-card" style="padding:16px;">
+        <div class="tool-name">Quick conversions (from input)</div>
+        <div id="tTable" style="font-family:monospace; white-space:pre-line;">â€”</div>
+      </div>
+    </div>
+
+    <div class="banner-ad" style="margin-top:16px;">Ad Placeholder (728x90)</div>
+    <div style="text-align:center; margin-top:8px;">
+      <a class="tool-button" href="../index.html">Back to Home</a>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="../js/include.js"></script>
+<script>
+  function toC(val, unit){
+    if (unit==='C') return val;
+    if (unit==='F') return (val - 32) * 5/9;
+    if (unit==='K') return val - 273.15;
+    return NaN;
+  }
+  function fromC(c, unit){
+    if (unit==='C') return c;
+    if (unit==='F') return (c * 9/5) + 32;
+    if (unit==='K') return c + 273.15;
+    return NaN;
+  }
+  function fmt(n){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:4}); }
+  function buildTable(c){
+    return [
+      `C : ${fmt(fromC(c,'C'))} Â°C`,
+      `F : ${fmt(fromC(c,'F'))} Â°F`,
+      `K : ${fmt(fromC(c,'K'))} K`
+    ].join('\n');
+  }
+  document.getElementById('tSwap').addEventListener('click', ()=>{
+    const a=document.getElementById('tFrom'); const b=document.getElementById('tTo');
+    const t=a.value; a.value=b.value; b.value=t;
+  });
+  document.getElementById('tConvert').addEventListener('click', ()=>{
+    const val = Number(document.getElementById('tVal').value);
+    const from = document.getElementById('tFrom').value;
+    const to = document.getElementById('tTo').value;
+    const out = document.getElementById('tResult');
+    const tbl = document.getElementById('tTable');
+    if (!isFinite(val)) { out.textContent='Please enter a valid number'; tbl.textContent='â€”'; return; }
+    const c = toC(val, from);
+    const conv = fromC(c, to);
+    out.textContent = `${fmt(val)} Â°${from} = ${fmt(conv)} Â°${to}`;
+    tbl.textContent = buildTable(c);
+  });
+  document.getElementById('tCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('tResult').textContent); } catch(e){} });
+</script>
+</body></html>
+
+
